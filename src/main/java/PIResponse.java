@@ -1,4 +1,3 @@
-
 import javax.json.*;
 import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
@@ -9,10 +8,10 @@ import java.util.stream.Collectors;
 public class PIResponse {
 
     private String message;
-    private List<String> messages = new ArrayList<>();
-    private List<Challenge> mutlichallenge = new ArrayList<>();
+    private final List<String> messages = new ArrayList<>();
+    private final List<Challenge> mutlichallenge = new ArrayList<>();
     private String transaction_id;
-    private List<String> transaction_ids = new ArrayList<>();
+    private final List<String> transaction_ids = new ArrayList<>();
     private String serial;
     private String threadID;
     private String id;

@@ -56,7 +56,7 @@ public class PrivacyIDEA {
         runPoll.set(false);
     }
 
-    void asyncPollTransaction(String transction_id, String username, IPollTransactionCallback callback) {
+    void asyncPollTransaction(String transaction_id, String username, IPollTransactionCallback callback) {
         runPoll.set(true);
         Thread t = new Thread(() -> {
             int count = 0;
@@ -71,9 +71,9 @@ public class PrivacyIDEA {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (pollTransaction(transction_id)) {
+                if (pollTransaction(transaction_id)) {
                     runPoll.set(false);
-                    PIResponse response = validateCheck(username, "", transction_id);
+                    PIResponse response = validateCheck(username, "", transaction_id);
                     callback.transactionFinalized(response.getValue());
                     break;
                 }
