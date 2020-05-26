@@ -6,11 +6,10 @@ class Configuration {
     String serverURL = "";
     String realm = "";
     boolean doSSLVerify = true;
-    boolean doTriggerChallenge = true;
     String serviceAccountName = "";
     String serviceAccountPass = "";
     boolean doEnrollToken = false;
-    TokenType enrollingTokenType = TokenType.HOTP;
+    String enrollingTokenType = "hotp";
     List<Integer> pollingIntervals = new ArrayList<>();
 
     public Configuration(String serverURL) {

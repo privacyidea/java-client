@@ -13,13 +13,13 @@ public class Constants {
     static final String ENDPOINT_TRIGGERCHALLENGE = "/validate/triggerchallenge";
     static final String ENDPOINT_POLL_TRANSACTION = "/validate/polltransaction";
     static final String ENDPOINT_VALIDATE_CHECK = "/validate/check";
-    static final String ENDPOINT_TOKEN = "/token";
+    static final String ENDPOINT_TOKEN = "/token/";
 
     static final String DEFAULT_PUSH_MESSAGE = "Please confirm the authentication on your mobile device";
     static final String DEFAULT_OTP_MESSAGE = "Please enter the OTP";
 
-    static final int DEFAULT_POLLING_INTERVAL = 2; // Will be used if single value from config cannot be parsed
-    static final List<Integer> DEFAULT_POLLING_ARRAY = Arrays.asList(5, 1, 1, 1, 2, 3); // Will be used if no intervals are specified
+    static final int DEFAULT_POLLING_INTERVAL = 1; // Will be used if single value from config cannot be parsed
+    static final List<Integer> DEFAULT_POLLING_ARRAY = Arrays.asList(4, 2, 1, 1, 2); // Will be used if no intervals are specified
 
     static final String FORM_PUSHTOKEN_INTERVAL = "pushTokenInterval";
     static final String FORM_TOKEN_ENROLLMENT_QR = "tokenEnrollmentQR";

@@ -1,9 +1,9 @@
-public interface ILoggerBridge {
-    void error(String message);
-
+interface ILoggerBridge {
     void log(String message);
 
-    void error(Throwable t);
+    void error(String message);
 
     void log(Throwable t);
+
+    void error(Throwable t);
 }
