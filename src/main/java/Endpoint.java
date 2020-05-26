@@ -1,36 +1,52 @@
-import javax.json.*;
-import javax.json.stream.JsonGenerator;
-import javax.net.ssl.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
-
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonWriter;
+import javax.json.JsonWriterFactory;
+import javax.json.stream.JsonGenerator;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 class Endpoint {
 
-    private ILoggerBridge log;
-    private String authToken;
-    private List<String> excludedEndpointPrints = Arrays.asList(Constants.ENDPOINT_AUTH, Constants.ENDPOINT_POLL_TRANSACTION); //Collections.emptyList(); //
+    private final PrivacyIDEA privacyIDEA;
+    private String authToken; // lazy init
+    private List<String> excludedEndpointPrints = Collections.emptyList(); //Arrays.asList(Constants.ENDPOINT_AUTH, Constants.ENDPOINT_POLL_TRANSACTION);
     private boolean doSSLVerify = true;
-    private String serverURL;
-    private String serviceAccountName;
-    private String serviceAccountPass;
+    private final String hostname;
+    private final String serviceAccountName;
+    private final String serviceAccountPass;
 
-    Endpoint(String serverURL, boolean doSSLVerify, ILoggerBridge logger, String serviceAccountName, String serviceAccountPass) {
-        this.serverURL = serverURL;
+    Endpoint(PrivacyIDEA privacyIDEA, String hostname, boolean doSSLVerify, String serviceAccountName, String serviceAccountPass) {
+        this.hostname = hostname;
         this.doSSLVerify = doSSLVerify;
-        this.log = logger;
         this.serviceAccountName = serviceAccountName;
         this.serviceAccountPass = serviceAccountPass;
+        this.privacyIDEA = privacyIDEA;
     }
 
     /**
-     * Make a http(s) call to the specified path, the URL is taken from the config.
+     * Make a https call to the specified path, the URL is taken from the config.
      * If SSL Verification is turned off in the config, the endpoints certificate will not be verified.
      *
      * @param path              Path to the API endpoint
@@ -40,55 +56,60 @@ class Endpoint {
      * @return String containing the whole response
      */
     String sendRequest(String path, Map<String, String> params, boolean authTokenRequired, String method) {
-        log.log("Sending to endpoint=" + path + " with params=" + params.toString() + " and method=" + method);
+        //log.log("Sending to endpoint=" + path + " with params=" + params.toString() + " and method=" + method);
         StringBuilder paramsSB = new StringBuilder();
         params.forEach((key, value) -> {
-            try {
-                if (key != null) {
-                    paramsSB.append(key).append("=");
-                }
-                if (value != null) {
-                    paramsSB.append(URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
-                }
-                paramsSB.append("&");
-            } catch (Exception e) {
-                log.log(e);
+            if (key != null) {
+                paramsSB.append(key).append("=");
             }
+            if (value != null) {
+                try {
+                    paramsSB.append(URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+                } catch (Exception e) {
+                    privacyIDEA.log(e);
+                }
+            }
+            paramsSB.append("&");
         });
-        paramsSB.deleteCharAt(paramsSB.length() - 1);
-
-        //_log.info("Params: " + paramsSB);
+        // Delete trailing '&'
+        if (paramsSB.length() > 1 && paramsSB.charAt(paramsSB.length() - 1) == '&') {
+            paramsSB.deleteCharAt(paramsSB.length() - 1);
+        }
 
         try {
-            String sURL = serverURL + path;
-            if (method.equals("GET")) {
-                sURL += "?" + paramsSB.toString();
-            }
-            URL url = new URL(sURL);
+            String strURL = hostname + path;
 
+            if (method.equals("GET")) {
+                strURL += "?" + paramsSB.toString();
+            }
+            URL url = new URL(strURL);
             HttpURLConnection con;
+
             if (url.getProtocol().equals("https")) {
                 con = (HttpsURLConnection) (url.openConnection());
             } else {
                 con = (HttpURLConnection) (url.openConnection());
             }
 
-            if (!doSSLVerify && con instanceof HttpsURLConnection) {
+            if (!doSSLVerify && (con instanceof HttpsURLConnection)) {
                 con = turnOffSSLVerification((HttpsURLConnection) con);
             }
 
-            con.setDoOutput(true);
+            if (method.equals("POST")) {
+                con.setDoOutput(true);
+            }
             con.setRequestMethod(method);
 
             if (authToken == null && authTokenRequired) {
-                getAuthorizationToken();
+                getAuthTokenFromServer();
             }
 
             if (authToken != null && authTokenRequired) {
                 con.setRequestProperty("Authorization", authToken);
             } else if (authTokenRequired) {
-                throw new IllegalStateException("No authorization token found but is needed!");
+                throw new IllegalStateException("Authorization token could not be acquired, but it is needed!");
             }
+
             con.connect();
 
             if (method.equals("POST")) {
@@ -105,12 +126,13 @@ class Endpoint {
             }
 
             if (!excludedEndpointPrints.contains(path)) {
-                log.log(path + " RESPONSE: " + prettyPrintJson(response));
+                privacyIDEA.log(path + ":");
+                privacyIDEA.log(prettyPrintJson(response));
             }
 
             return response;
         } catch (Exception e) {
-            log.error(e);
+            privacyIDEA.log(e);
         }
         return null;
     }
@@ -151,33 +173,44 @@ class Endpoint {
         return con;
     }
 
-    private void getAuthorizationToken() {
+    private void getAuthTokenFromServer() {
         if (authToken != null) {
-            //_log.info("Auth token already set.");
+            // The TTL of the AuthToken should be long enough for the usage (default is 60min)
+            //log.info("Auth token already set.");
             return;
         }
 
-        if (serviceAccountName == null || serviceAccountName.isEmpty() || serviceAccountPass == null || serviceAccountPass.isEmpty()) {
-            log.error("Service account information not set, cannot retrieve auth token");
+        if (privacyIDEA.) {
+            privacyIDEA.log("Service account information not set, cannot retrieve auth token");
             return;
         }
 
-        //_log.info("Getting auth token from PI");
-        Map<String, String> params = new HashMap<>();
+        //log.info("Getting auth token from PI");
+        Map<String, String> params = new LinkedHashMap<>();
         params.put(Constants.PARAM_KEY_USERNAME, serviceAccountPass);
         params.put(Constants.PARAM_KEY_PASSWORD, serviceAccountPass);
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
+
         JsonObject body = Json.createReader(new StringReader(response)).readObject();
-        JsonObject result = body.getJsonObject(Constants.JSON_KEY_RESULT);
-        JsonObject value = result.getJsonObject(Constants.JSON_KEY_VALUE);
-        authToken = value.getString(Constants.JSON_KEY_TOKEN);
+        JsonObject result = body.getJsonObject("result");
+        JsonObject value = result.getJsonObject("value");
+        authToken = value.getString("token");
         if (authToken == null) {
-            log.error("Failed to get authorization token.");
-            log.error("Unable to read response from privacyIDEA.");
+            privacyIDEA.log("Failed to get authorization token.");
+            privacyIDEA.log("Unable to read response from privacyIDEA.");
         }
     }
 
+    String getAuthToken() {
+        if (authToken == null) {
+            getAuthTokenFromServer();
+        }
+        return authToken;
+    }
+
     public static String prettyPrintJson(String json) {
+        if (json == null || json.isEmpty()) return "";
+
         StringWriter sw = new StringWriter();
         try {
             JsonReader jr = Json.createReader(new StringReader(json));
@@ -197,4 +230,11 @@ class Endpoint {
         return sw.toString();
     }
 
+    public List<String> getExcludedEndpoints() {
+        return excludedEndpointPrints;
+    }
+
+    public void setExcludedEndpoints(List<String> list) {
+        excludedEndpointPrints = list;
+    }
 }

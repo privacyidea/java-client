@@ -1,70 +1,85 @@
-import javax.json.*;
-import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 public class PIResponse {
 
     private String message;
     private final List<String> messages = new ArrayList<>();
-    private final List<Challenge> mutlichallenge = new ArrayList<>();
+    private final List<Challenge> multichallenge = new ArrayList<>();
     private String transaction_id;
     private final List<String> transaction_ids = new ArrayList<>();
     private String serial;
-    private String threadID;
     private String id;
     private String jsonRPCVersion;
-    private boolean status;
-    private boolean value;
+    private boolean status = false;
+    private boolean value = false;
     private String version; // e.g. privacyIDEA 3.2.1.
     private String versionNumber; // e.g. 3.2.1
     private String rawMessage;
     private String time;
     private String signature;
+    private String type; // Type of token that was matching the request
+    private int otplen = 0;
+    private String threadID;
 
     public PIResponse(String json) {
         if (json == null) return;
         this.rawMessage = json;
-        JsonObject o;
+
+        if (json.isEmpty()) return;
+
+        JsonObject jsonObject;
         try {
-            o = Json.createReader(new StringReader(json)).readObject();
+            jsonObject = Json.createReader(new StringReader(json)).readObject();
         } catch (JsonException | IllegalStateException e) {
             e.printStackTrace();
             return;
         }
 
-        this.id = String.valueOf(o.getInt("id", 0));
-        this.version = o.getString("version", "");
-        this.versionNumber = o.getString("versionnumber", "");
-
-        JsonNumber jNum = o.getJsonNumber("time");//.doubleValue();
-        if (jNum != null) {
-            this.time = String.valueOf(jNum.doubleValue());
+        this.id = String.valueOf(jsonObject.getInt("id", 0));
+        this.version = jsonObject.getString("version", "");
+        this.versionNumber = jsonObject.getString("versionnumber", "");
+        /*
+        JsonNumber jNumTime = jsonObject.getJsonNumber("time");
+        if (jNumTime != null) {
+            this.time = String.valueOf(jNumTime.doubleValue());
         }
-        this.signature = o.getString("signature", "");
-        this.jsonRPCVersion = o.getString("jsonrpc", "");
+        */
+        this.signature = jsonObject.getString("signature", "");
+        this.jsonRPCVersion = jsonObject.getString("jsonrpc", "");
 
-        JsonObject result = o.getJsonObject("result");
+        JsonObject result = jsonObject.getJsonObject("result");
         if (result != null) {
             this.status = result.getBoolean("status", false);
             this.value = result.getBoolean("value", false);
         }
 
-        JsonObject detail = o.getJsonObject("detail");
+        JsonObject detail = jsonObject.getJsonObject("detail");
         if (detail != null) {
             this.message = detail.getString("message", "");
             this.serial = detail.getString("serial", "");
-            this.threadID = String.valueOf(detail.getInt("threadid", 0));
             this.transaction_id = detail.getString("transaction_id", "");
-
+            this.type = detail.getString("type", null);
+            this.otplen = detail.getInt("otplen", 0);
+            /*
+            JsonNumber jNumThreadID = detail.getJsonNumber("threadid");
+            if (jNumThreadID != null) {
+                this.threadID = String.valueOf(jNumThreadID.bigIntegerValue());
+            }
+            */
             // The following is included if challenges were triggered
             JsonArray arrMessages = detail.getJsonArray("messages");
             if (arrMessages != null) {
                 for (JsonValue value : arrMessages) {
                     if (value.getValueType() == JsonValue.ValueType.STRING) {
-                        messages.add(((JsonString) value).toString());
+                        messages.add(value.toString());
                     }
                 }
             }
@@ -75,31 +90,14 @@ public class PIResponse {
                     JsonObject obj = arrChallenges.getJsonObject(i);
                     String type = obj.getString("type");
 
-                    TokenType ttype;
-                    switch (type) {
-                        case "hotp":
-                            ttype = TokenType.HOTP;
-                            break;
-                        case "totp":
-                            ttype = TokenType.TOTP;
-                            break;
-                        case "push":
-                            ttype = TokenType.PUSH;
-                            break;
-                        default:
-                            ttype = TokenType.HOTP;
-                            break;
-                    }
-
-                    mutlichallenge.add(new Challenge(
+                    multichallenge.add(new Challenge(
                             obj.getString("serial"),
                             obj.getString("message"),
                             obj.getString("transaction_id"),
-                            ttype
+                            type
                     ));
                 }
             }
-
         }
     }
 
@@ -107,10 +105,8 @@ public class PIResponse {
         return message;
     }
 
-    public List<TokenType> getTriggeredTokenTypes() {
-        return mutlichallenge.stream().map(c -> {
-            return c.type;
-        }).distinct().collect(Collectors.toList());
+    public List<String> getTriggeredTokenTypes() {
+        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     public List<String> getMessages() {
@@ -118,7 +114,7 @@ public class PIResponse {
     }
 
     public List<Challenge> getMultiChallenge() {
-        return mutlichallenge;
+        return multichallenge;
     }
 
     public String getTransactionID() {
@@ -126,15 +122,11 @@ public class PIResponse {
     }
 
     public List<String> getTransactionIDs() {
-        return mutlichallenge.stream().map(c -> c.transaction_id).collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
     }
 
     public String getSerial() {
         return serial;
-    }
-
-    public String getThreadID() {
-        return threadID;
     }
 
     public String getID() {
@@ -153,15 +145,11 @@ public class PIResponse {
         return value;
     }
 
-    public String getTime() {
-        return time;
-    }
-
-    public String getVersion() {
+    public String getPrivacyIDEAVersion() {
         return version;
     }
 
-    public String getVersionNumber() {
+    public String getPrivacyIDEAVersionNumber() {
         return versionNumber;
     }
 
@@ -170,6 +158,19 @@ public class PIResponse {
     }
 
     public String getRawMessage() {
+        return rawMessage;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public int getOTPlength() {
+        return otplen;
+    }
+
+    @Override
+    public String toString() {
         return rawMessage;
     }
 }
