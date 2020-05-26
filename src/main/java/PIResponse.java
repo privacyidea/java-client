@@ -12,7 +12,7 @@ public class PIResponse {
 
     private String message;
     private final List<String> messages = new ArrayList<>();
-    private final List<Challenge> mutlichallenge = new ArrayList<>();
+    private final List<Challenge> multichallenge = new ArrayList<>();
     private String transaction_id;
     private final List<String> transaction_ids = new ArrayList<>();
     private String serial;
@@ -90,7 +90,7 @@ public class PIResponse {
                     JsonObject obj = arrChallenges.getJsonObject(i);
                     String type = obj.getString("type");
 
-                    mutlichallenge.add(new Challenge(
+                    multichallenge.add(new Challenge(
                             obj.getString("serial"),
                             obj.getString("message"),
                             obj.getString("transaction_id"),
@@ -106,7 +106,7 @@ public class PIResponse {
     }
 
     public List<String> getTriggeredTokenTypes() {
-        return mutlichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     public List<String> getMessages() {
@@ -114,7 +114,7 @@ public class PIResponse {
     }
 
     public List<Challenge> getMultiChallenge() {
-        return mutlichallenge;
+        return multichallenge;
     }
 
     public String getTransactionID() {
@@ -122,7 +122,7 @@ public class PIResponse {
     }
 
     public List<String> getTransactionIDs() {
-        return mutlichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
     }
 
     public String getSerial() {

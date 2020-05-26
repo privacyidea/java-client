@@ -8,8 +8,6 @@ class Configuration {
     boolean doSSLVerify = true;
     String serviceAccountName = "";
     String serviceAccountPass = "";
-    boolean doEnrollToken = false;
-    String enrollingTokenType = "hotp";
     List<Integer> pollingIntervals = new ArrayList<>();
 
     public Configuration(String serverURL) {

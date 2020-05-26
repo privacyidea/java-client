@@ -126,7 +126,8 @@ class Endpoint {
             }
 
             if (!excludedEndpointPrints.contains(path)) {
-                privacyIDEA.log(path + " RESPONSE: " + prettyPrintJson(response));
+                privacyIDEA.log(path + ":");
+                privacyIDEA.log(prettyPrintJson(response));
             }
 
             return response;
@@ -179,8 +180,7 @@ class Endpoint {
             return;
         }
 
-        if (serviceAccountName == null || serviceAccountName.isEmpty()
-                || serviceAccountPass == null || serviceAccountPass.isEmpty()) {
+        if (privacyIDEA.) {
             privacyIDEA.log("Service account information not set, cannot retrieve auth token");
             return;
         }
@@ -192,9 +192,9 @@ class Endpoint {
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
 
         JsonObject body = Json.createReader(new StringReader(response)).readObject();
-        JsonObject result = body.getJsonObject(Constants.JSON_KEY_RESULT);
-        JsonObject value = result.getJsonObject(Constants.JSON_KEY_VALUE);
-        authToken = value.getString(Constants.JSON_KEY_TOKEN);
+        JsonObject result = body.getJsonObject("result");
+        JsonObject value = result.getJsonObject("value");
+        authToken = value.getString("token");
         if (authToken == null) {
             privacyIDEA.log("Failed to get authorization token.");
             privacyIDEA.log("Unable to read response from privacyIDEA.");
@@ -206,10 +206,6 @@ class Endpoint {
             getAuthTokenFromServer();
         }
         return authToken;
-    }
-
-    void setExcludedEndpointPrints(List<String> excludedEndpoints) {
-        this.excludedEndpointPrints = excludedEndpoints;
     }
 
     public static String prettyPrintJson(String json) {
@@ -232,5 +228,13 @@ class Endpoint {
             e.printStackTrace();
         }
         return sw.toString();
+    }
+
+    public List<String> getExcludedEndpoints() {
+        return excludedEndpointPrints;
+    }
+
+    public void setExcludedEndpoints(List<String> list) {
+        excludedEndpointPrints = list;
     }
 }

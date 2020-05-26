@@ -19,27 +19,39 @@ public class PrivacyIDEA {
                 configuration.serviceAccountName, configuration.serviceAccountPass);
     }
 
+    /**
+     * @see PrivacyIDEA#validateCheck(String, String, String)
+     */
     public PIResponse validateCheck(String username, String otp) {
         return validateCheck(username, otp, null);
     }
 
+    /**
+     * Send a request to validate/check with the given parameters.
+     * Which parameters to send depends on the use case and how privacyIDEA is configured.
+     * (E.g. this can also be used to trigger challenges without a service account)
+     *
+     * @param username       username
+     * @param otp            the OTP, PIN+OTP or password to use.
+     * @param transaction_id optional, will be appended if set
+     * @return PIResponse object containing the response
+     */
     public PIResponse validateCheck(String username, String otp, String transaction_id) {
         Map<String, String> params = new LinkedHashMap<>();
 
-        if (otp == null)
-            otp = "";
-
         params.put(Constants.PARAM_KEY_USER, username);
-        params.put(Constants.PARAM_KEY_PASS, otp);
+        params.put(Constants.PARAM_KEY_PASS, (otp != null ? otp : ""));
 
-        if (transaction_id != null && !transaction_id.isEmpty())
+        if (transaction_id != null && !transaction_id.isEmpty()) {
             params.put(Constants.PARAM_KEY_TRANSACTION_ID, transaction_id);
+        }
 
         String response = endpoint.sendRequest(Constants.ENDPOINT_VALIDATE_CHECK, params, false, "POST");
 
         // TODO return null object or null upon error or empty response
-        if (response == null || response.isEmpty())
+        if (response == null || response.isEmpty()) {
             return null;
+        }
 
         return new PIResponse(response);
     }
@@ -52,8 +64,8 @@ public class PrivacyIDEA {
      */
     public PIResponse triggerChallenges(String username) {
         Objects.requireNonNull(username, "Username is required!");
-        if (configuration.serviceAccountName == null || configuration.serviceAccountName.isEmpty()
-                || configuration.serviceAccountPass == null || configuration.serviceAccountPass.isEmpty()) {
+
+        if (!checkServiceAccountAvailable()) {
             log.error("No service account configured. Cannot trigger challenges");
             return null;
         }
@@ -78,6 +90,15 @@ public class PrivacyIDEA {
         return response.getValue();
     }
 
+    /**
+     * Poll for the transaction in another thread. Once the polling returns success, the authentication is finalized
+     * using validate/check. The given callback is invoked with the result of the finalization.
+     * The poll loop is stopped when polling returns success.
+     *
+     * @param transactionID id of the transaction to poll for
+     * @param username      username, required for finalization
+     * @param callback      callback to invoke with finalization result
+     */
     public void asyncPollTransaction(String transactionID, String username, IPollTransactionCallback callback) {
         Objects.requireNonNull(transactionID, "TransactionID is required!");
         Objects.requireNonNull(username, "Username is required!");
@@ -108,18 +129,40 @@ public class PrivacyIDEA {
         t.start();
     }
 
+    /**
+     * Get the Authorization token for the service account.
+     *
+     * @return the AuthToken or null if error
+     */
     public String getAuthToken() {
         if (!checkServiceAccountAvailable()) return null;
         return endpoint.getAuthToken();
     }
 
+    /*
+     * Stop the poll loop.
+     */
+    public void stopPolling() {
+        runPoll.set(false);
+    }
+
+    /**
+     * @return list of endpoints for which the response is not printed
+     */
+    public List<String> getExcludedEndpoints() {
+        return endpoint.getExcludedEndpoints();
+    }
+
+    /**
+     * @param list list of endpoints for which the response should not be printed
+     */
+    public void setExcludedEnpoints(List<String> list) {
+        endpoint.setExcludedEndpoints(list);
+    }
+
     private boolean checkServiceAccountAvailable() {
         return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
                 && configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
-    }
-
-    public void stopPolling() {
-        runPoll.set(false);
     }
 
     void log(String message) {
@@ -140,51 +183,76 @@ public class PrivacyIDEA {
         private boolean doSSLVerify = true;
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
-        private boolean doEnrollToken = false;
-        private String enrollingTokenType = "hotp";
         private List<Integer> pollingIntervals = Collections.singletonList(1);
         private ILoggerBridge logger = null;
 
+        /**
+         * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
+         */
         public Builder(String serverURL) {
             this.serverURL = serverURL;
         }
 
+        /**
+         * Set a logger, which will receive log and error messages.
+         * This is optional, if not set there will be no debug output.
+         *
+         * @param logger ILoggerBridge implementation
+         * @return Builder
+         */
         public Builder setLogger(ILoggerBridge logger) {
             this.logger = logger;
             return this;
         }
 
+        /**
+         * Set a realm that is appended to every request
+         *
+         * @param realm realm
+         * @return Builder
+         */
         public Builder setRealm(String realm) {
             this.realm = realm;
             return this;
         }
 
+        /**
+         * Set whether to verify the peer when connecting.
+         * It is not recommended to set this to false in productive environments.
+         *
+         * @param doSSLVerify boolean
+         * @return Builder
+         */
         public Builder setSSLVerify(boolean doSSLVerify) {
             this.doSSLVerify = doSSLVerify;
             return this;
         }
 
+        /**
+         * Set a service account, which can be used to trigger challenges etc.
+         *
+         * @param serviceAccountName account name
+         * @param serviceAccountPass account password
+         * @return Builder
+         */
         public Builder setServiceAccount(String serviceAccountName, String serviceAccountPass) {
             this.serviceAccountName = serviceAccountName;
             this.serviceAccountPass = serviceAccountPass;
             return this;
         }
 
-        public Builder setEnrollToken(boolean doEnrollToken) {
-            this.doEnrollToken = doEnrollToken;
-            return this;
-        }
-
-        // TODO which token types are supported here?
-        public Builder setEnrollingTokenType(String tokenType) {
-            this.enrollingTokenType = tokenType;
-            return this;
-        }
-
+        /**
+         * Set the intervals at which the polling is done when using asyncPollTransaction.
+         * The last number will be repeated if the end of the list is reached.
+         *
+         * @param intervals list of ints that represent seconds
+         * @return Builder
+         */
         public Builder setPollingIntervals(List<Integer> intervals) {
             this.pollingIntervals = intervals;
             return this;
         }
+
 
         public PrivacyIDEA build() {
             Configuration configuration = new Configuration(serverURL);
@@ -192,8 +260,6 @@ public class PrivacyIDEA {
             configuration.doSSLVerify = doSSLVerify;
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
-            configuration.doEnrollToken = doEnrollToken;
-            configuration.enrollingTokenType = enrollingTokenType;
             configuration.pollingIntervals = pollingIntervals;
 
             return new PrivacyIDEA(configuration, logger);
