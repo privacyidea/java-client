@@ -160,7 +160,7 @@ public class PrivacyIDEA {
         endpoint.setExcludedEndpoints(list);
     }
 
-    private boolean checkServiceAccountAvailable() {
+    boolean checkServiceAccountAvailable() {
         return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
                 && configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
     }

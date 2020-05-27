@@ -180,7 +180,7 @@ class Endpoint {
             return;
         }
 
-        if (privacyIDEA.) {
+        if (!privacyIDEA.checkServiceAccountAvailable()) {
             privacyIDEA.log("Service account information not set, cannot retrieve auth token");
             return;
         }
