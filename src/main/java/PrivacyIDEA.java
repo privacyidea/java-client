@@ -181,29 +181,32 @@ public class PrivacyIDEA {
             return null;
         }
 
+        List<TokenInfo> ret = null;
+
         String response = endpoint.sendRequest(Constants.ENDPOINT_TOKEN,
                 Collections.singletonMap(Constants.PARAM_KEY_USER, username),
                 true,
                 "GET");
 
-        List<TokenInfo> ret = null;
-        JsonObject object;
-        try {
-            object = Json.createReader(new StringReader(response)).readObject();
-        } catch (JsonException | IllegalStateException e) {
-            e.printStackTrace();
-            return null;
-        }
+        if (response != null && !response.isEmpty()) {
+            JsonObject object;
+            try {
+                object = Json.createReader(new StringReader(response)).readObject();
+            } catch (JsonException | IllegalStateException e) {
+                e.printStackTrace();
+                return null;
+            }
 
-        JsonObject result = object.getJsonObject("result");
-        if (result != null) {
-            JsonObject value = result.getJsonObject("value");
-            if (value != null) {
-                JsonArray tokens = value.getJsonArray("tokens");
-                if (tokens != null) {
-                    List<TokenInfo> infos = new ArrayList<>();
-                    tokens.forEach(jsonValue -> infos.add(new TokenInfo(jsonValue.toString())));
-                    ret = infos;
+            JsonObject result = object.getJsonObject("result");
+            if (result != null) {
+                JsonObject value = result.getJsonObject("value");
+                if (value != null) {
+                    JsonArray tokens = value.getJsonArray("tokens");
+                    if (tokens != null) {
+                        List<TokenInfo> infos = new ArrayList<>();
+                        tokens.forEach(jsonValue -> infos.add(new TokenInfo(jsonValue.toString())));
+                        ret = infos;
+                    }
                 }
             }
         }

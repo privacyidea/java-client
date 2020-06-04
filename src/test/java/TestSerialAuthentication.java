@@ -11,14 +11,17 @@ public class TestSerialAuthentication implements PILoggerBridge {
                 .setServiceAccount("admin", "admin")
                 .setLogger(this)
                 .build();
+
         List<TokenInfo> infos = privacyIDEA.getTokenInfo("someUser");
 
-        infos = infos.stream().filter(tokenInfo -> tokenInfo.getTokenType().equals("hotp")).collect(Collectors.toList());
+        if (infos != null) {
+            infos = infos.stream().filter(tokenInfo -> tokenInfo.getTokenType().equals("hotp")).collect(Collectors.toList());
 
-        String serial = infos.get(0).getSerial();
-        String otp = "496384";
+            String serial = infos.get(0).getSerial();
+            String otp = "496384";
 
-        PIResponse response = privacyIDEA.validateCheckSerial(serial, otp);
+            PIResponse response = privacyIDEA.validateCheckSerial(serial, otp);
+        }
     }
 
     @Override
