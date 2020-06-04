@@ -1,4 +1,4 @@
-public interface IPollTransactionCallback {
+public interface PIPollTransactionCallback {
 
     /**
      * If this method is invoked, the polling the status of the transaction_id passed to PrivacyIDEA::asyncPollTransaction

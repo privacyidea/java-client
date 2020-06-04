@@ -25,6 +25,7 @@ public class Constants {
     static final String PARAM_KEY_USER = "user";
     static final String PARAM_KEY_PASSWORD = "password";
     static final String PARAM_KEY_PASS = "pass";
+    static final String PARAM_KEY_SERIAL = "serial";
     static final String PARAM_KEY_TYPE = "type";
     static final String PARAM_KEY_TRANSACTION_ID = "transaction_id";
     static final String PARAM_KEY_REALM = "realm";

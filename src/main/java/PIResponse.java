@@ -77,24 +77,18 @@ public class PIResponse {
             // The following is included if challenges were triggered
             JsonArray arrMessages = detail.getJsonArray("messages");
             if (arrMessages != null) {
-                for (JsonValue value : arrMessages) {
-                    if (value.getValueType() == JsonValue.ValueType.STRING) {
-                        messages.add(value.toString());
-                    }
-                }
+                arrMessages.forEach(jsonValue -> this.messages.add(jsonValue.toString()));
             }
 
             JsonArray arrChallenges = detail.getJsonArray("multi_challenge");
             if (arrChallenges != null) {
                 for (int i = 0; i < arrChallenges.size(); i++) {
                     JsonObject obj = arrChallenges.getJsonObject(i);
-                    String type = obj.getString("type");
-
                     multichallenge.add(new Challenge(
                             obj.getString("serial"),
                             obj.getString("message"),
                             obj.getString("transaction_id"),
-                            type
+                            obj.getString("type")
                     ));
                 }
             }

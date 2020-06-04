@@ -15,7 +15,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestCRnoServiceAcc implements ILoggerBridge {
+public class TestCRnoServiceAcc implements PILoggerBridge {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;

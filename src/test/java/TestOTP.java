@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class TestOTP implements ILoggerBridge {
+public class TestOTP implements PILoggerBridge {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
