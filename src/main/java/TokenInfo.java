@@ -1,5 +1,4 @@
 import java.io.StringReader;
-import java.security.SignedObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +7,6 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonObject;
-import netscape.javascript.JSObject;
 
 public class TokenInfo {
     private boolean active = false;

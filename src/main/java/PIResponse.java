@@ -6,7 +6,6 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 public class PIResponse {
 

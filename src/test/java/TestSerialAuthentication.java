@@ -1,15 +1,11 @@
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.integration.ClientAndServer;
 
 public class TestSerialAuthentication implements PILoggerBridge {
 
     @Test
     public void test() {
-
         PrivacyIDEA privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1")
                 .setSSLVerify(false)
                 .setServiceAccount("admin", "admin")
