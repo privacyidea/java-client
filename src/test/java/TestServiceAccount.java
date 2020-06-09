@@ -7,7 +7,7 @@ import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestServiceAccount implements ILoggerBridge {
+public class TestServiceAccount implements PILoggerBridge {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 

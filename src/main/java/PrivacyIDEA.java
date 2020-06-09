@@ -1,18 +1,24 @@
+import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 
 public class PrivacyIDEA {
 
     private final Configuration configuration;
-    private final ILoggerBridge log;
+    private final PILoggerBridge log;
     private final AtomicBoolean runPoll = new AtomicBoolean(true);
     private final Endpoint endpoint;
 
-    private PrivacyIDEA(Configuration configuration, ILoggerBridge logger) {
+    private PrivacyIDEA(Configuration configuration, PILoggerBridge logger) {
         this.log = logger;
         this.configuration = configuration;
         this.endpoint = new Endpoint(this, configuration.serverURL, configuration.doSSLVerify,
@@ -45,6 +51,22 @@ public class PrivacyIDEA {
         if (transaction_id != null && !transaction_id.isEmpty()) {
             params.put(Constants.PARAM_KEY_TRANSACTION_ID, transaction_id);
         }
+
+        String response = endpoint.sendRequest(Constants.ENDPOINT_VALIDATE_CHECK, params, false, "POST");
+
+        // TODO return null object or null upon error or empty response
+        if (response == null || response.isEmpty()) {
+            return null;
+        }
+
+        return new PIResponse(response);
+    }
+
+    public PIResponse validateCheckSerial(String serial, String otp) {
+        Map<String, String> params = new LinkedHashMap<>();
+
+        params.put(Constants.PARAM_KEY_SERIAL, serial);
+        params.put(Constants.PARAM_KEY_PASS, (otp != null ? otp : ""));
 
         String response = endpoint.sendRequest(Constants.ENDPOINT_VALIDATE_CHECK, params, false, "POST");
 
@@ -99,7 +121,7 @@ public class PrivacyIDEA {
      * @param username      username, required for finalization
      * @param callback      callback to invoke with finalization result
      */
-    public void asyncPollTransaction(String transactionID, String username, IPollTransactionCallback callback) {
+    public void asyncPollTransaction(String transactionID, String username, PIPollTransactionCallback callback) {
         Objects.requireNonNull(transactionID, "TransactionID is required!");
         Objects.requireNonNull(username, "Username is required!");
         Objects.requireNonNull(callback, "Callback is required!");
@@ -147,6 +169,52 @@ public class PrivacyIDEA {
     }
 
     /**
+     * Retrieve information about the users tokens using a service account
+     *
+     * @param username username to get info for
+     * @return list of TokenInfo or null if failure
+     */
+    public List<TokenInfo> getTokenInfo(String username) {
+        Objects.requireNonNull(username);
+        if (!checkServiceAccountAvailable()) {
+            log.error("Cannot retrieve token info without service account!");
+            return null;
+        }
+
+        List<TokenInfo> ret = null;
+
+        String response = endpoint.sendRequest(Constants.ENDPOINT_TOKEN,
+                Collections.singletonMap(Constants.PARAM_KEY_USER, username),
+                true,
+                "GET");
+
+        if (response != null && !response.isEmpty()) {
+            JsonObject object;
+            try {
+                object = Json.createReader(new StringReader(response)).readObject();
+            } catch (JsonException | IllegalStateException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+            JsonObject result = object.getJsonObject("result");
+            if (result != null) {
+                JsonObject value = result.getJsonObject("value");
+                if (value != null) {
+                    JsonArray tokens = value.getJsonArray("tokens");
+                    if (tokens != null) {
+                        List<TokenInfo> infos = new ArrayList<>();
+                        tokens.forEach(jsonValue -> infos.add(new TokenInfo(jsonValue.toString())));
+                        ret = infos;
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * @return list of endpoints for which the response is not printed
      */
     public List<String> getExcludedEndpoints() {
@@ -184,7 +252,7 @@ public class PrivacyIDEA {
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private List<Integer> pollingIntervals = Collections.singletonList(1);
-        private ILoggerBridge logger = null;
+        private PILoggerBridge logger = null;
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
@@ -200,7 +268,7 @@ public class PrivacyIDEA {
          * @param logger ILoggerBridge implementation
          * @return Builder
          */
-        public Builder setLogger(ILoggerBridge logger) {
+        public Builder setLogger(PILoggerBridge logger) {
             this.logger = logger;
             return this;
         }

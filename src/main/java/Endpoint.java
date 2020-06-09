@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonWriter;
@@ -191,14 +192,18 @@ class Endpoint {
         params.put(Constants.PARAM_KEY_PASSWORD, serviceAccountPass);
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
 
-        JsonObject body = Json.createReader(new StringReader(response)).readObject();
-        JsonObject result = body.getJsonObject("result");
-        JsonObject value = result.getJsonObject("value");
-        authToken = value.getString("token");
-        if (authToken == null) {
-            privacyIDEA.log("Failed to get authorization token.");
-            privacyIDEA.log("Unable to read response from privacyIDEA.");
+        try {
+            JsonObject body = Json.createReader(new StringReader(response)).readObject();
+            JsonObject result = body.getJsonObject("result");
+            JsonObject value = result.getJsonObject("value");
+            authToken = value.getString("token", null);
+            if (authToken == null) {
+                privacyIDEA.log("Failed to get authorization token.");
+            }
+        } catch (JsonException e) {
+            privacyIDEA.log("Unable to parse response from server: " + e);
         }
+
     }
 
     String getAuthToken() {
