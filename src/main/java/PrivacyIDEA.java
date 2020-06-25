@@ -1,6 +1,7 @@
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class PrivacyIDEA {
         Objects.requireNonNull(username, "Username is required!");
 
         if (!checkServiceAccountAvailable()) {
-            log.error("No service account configured. Cannot trigger challenges");
+            logError("No service account configured. Cannot trigger challenges");
             return null;
         }
 
@@ -138,7 +139,7 @@ public class PrivacyIDEA {
                 try {
                     Thread.sleep(msToSleep);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logError(e);
                 }
                 if (pollTransaction(transactionID)) {
                     runPoll.set(false);
@@ -157,7 +158,10 @@ public class PrivacyIDEA {
      * @return the AuthToken or null if error
      */
     public String getAuthToken() {
-        if (!checkServiceAccountAvailable()) return null;
+        if (!checkServiceAccountAvailable()) {
+            logError("Cannot retrieve auth token without service account!");
+            return null;
+        }
         return endpoint.getAuthToken();
     }
 
@@ -177,7 +181,7 @@ public class PrivacyIDEA {
     public List<TokenInfo> getTokenInfo(String username) {
         Objects.requireNonNull(username);
         if (!checkServiceAccountAvailable()) {
-            log.error("Cannot retrieve token info without service account!");
+            logError("Cannot retrieve token info without service account!");
             return null;
         }
 
@@ -193,7 +197,7 @@ public class PrivacyIDEA {
             try {
                 object = Json.createReader(new StringReader(response)).readObject();
             } catch (JsonException | IllegalStateException e) {
-                e.printStackTrace();
+                logError(e);
                 return null;
             }
 
@@ -214,18 +218,33 @@ public class PrivacyIDEA {
         return ret;
     }
 
+    public RolloutInfo tokenRollout(String username, String typeToEnroll) {
+        if (!checkServiceAccountAvailable()) {
+            logError("Cannot do rollout without service account!");
+            return null;
+        }
+
+        Map<String, String> params = new HashMap<>();
+        params.put(Constants.PARAM_KEY_USER, username);
+        params.put(Constants.PARAM_KEY_TYPE, typeToEnroll);
+        params.put(Constants.PARAM_KEY_GENKEY, "1"); // Let the server generate the secret
+
+        String response = endpoint.sendRequest(Constants.ENDPOINT_TOKEN_INIT, params, true, "POST");
+        return new RolloutInfo(response);
+    }
+
     /**
      * @return list of endpoints for which the response is not printed
      */
-    public List<String> getExcludedEndpoints() {
-        return endpoint.getExcludedEndpoints();
+    public List<String> getLogExcludedEndpoints() {
+        return endpoint.getLogExcludedEndpoints();
     }
 
     /**
      * @param list list of endpoints for which the response should not be printed
      */
-    public void setExcludedEnpoints(List<String> list) {
-        endpoint.setExcludedEndpoints(list);
+    public void setLogExcludedEndpoints(List<String> list) {
+        endpoint.setLogExcludedEndpoints(list);
     }
 
     boolean checkServiceAccountAvailable() {
@@ -242,6 +261,19 @@ public class PrivacyIDEA {
     void log(Throwable throwable) {
         if (this.log != null) {
             this.log.log(throwable);
+        }
+    }
+
+
+    private void logError(Throwable e) {
+        if (this.log != null) {
+            this.log.error(e);
+        }
+    }
+
+    private void logError(String e) {
+        if (this.log != null) {
+            this.log.error(e);
         }
     }
 
