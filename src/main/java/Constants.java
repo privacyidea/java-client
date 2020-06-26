@@ -29,4 +29,5 @@ public class Constants {
     static final String PARAM_KEY_TYPE = "type";
     static final String PARAM_KEY_TRANSACTION_ID = "transaction_id";
     static final String PARAM_KEY_REALM = "realm";
+    static final String PARAM_KEY_GENKEY = "genkey";
 }

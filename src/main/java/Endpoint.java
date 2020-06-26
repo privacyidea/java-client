@@ -32,7 +32,7 @@ class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
     private String authToken; // lazy init
-    private List<String> excludedEndpointPrints = Collections.emptyList(); //Arrays.asList(Constants.ENDPOINT_AUTH, Constants.ENDPOINT_POLL_TRANSACTION);
+    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(Constants.ENDPOINT_AUTH, Constants.ENDPOINT_POLL_TRANSACTION);
     private boolean doSSLVerify = true;
     private final String hostname;
     private final String serviceAccountName;
@@ -126,7 +126,7 @@ class Endpoint {
                 response = br.lines().reduce("", (a, s) -> a += s);
             }
 
-            if (!excludedEndpointPrints.contains(path)) {
+            if (!logExcludedEndpointPrints.contains(path)) {
                 privacyIDEA.log(path + ":");
                 privacyIDEA.log(prettyPrintJson(response));
             }
@@ -235,11 +235,11 @@ class Endpoint {
         return sw.toString();
     }
 
-    public List<String> getExcludedEndpoints() {
-        return excludedEndpointPrints;
+    public List<String> getLogExcludedEndpoints() {
+        return logExcludedEndpointPrints;
     }
 
-    public void setExcludedEndpoints(List<String> list) {
-        excludedEndpointPrints = list;
+    public void setLogExcludedEndpoints(List<String> list) {
+        logExcludedEndpointPrints = list;
     }
 }
