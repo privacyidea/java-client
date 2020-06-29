@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +43,7 @@ public class PrivacyIDEA {
      * @param username       username
      * @param otp            the OTP, PIN+OTP or password to use.
      * @param transaction_id optional, will be appended if set
-     * @return PIResponse object containing the response
+     * @return org.privacyidea.PIResponse object containing the response
      */
     public PIResponse validateCheck(String username, String otp, String transaction_id) {
         Map<String, String> params = new LinkedHashMap<>();
@@ -52,6 +54,8 @@ public class PrivacyIDEA {
         if (transaction_id != null && !transaction_id.isEmpty()) {
             params.put(Constants.PARAM_KEY_TRANSACTION_ID, transaction_id);
         }
+
+        appendRealm(params);
 
         String response = endpoint.sendRequest(Constants.ENDPOINT_VALIDATE_CHECK, params, false, "POST");
 
@@ -69,6 +73,8 @@ public class PrivacyIDEA {
         params.put(Constants.PARAM_KEY_SERIAL, serial);
         params.put(Constants.PARAM_KEY_PASS, (otp != null ? otp : ""));
 
+        appendRealm(params);
+
         String response = endpoint.sendRequest(Constants.ENDPOINT_VALIDATE_CHECK, params, false, "POST");
 
         // TODO return null object or null upon error or empty response
@@ -77,6 +83,12 @@ public class PrivacyIDEA {
         }
 
         return new PIResponse(response);
+    }
+
+    private void appendRealm(Map<String, String> params) {
+        if (configuration.realm != null && !configuration.realm.isEmpty()) {
+            params.put(Constants.PARAM_KEY_REALM, configuration.realm);
+        }
     }
 
     /**
@@ -92,9 +104,13 @@ public class PrivacyIDEA {
             logError("No service account configured. Cannot trigger challenges");
             return null;
         }
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(Constants.PARAM_KEY_USER, username);
+
+        appendRealm(params);
 
         return new PIResponse(endpoint.sendRequest(Constants.ENDPOINT_TRIGGERCHALLENGE,
-                Collections.singletonMap(Constants.PARAM_KEY_USER, username), true, "POST"));
+                params, true, "POST"));
     }
 
     /**
@@ -176,7 +192,7 @@ public class PrivacyIDEA {
      * Retrieve information about the users tokens using a service account
      *
      * @param username username to get info for
-     * @return list of TokenInfo or null if failure
+     * @return list of org.privacyidea.TokenInfo or null if failure
      */
     public List<TokenInfo> getTokenInfo(String username) {
         Objects.requireNonNull(username);
@@ -224,7 +240,7 @@ public class PrivacyIDEA {
             return null;
         }
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new LinkedHashMap<>();
         params.put(Constants.PARAM_KEY_USER, username);
         params.put(Constants.PARAM_KEY_TYPE, typeToEnroll);
         params.put(Constants.PARAM_KEY_GENKEY, "1"); // Let the server generate the secret

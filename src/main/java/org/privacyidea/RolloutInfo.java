@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.StringReader;
 import javax.json.Json;
 import javax.json.JsonException;
@@ -60,14 +62,14 @@ public class RolloutInfo {
     }
 
     public static class GoogleURL {
-        String description = "", img = "", value = "";
+        public String description = "", img = "", value = "";
     }
 
     public static class OATHURL {
-        String description = "", img = "", value = "";
+        public String description = "", img = "", value = "";
     }
 
     public static class OTPKey {
-        String description = "", img = "", value = "", value_b32 = "";
+        public String description = "", img = "", value = "", value_b32 = "";
     }
 }

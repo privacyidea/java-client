@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;

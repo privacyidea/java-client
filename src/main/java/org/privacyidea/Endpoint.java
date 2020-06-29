@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,7 +34,7 @@ class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
     private String authToken; // lazy init
-    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(Constants.ENDPOINT_AUTH, Constants.ENDPOINT_POLL_TRANSACTION);
+    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(org.privacyidea.Constants.ENDPOINT_AUTH, org.privacyidea.Constants.ENDPOINT_POLL_TRANSACTION);
     private boolean doSSLVerify = true;
     private final String hostname;
     private final String serviceAccountName;

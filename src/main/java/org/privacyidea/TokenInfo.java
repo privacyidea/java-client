@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +38,7 @@ public class TokenInfo {
         if (rawJson == null || rawJson.isEmpty()) {
             return;
         }
+
         this.rawJson = rawJson;
         JsonObject object;
         try {

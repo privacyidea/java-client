@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.io.FileNotFoundException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;

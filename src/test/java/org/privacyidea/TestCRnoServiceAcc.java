@@ -1,3 +1,5 @@
+package org.privacyidea;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -94,7 +96,7 @@ public class TestCRnoServiceAcc implements PILoggerBridge {
 
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
 
-        // Check the triggered challenges - the other things are already tested in TestOTP
+        // Check the triggered challenges - the other things are already tested in org.privacyidea.TestOTP
         List<Challenge> challenges = initialResponse.getMultiChallenge();
 
         Challenge hotpChallenge = challenges.stream().filter(c -> c.getSerial().equals("OATH00020121")).findFirst().orElse(null);
