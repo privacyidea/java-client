@@ -190,7 +190,7 @@ class Endpoint {
 
         //log.info("Getting auth token from PI");
         Map<String, String> params = new LinkedHashMap<>();
-        params.put(Constants.PARAM_KEY_USERNAME, serviceAccountPass);
+        params.put(Constants.PARAM_KEY_USERNAME, serviceAccountName);
         params.put(Constants.PARAM_KEY_PASSWORD, serviceAccountPass);
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
 
