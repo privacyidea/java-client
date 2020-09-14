@@ -1,9 +1,10 @@
 package org.privacyidea;
 
-import java.io.StringReader;
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
+import static org.privacyidea.PIResponse.getString;
 
 public class RolloutInfo {
 
@@ -24,41 +25,42 @@ public class RolloutInfo {
             return;
         }
 
-        JsonObject jsonObject;
+        JsonObject obj;
         try {
-            jsonObject = Json.createReader(new StringReader(json)).readObject();
-        } catch (JsonException | IllegalStateException e) {
+            obj = JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
             e.printStackTrace();
             return;
         }
 
-        JsonObject detail = jsonObject.getJsonObject("detail");
+        JsonObject detail = obj.getAsJsonObject("detail");
         if (detail != null) {
-            JsonObject google = detail.getJsonObject("googleurl");
+            JsonObject google = detail.getAsJsonObject("googleurl");
             if (google != null) {
-                this.googleurl.description = google.getString("description", "");
-                this.googleurl.img = google.getString("img", "");
-                this.googleurl.value = google.getString("value", "");
+                this.googleurl.description = getString(google, "description");
+                this.googleurl.img = getString(google, "img");
+                this.googleurl.value = getString(google, "value");
             }
 
-            JsonObject oath = detail.getJsonObject("oathurl");
+            JsonObject oath = detail.getAsJsonObject("oath");
             if (oath != null) {
-                this.oathurl.description = oath.getString("description", "");
-                this.oathurl.img = oath.getString("img", "");
-                this.oathurl.value = oath.getString("value", "");
+                this.oathurl.description = getString(oath, "description");
+                this.oathurl.img = getString(oath, "img");
+                this.oathurl.value = getString(oath, "value");
             }
 
-            JsonObject otp = detail.getJsonObject("otpkey");
+            JsonObject otp = detail.getAsJsonObject("otpkey");
             if (otp != null) {
-                this.otpkey.description = otp.getString("description", "");
-                this.otpkey.img = otp.getString("img", "");
-                this.otpkey.value = otp.getString("value", "");
-                this.otpkey.value_b32 = otp.getString("value_b32", "");
+                this.otpkey.description = getString(otp, "description");
+                this.otpkey.img = getString(otp, "img");
+                this.otpkey.value = getString(otp, "value");
+                this.otpkey.value_b32 = getString(otp, "value_b32");
             }
 
-            this.serial = detail.getString("serial", "");
-            this.rolloutState = detail.getString("rollout_state", "");
+            this.serial = getString(detail, "serial");
+            this.rolloutState = getString(detail, "rollout_state");
         }
+
     }
 
     public static class GoogleURL {

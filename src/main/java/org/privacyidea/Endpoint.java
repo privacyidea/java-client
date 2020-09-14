@@ -1,11 +1,9 @@
 package org.privacyidea;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
+import com.google.gson.*;
+
+import javax.net.ssl.*;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -13,22 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 class Endpoint {
 
@@ -79,6 +64,8 @@ class Endpoint {
             paramsSB.deleteCharAt(paramsSB.length() - 1);
         }
 
+        HttpURLConnection con = null;
+        String response = null;
         try {
             String strURL = hostname + path;
 
@@ -86,7 +73,6 @@ class Endpoint {
                 strURL += "?" + paramsSB.toString();
             }
             URL url = new URL(strURL);
-            HttpURLConnection con;
 
             if (url.getProtocol().equals("https")) {
                 con = (HttpsURLConnection) (url.openConnection());
@@ -95,7 +81,7 @@ class Endpoint {
             }
 
             if (!doSSLVerify && (con instanceof HttpsURLConnection)) {
-                con = turnOffSSLVerification((HttpsURLConnection) con);
+                con = disableSSLVerification((HttpsURLConnection) con);
             }
 
             if (method.equals("POST")) {
@@ -122,7 +108,6 @@ class Endpoint {
                 os.close();
             }
 
-            String response;
             try (InputStream is = con.getInputStream()) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
                 response = br.lines().reduce("", (a, s) -> a += s);
@@ -135,12 +120,29 @@ class Endpoint {
 
             return response;
         } catch (Exception e) {
-            privacyIDEA.log(e);
+            privacyIDEA.log("Endpoint exception: " + e.getMessage());
+            // If the server returns a different response code than 200, an exception is thrown
+            // Try to read the response from the ErrorStream
+            try {
+                if (con != null && con.getResponseCode() != 200 && (response == null || response.isEmpty())) {
+                    privacyIDEA.log("HttpResponseCode: " + con.getResponseCode() + ", reading response from ErrorStream...");
+                    try (InputStream es = con.getErrorStream()) {
+                        if (es != null) {
+                            BufferedReader br = new BufferedReader(new InputStreamReader(es));
+                            response = br.lines().reduce("", (a, s) -> a += s);
+                        }
+                    }
+                    privacyIDEA.log("Reponse from error: " + response);
+                }
+            } catch (IOException ioe) {
+                privacyIDEA.log("Exception while getting ErrorStream: " + e.getMessage());
+            }
+
         }
-        return null;
+        return response;
     }
 
-    private HttpsURLConnection turnOffSSLVerification(HttpsURLConnection con) {
+    private HttpsURLConnection disableSSLVerification(HttpsURLConnection con) {
         final TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     @Override
@@ -190,22 +192,14 @@ class Endpoint {
 
         //log.info("Getting auth token from PI");
         Map<String, String> params = new LinkedHashMap<>();
-        params.put(Constants.PARAM_KEY_USERNAME, serviceAccountPass);
+        params.put(Constants.PARAM_KEY_USERNAME, serviceAccountName);
         params.put(Constants.PARAM_KEY_PASSWORD, serviceAccountPass);
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
 
-        try {
-            JsonObject body = Json.createReader(new StringReader(response)).readObject();
-            JsonObject result = body.getJsonObject("result");
-            JsonObject value = result.getJsonObject("value");
-            authToken = value.getString("token", null);
-            if (authToken == null) {
-                privacyIDEA.log("Failed to get authorization token.");
-            }
-        } catch (JsonException e) {
-            privacyIDEA.log("Unable to parse response from server: " + e);
+        JsonObject obj = JsonParser.parseString(response).getAsJsonObject();
+        if (obj != null) {
+            authToken = obj.getAsJsonObject("result").getAsJsonObject("value").getAsJsonPrimitive("token").getAsString();
         }
-
     }
 
     String getAuthToken() {
@@ -218,23 +212,17 @@ class Endpoint {
     public static String prettyPrintJson(String json) {
         if (json == null || json.isEmpty()) return "";
 
-        StringWriter sw = new StringWriter();
+        JsonObject obj;
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try {
-            JsonReader jr = Json.createReader(new StringReader(json));
-            JsonObject jobj = jr.readObject();
-
-            Map<String, Object> properties = new HashMap<>(1);
-            properties.put(JsonGenerator.PRETTY_PRINTING, true);
-
-            JsonWriterFactory writerFactory = Json.createWriterFactory(properties);
-            JsonWriter jsonWriter = writerFactory.createWriter(sw);
-
-            jsonWriter.writeObject(jobj);
-            jsonWriter.close();
-        } catch (Exception e) {
+            obj = JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
             e.printStackTrace();
+            return json;
         }
-        return sw.toString();
+
+        //return sw.toString();
+        return gson.toJson(obj);
     }
 
     public List<String> getLogExcludedEndpoints() {
