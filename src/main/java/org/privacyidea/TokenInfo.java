@@ -1,14 +1,16 @@
 package org.privacyidea;
 
-import java.io.StringReader;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
+
+import static org.privacyidea.PIResponse.*;
 
 public class TokenInfo {
     private boolean active = false;
@@ -40,42 +42,51 @@ public class TokenInfo {
         }
 
         this.rawJson = rawJson;
-        JsonObject object;
+
+        JsonObject obj;
         try {
-            object = Json.createReader(new StringReader(rawJson)).readObject();
-        } catch (JsonException | IllegalStateException e) {
+            obj = JsonParser.parseString(rawJson).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
             e.printStackTrace();
             return;
         }
 
-        this.active = object.getBoolean("active", false);
-        this.count = object.getInt("count", 0);
-        this.countWindow = object.getInt("count_window", 0);
-        this.description = object.getString("description", "");
-        this.failCount = object.getInt("failcount", 0);
-        this.id = object.getInt("id", 0);
-        this.locked = object.getBoolean("locked", false);
-        this.maxFail = object.getInt("maxfail", 0);
-        this.otpLen = object.getInt("otplen", 0);
-        this.resolver = object.getString("resolver", "");
-        this.revoked = object.getBoolean("revoked", false);
-        this.rolloutState = object.getString("rollout_state", "");
-        this.serial = object.getString("serial", "");
-        this.syncWindow = object.getInt("sync_window", 0);
-        this.tokenType = object.getString("tokentype", "");
-        this.userEditable = object.getBoolean("user_editable", false);
-        this.userID = object.getString("user_id", "");
-        this.userRealm = object.getString("user_realm", "");
-        this.username = object.getString("username", "");
+        this.active = getBoolean(obj, "active");
+        this.count = getInt(obj, "count");
+        this.countWindow = getInt(obj, "count_window");
+        this.description = getString(obj, "description");
+        this.failCount = getInt(obj, "failcount");
+        this.id = getInt(obj, "id");
+        this.locked = getBoolean(obj, "locked");
+        this.maxFail = getInt(obj, "maxfail");
+        this.otpLen = getInt(obj, "otplen");
+        this.resolver = getString(obj, "resolver");
+        this.revoked = getBoolean(obj, "revoked");
+        this.rolloutState = getString(obj, "rollout_state");
+        this.serial = getString(obj, "serial");
+        this.syncWindow = getInt(obj, "sync_window");
+        this.tokenType = getString(obj, "tokentype");
+        this.userEditable = getBoolean(obj, "user_editable");
+        this.userID = getString(obj, "user_id");
+        this.userRealm = getString(obj, "user_realm");
+        this.username = getString(obj, "username");
 
-        JsonObject infoObj = object.getJsonObject("info");
-        if (infoObj != null) {
-            infoObj.forEach((s, jsonValue) -> this.info.put(s, jsonValue.toString()));
+        JsonObject info = obj.getAsJsonObject("info");
+        if (info != null) {
+            info.entrySet().forEach(entry -> {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    this.info.put(entry.getKey(), entry.getValue().getAsString());
+                }
+            });
         }
 
-        JsonArray realmsArr = object.getJsonArray("realms");
-        if (realmsArr != null) {
-            realmsArr.forEach(jsonValue -> this.realms.add(jsonValue.toString()));
+        JsonArray arrRealms = obj.getAsJsonArray("realms");
+        if (arrRealms != null) {
+            arrRealms.forEach(val -> {
+                if (val != null) {
+                    this.realms.add(val.getAsString());
+                }
+            });
         }
     }
 

@@ -32,7 +32,6 @@ public class TestServiceAccount implements PILoggerBridge {
                 .build();
     }
 
-
     @Test
     public void testGettingAuthToken() {
         String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU" +

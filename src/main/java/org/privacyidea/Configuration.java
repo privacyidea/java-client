@@ -11,6 +11,7 @@ class Configuration {
     String serviceAccountName = "";
     String serviceAccountPass = "";
     List<Integer> pollingIntervals = new ArrayList<>();
+    boolean disableLog = false;
 
     public Configuration(String serverURL) {
         this.serverURL = serverURL;

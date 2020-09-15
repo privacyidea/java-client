@@ -1,13 +1,10 @@
 package org.privacyidea;
 
-import java.io.StringReader;
+import com.google.gson.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
 
 public class PIResponse {
 
@@ -29,6 +26,7 @@ public class PIResponse {
     private String type; // Type of token that was matching the request
     private int otplen = 0;
     private String threadID;
+    private Error error = null;
 
     public PIResponse(String json) {
         if (json == null) return;
@@ -36,86 +34,135 @@ public class PIResponse {
 
         if (json.isEmpty()) return;
 
-        JsonObject jsonObject;
+        JsonObject obj;
         try {
-            jsonObject = Json.createReader(new StringReader(json)).readObject();
-        } catch (JsonException | IllegalStateException e) {
+            obj = JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
             e.printStackTrace();
             return;
         }
 
-        this.id = String.valueOf(jsonObject.getInt("id", 0));
-        this.version = jsonObject.getString("version", "");
-        this.versionNumber = jsonObject.getString("versionnumber", "");
-        /*
-        JsonNumber jNumTime = jsonObject.getJsonNumber("time");
-        if (jNumTime != null) {
-            this.time = String.valueOf(jNumTime.doubleValue());
-        }
-        */
-        this.signature = jsonObject.getString("signature", "");
-        this.jsonRPCVersion = jsonObject.getString("jsonrpc", "");
+        this.id = getString(obj, "id");
+        this.version = getString(obj, "version");
+        this.versionNumber = getString(obj, "versionnumber");
+        this.signature = getString(obj, "signature");
+        this.jsonRPCVersion = getString(obj, "jsonrpc");
 
-        JsonObject result = jsonObject.getJsonObject("result");
+        JsonObject result = obj.getAsJsonObject("result");
         if (result != null) {
-            this.status = result.getBoolean("status", false);
-            this.value = result.getBoolean("value", false);
+            this.status = getBoolean(result, "status");
+            this.value = getBoolean(result, "value");
+
+            JsonElement errElem = result.get("error");
+            if (errElem != null && !errElem.isJsonNull()) {
+                JsonObject errObj = result.getAsJsonObject("error");
+                this.error = new Error();
+                this.error.code = getInt(errObj, "code");
+                this.error.message = getString(errObj, "message");
+            }
         }
+        JsonElement detailElem = obj.get("detail");
+        if (detailElem != null && !detailElem.isJsonNull()) {
+            JsonObject detail = obj.getAsJsonObject("detail");
+            if (detail != null) {
+                this.message = getString(detail, "message");
+                this.serial = getString(detail, "serial");
+                this.transaction_id = getString(detail, "transaction_id");
+                this.type = getString(detail, "type");
+                this.otplen = getInt(detail, "otplen");
 
-        JsonObject detail = jsonObject.getJsonObject("detail");
-        if (detail != null) {
-            this.message = detail.getString("message", "");
-            this.serial = detail.getString("serial", "");
-            this.transaction_id = detail.getString("transaction_id", "");
-            this.type = detail.getString("type", null);
-            this.otplen = detail.getInt("otplen", 0);
-            /*
-            JsonNumber jNumThreadID = detail.getJsonNumber("threadid");
-            if (jNumThreadID != null) {
-                this.threadID = String.valueOf(jNumThreadID.bigIntegerValue());
-            }
-            */
-            // The following is included if challenges were triggered
-            JsonArray arrMessages = detail.getJsonArray("messages");
-            if (arrMessages != null) {
-                arrMessages.forEach(jsonValue -> this.messages.add(jsonValue.toString()));
-            }
+                JsonArray arrMessages = detail.getAsJsonArray("messages");
+                if (arrMessages != null) {
+                    arrMessages.forEach(val -> {
+                        if (val != null) {
+                            this.messages.add(val.getAsString());
+                        }
+                    });
+                }
 
-            JsonArray arrChallenges = detail.getJsonArray("multi_challenge");
-            if (arrChallenges != null) {
-                for (int i = 0; i < arrChallenges.size(); i++) {
-                    JsonObject obj = arrChallenges.getJsonObject(i);
-                    multichallenge.add(new Challenge(
-                            obj.getString("serial"),
-                            obj.getString("message"),
-                            obj.getString("transaction_id"),
-                            obj.getString("type")
-                    ));
+                JsonArray arrChallenges = detail.getAsJsonArray("multi_challenge");
+                if (arrChallenges != null) {
+                    for (int i = 0; i < arrChallenges.size(); i++) {
+                        JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+                        multichallenge.add(new Challenge(
+                                getString(challenge, "serial"),
+                                getString(challenge, "message"),
+                                getString(challenge, "transaction_id"),
+                                getString(challenge, "type")
+                        ));
+                    }
                 }
             }
         }
+    }
+
+    public static class Error {
+        private int code = 0;
+        private String message = "";
+
+        public int getCode() {
+            return code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+    static boolean getBoolean(JsonObject obj, String name) {
+        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
+        return prim != null && prim.getAsBoolean();
+    }
+
+    static int getInt(JsonObject obj, String name) {
+        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
+        return prim == null ? 0 : prim.getAsInt();
+    }
+
+    static String getString(JsonObject obj, String name) {
+        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
+        return prim == null ? "" : prim.getAsString();
+    }
+
+    public Error getError() {
+        return error;
     }
 
     public String getMessage() {
         return message;
     }
 
+    /**
+     * @return list of token types that were triggered or an empty list
+     */
     public List<String> getTriggeredTokenTypes() {
         return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
+    /**
+     * @return a list of messages for the challenges that were triggered or an empty list
+     */
     public List<String> getMessages() {
         return messages;
     }
 
+    /**
+     * @return a list of challenges that were triggered or an empty list if none were triggered
+     */
     public List<Challenge> getMultiChallenge() {
         return multichallenge;
     }
 
+    /**
+     * @return the transaction id that was triggered or an empty string if nothing was triggered
+     */
     public String getTransactionID() {
         return transaction_id;
     }
 
+    /**
+     * @return list which might be empty if no transactions were triggered
+     */
     public List<String> getTransactionIDs() {
         return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
     }

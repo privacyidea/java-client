@@ -1,8 +1,5 @@
 package org.privacyidea;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,10 +9,11 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.Assert.*;
 
 public class TestCRnoServiceAcc implements PILoggerBridge {
 
@@ -34,6 +32,7 @@ public class TestCRnoServiceAcc implements PILoggerBridge {
         privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080")
                 .setSSLVerify(false)
                 .setLogger(this)
+                .setSimpleLog(System.out::println)
                 .build();
     }
 

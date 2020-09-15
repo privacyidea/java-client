@@ -1,28 +1,24 @@
 package org.privacyidea;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonException;
-import javax.json.JsonObject;
 
 public class PrivacyIDEA {
 
     private final Configuration configuration;
     private final PILoggerBridge log;
+    private final PISimpleLogBridge simpleLog;
     private final AtomicBoolean runPoll = new AtomicBoolean(true);
     private final Endpoint endpoint;
 
-    private PrivacyIDEA(Configuration configuration, PILoggerBridge logger) {
+    private PrivacyIDEA(Configuration configuration, PILoggerBridge logger, PISimpleLogBridge simpleLog) {
         this.log = logger;
+        this.simpleLog = simpleLog;
         this.configuration = configuration;
         this.endpoint = new Endpoint(this, configuration.serverURL, configuration.doSSLVerify,
                 configuration.serviceAccountName, configuration.serviceAccountPass);
@@ -192,7 +188,7 @@ public class PrivacyIDEA {
      * Retrieve information about the users tokens using a service account
      *
      * @param username username to get info for
-     * @return list of org.privacyidea.TokenInfo or null if failure
+     * @return list of TokenInfo or null if failure
      */
     public List<TokenInfo> getTokenInfo(String username) {
         Objects.requireNonNull(username);
@@ -211,17 +207,17 @@ public class PrivacyIDEA {
         if (response != null && !response.isEmpty()) {
             JsonObject object;
             try {
-                object = Json.createReader(new StringReader(response)).readObject();
-            } catch (JsonException | IllegalStateException e) {
+                object = JsonParser.parseString(response).getAsJsonObject();
+            } catch (JsonSyntaxException e) {
                 logError(e);
                 return null;
             }
 
-            JsonObject result = object.getJsonObject("result");
+            JsonObject result = object.getAsJsonObject("result");
             if (result != null) {
-                JsonObject value = result.getJsonObject("value");
+                JsonObject value = result.getAsJsonObject("value");
                 if (value != null) {
-                    JsonArray tokens = value.getJsonArray("tokens");
+                    JsonArray tokens = value.getAsJsonArray("tokens");
                     if (tokens != null) {
                         List<TokenInfo> infos = new ArrayList<>();
                         tokens.forEach(jsonValue -> infos.add(new TokenInfo(jsonValue.toString())));
@@ -230,7 +226,6 @@ public class PrivacyIDEA {
                 }
             }
         }
-
         return ret;
     }
 
@@ -269,27 +264,50 @@ public class PrivacyIDEA {
     }
 
     void log(String message) {
-        if (this.log != null) {
-            this.log.log(message);
+        if (!configuration.disableLog) {
+            if (this.log != null) {
+                this.log.log(message);
+            } else if (this.simpleLog != null) {
+                this.simpleLog.pilog(message);
+            } else {
+                System.out.println(message);
+            }
         }
     }
 
     void log(Throwable throwable) {
-        if (this.log != null) {
-            this.log.log(throwable);
+        if (!configuration.disableLog) {
+            if (this.log != null) {
+                this.log.log(throwable);
+            } else if (this.simpleLog != null) {
+                this.simpleLog.pilog(throwable.getMessage());
+            } else {
+                System.out.println(throwable.getLocalizedMessage());
+            }
         }
     }
 
-
     private void logError(Throwable e) {
-        if (this.log != null) {
-            this.log.error(e);
+        if (!configuration.disableLog) {
+            if (this.log != null) {
+                this.log.error(e);
+            } else if (this.simpleLog != null) {
+                this.simpleLog.pilog(e.getMessage());
+            } else {
+                System.out.println(e.getLocalizedMessage());
+            }
         }
     }
 
     private void logError(String e) {
-        if (this.log != null) {
-            this.log.error(e);
+        if (!configuration.disableLog) {
+            if (this.log != null) {
+                this.log.error(e);
+            } else if (this.simpleLog != null) {
+                this.simpleLog.pilog(e);
+            } else {
+                System.out.println(e);
+            }
         }
     }
 
@@ -301,12 +319,19 @@ public class PrivacyIDEA {
         private String serviceAccountPass = "";
         private List<Integer> pollingIntervals = Collections.singletonList(1);
         private PILoggerBridge logger = null;
+        private boolean disableLog = false;
+        private PISimpleLogBridge simpleLogBridge = null;
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
          */
         public Builder(String serverURL) {
             this.serverURL = serverURL;
+        }
+
+        public Builder setSimpleLog(PISimpleLogBridge simpleLog) {
+            this.simpleLogBridge = simpleLog;
+            return this;
         }
 
         /**
@@ -369,6 +394,10 @@ public class PrivacyIDEA {
             return this;
         }
 
+        public Builder disableLog() {
+            this.disableLog = true;
+            return this;
+        }
 
         public PrivacyIDEA build() {
             Configuration configuration = new Configuration(serverURL);
@@ -377,8 +406,8 @@ public class PrivacyIDEA {
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.pollingIntervals = pollingIntervals;
-
-            return new PrivacyIDEA(configuration, logger);
+            configuration.disableLog = disableLog;
+            return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }
     }
 }

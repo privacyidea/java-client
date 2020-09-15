@@ -1,7 +1,5 @@
 package org.privacyidea;
 
-import java.io.FileNotFoundException;
-import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,9 +8,10 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.io.FileNotFoundException;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.*;
 
 
 public class TestOTP implements PILoggerBridge {
@@ -61,13 +60,13 @@ public class TestOTP implements PILoggerBridge {
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
         // Assert everything
+        assertEquals("1", response.getID());
         assertEquals("matching 1 tokens", response.getMessage());
         assertEquals(6, response.getOTPlength());
         assertEquals("PISP0001C673", response.getSerial());
         //assertEquals("140536383567616", response.getThreadID());
         //assertEquals("1589276995.4397042", response.getTime());
         assertEquals("totp", response.getType());
-        assertEquals("1", response.getID());
         assertEquals("2.0", response.getJSONRPCVersion());
         assertEquals("privacyIDEA 3.2.1", response.getPrivacyIDEAVersion());
         assertEquals("3.2.1", response.getPrivacyIDEAVersionNumber());
@@ -97,7 +96,7 @@ public class TestOTP implements PILoggerBridge {
 
         // No response also returns null - the exception is forwarded to the ILoggerBridge if set
         assertNull(response);
-        assertTrue(lastError instanceof FileNotFoundException);
+        //assertTrue(lastError instanceof FileNotFoundException);
     }
 
     private void setResponseBody(String s) {
