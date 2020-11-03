@@ -18,27 +18,20 @@ import java.util.Map;
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
-    private String authToken; // lazy init
     private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(org.privacyidea.Constants.ENDPOINT_AUTH, org.privacyidea.Constants.ENDPOINT_POLL_TRANSACTION);
-    private boolean doSSLVerify = true;
-    private final String hostname;
-    private final String serviceAccountName;
-    private final String serviceAccountPass;
+    private final Configuration configuration;
 
-    Endpoint(PrivacyIDEA privacyIDEA, String hostname, boolean doSSLVerify, String serviceAccountName, String serviceAccountPass) {
-        this.hostname = hostname;
-        this.doSSLVerify = doSSLVerify;
-        this.serviceAccountName = serviceAccountName;
-        this.serviceAccountPass = serviceAccountPass;
+    Endpoint(PrivacyIDEA privacyIDEA, Configuration configuration) {
         this.privacyIDEA = privacyIDEA;
+        this.configuration = configuration;
     }
 
     /**
      * Make a https call to the specified path, the URL is taken from the config.
-     * If SSL Verification is turned off in the config, the endpoints certificate will not be verified.
+     * If SSL verification is set to false in the config, the endpoints certificate will not be verified.
      *
-     * @param path              Path to the API endpoint
-     * @param params            All necessary parameters for request
+     * @param path              path to the API endpoint
+     * @param params            all necessary parameters for the request
      * @param authTokenRequired whether the authorization header should be set
      * @param method            "POST" or "GET"
      * @return String containing the whole response
@@ -67,7 +60,7 @@ class Endpoint {
         HttpURLConnection con = null;
         String response = null;
         try {
-            String strURL = hostname + path;
+            String strURL = configuration.serverURL + path;
 
             if (method.equals("GET")) {
                 strURL += "?" + paramsSB.toString();
@@ -80,23 +73,25 @@ class Endpoint {
                 con = (HttpURLConnection) (url.openConnection());
             }
 
-            if (!doSSLVerify && (con instanceof HttpsURLConnection)) {
+            if (!configuration.doSSLVerify && (con instanceof HttpsURLConnection)) {
                 con = disableSSLVerification((HttpsURLConnection) con);
             }
 
             if (method.equals("POST")) {
                 con.setDoOutput(true);
             }
+
             con.setRequestMethod(method);
+            con.addRequestProperty("User-Agent", configuration.userAgent);
 
-            if (authToken == null && authTokenRequired) {
-                getAuthTokenFromServer();
-            }
+            if (authTokenRequired) {
+                String authToken = getAuthTokenFromServer();
+                if (authToken.isEmpty()) {
+                    privacyIDEA.log("Failed to fetch authorization token from server!");
+                    return "";
+                }
 
-            if (authToken != null && authTokenRequired) {
                 con.setRequestProperty("Authorization", authToken);
-            } else if (authTokenRequired) {
-                throw new IllegalStateException("Authorization token could not be acquired, but it is needed!");
             }
 
             con.connect();
@@ -132,10 +127,10 @@ class Endpoint {
                             response = br.lines().reduce("", (a, s) -> a += s);
                         }
                     }
-                    privacyIDEA.log("Reponse from error: " + response);
+                    privacyIDEA.log("Response from ErrorStream: " + response);
                 }
             } catch (IOException ioe) {
-                privacyIDEA.log("Exception while getting ErrorStream: " + e.getMessage());
+                privacyIDEA.log("Exception getting ErrorStream: " + ioe.getMessage());
             }
 
         }
@@ -178,35 +173,31 @@ class Endpoint {
         return con;
     }
 
-    private void getAuthTokenFromServer() {
-        if (authToken != null) {
-            // The TTL of the AuthToken should be long enough for the usage (default is 60min)
-            //log.info("Auth token already set.");
-            return;
-        }
-
+    String getAuthTokenFromServer() {
         if (!privacyIDEA.checkServiceAccountAvailable()) {
             privacyIDEA.log("Service account information not set, cannot retrieve auth token");
-            return;
+            return "";
         }
 
-        //log.info("Getting auth token from PI");
         Map<String, String> params = new LinkedHashMap<>();
-        params.put(Constants.PARAM_KEY_USERNAME, serviceAccountName);
-        params.put(Constants.PARAM_KEY_PASSWORD, serviceAccountPass);
+        params.put(Constants.PARAM_KEY_USERNAME, configuration.serviceAccountName);
+        params.put(Constants.PARAM_KEY_PASSWORD, configuration.serviceAccountPass);
+
+        if (configuration.serviceAccountRealm != null && !configuration.serviceAccountRealm.isEmpty()) {
+            params.put(Constants.PARAM_KEY_REALM, configuration.serviceAccountRealm);
+        } else if (configuration.realm != null && !configuration.realm.isEmpty()) {
+            params.put(Constants.PARAM_KEY_REALM, configuration.realm);
+        }
+
         String response = sendRequest(Constants.ENDPOINT_AUTH, params, false, Constants.POST);
 
         JsonObject obj = JsonParser.parseString(response).getAsJsonObject();
         if (obj != null) {
-            authToken = obj.getAsJsonObject("result").getAsJsonObject("value").getAsJsonPrimitive("token").getAsString();
+            return obj.getAsJsonObject("result").getAsJsonObject("value").getAsJsonPrimitive("token").getAsString();
+        } else {
+            privacyIDEA.log("Response did not contain an authorization token: " + response);
+            return "";
         }
-    }
-
-    String getAuthToken() {
-        if (authToken == null) {
-            getAuthTokenFromServer();
-        }
-        return authToken;
     }
 
     public static String prettyPrintJson(String json) {
@@ -221,7 +212,6 @@ class Endpoint {
             return json;
         }
 
-        //return sw.toString();
         return gson.toJson(obj);
     }
 
