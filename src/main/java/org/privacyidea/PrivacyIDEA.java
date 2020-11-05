@@ -20,8 +20,7 @@ public class PrivacyIDEA {
         this.log = logger;
         this.simpleLog = simpleLog;
         this.configuration = configuration;
-        this.endpoint = new Endpoint(this, configuration.serverURL, configuration.doSSLVerify,
-                configuration.serviceAccountName, configuration.serviceAccountPass);
+        this.endpoint = new Endpoint(this, configuration);
     }
 
     /**
@@ -167,14 +166,14 @@ public class PrivacyIDEA {
     /**
      * Get the Authorization token for the service account.
      *
-     * @return the AuthToken or null if error
+     * @return the AuthToken or empty string if error
      */
     public String getAuthToken() {
         if (!checkServiceAccountAvailable()) {
             logError("Cannot retrieve auth token without service account!");
             return null;
         }
-        return endpoint.getAuthToken();
+        return endpoint.getAuthTokenFromServer();
     }
 
     /*
@@ -317,6 +316,8 @@ public class PrivacyIDEA {
         private boolean doSSLVerify = true;
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
+        private String serviceAccountRealm = "";
+        private String userAgent = "";
         private List<Integer> pollingIntervals = Collections.singletonList(1);
         private PILoggerBridge logger = null;
         private boolean disableLog = false;
@@ -324,8 +325,10 @@ public class PrivacyIDEA {
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
+         * @param userAgent the user agent that should be used in the http requests. Should refer to the plugin, something like "privacyIDEA-Keycloak"
          */
-        public Builder(String serverURL) {
+        public Builder(String serverURL, String userAgent) {
+            this.userAgent = userAgent;
             this.serverURL = serverURL;
         }
 
@@ -383,10 +386,21 @@ public class PrivacyIDEA {
         }
 
         /**
+         * Set the realm for the service account if the account is found in a separate realm from the realm set in {@link Builder#setRealm(String)}.
+         *
+         * @param serviceAccountRealm realm of the service account
+         * @return Builder
+         */
+        public Builder setServiceAccountRealm(String serviceAccountRealm) {
+            this.serviceAccountRealm = serviceAccountRealm;
+            return this;
+        }
+
+        /**
          * Set the intervals at which the polling is done when using asyncPollTransaction.
          * The last number will be repeated if the end of the list is reached.
          *
-         * @param intervals list of ints that represent seconds
+         * @param intervals list of integers that represent seconds
          * @return Builder
          */
         public Builder setPollingIntervals(List<Integer> intervals) {
@@ -400,11 +414,12 @@ public class PrivacyIDEA {
         }
 
         public PrivacyIDEA build() {
-            Configuration configuration = new Configuration(serverURL);
+            Configuration configuration = new Configuration(serverURL, userAgent);
             configuration.realm = realm;
             configuration.doSSLVerify = doSSLVerify;
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
+            configuration.serviceAccountRealm = serviceAccountRealm;
             configuration.pollingIntervals = pollingIntervals;
             configuration.disableLog = disableLog;
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);

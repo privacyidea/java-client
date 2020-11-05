@@ -10,10 +10,13 @@ class Configuration {
     boolean doSSLVerify = true;
     String serviceAccountName = "";
     String serviceAccountPass = "";
+    String serviceAccountRealm = "";
     List<Integer> pollingIntervals = new ArrayList<>();
     boolean disableLog = false;
+    String userAgent = "";
 
-    public Configuration(String serverURL) {
+    public Configuration(String serverURL, String userAgent) {
         this.serverURL = serverURL;
+        this.userAgent = userAgent;
     }
 }

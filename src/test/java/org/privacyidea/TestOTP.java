@@ -28,7 +28,7 @@ public class TestOTP implements PILoggerBridge {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080")
+        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
                 .setSSLVerify(false)
                 .setLogger(this)
                 .build();

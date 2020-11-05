@@ -9,7 +9,7 @@ public class TestSerialAuthentication implements PILoggerBridge {
 
     @Test
     public void test() {
-        PrivacyIDEA privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1")
+        PrivacyIDEA privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1", "test")
                 .setSSLVerify(false)
                 .setServiceAccount("admin", "admin")
                 .setLogger(this)
