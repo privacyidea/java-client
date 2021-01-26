@@ -64,26 +64,35 @@ public class PIResponse {
         JsonElement detailElem = obj.get("detail");
         if (detailElem != null && !detailElem.isJsonNull()) {
             JsonObject detail = obj.getAsJsonObject("detail");
-            if (detail != null) {
-                this.message = getString(detail, "message");
-                this.serial = getString(detail, "serial");
-                this.transaction_id = getString(detail, "transaction_id");
-                this.type = getString(detail, "type");
-                this.otplen = getInt(detail, "otplen");
+            this.message = getString(detail, "message");
+            this.serial = getString(detail, "serial");
+            this.transaction_id = getString(detail, "transaction_id");
+            this.type = getString(detail, "type");
+            this.otplen = getInt(detail, "otplen");
 
-                JsonArray arrMessages = detail.getAsJsonArray("messages");
-                if (arrMessages != null) {
-                    arrMessages.forEach(val -> {
-                        if (val != null) {
-                            this.messages.add(val.getAsString());
-                        }
-                    });
-                }
 
-                JsonArray arrChallenges = detail.getAsJsonArray("multi_challenge");
-                if (arrChallenges != null) {
-                    for (int i = 0; i < arrChallenges.size(); i++) {
-                        JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+            JsonArray arrMessages = detail.getAsJsonArray("messages");
+            if (arrMessages != null) {
+                arrMessages.forEach(val -> {
+                    if (val != null) {
+                        this.messages.add(val.getAsString());
+                    }
+                });
+            }
+
+            JsonArray arrChallenges = detail.getAsJsonArray("multi_challenge");
+            if (arrChallenges != null) {
+                for (int i = 0; i < arrChallenges.size(); i++) {
+                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+                    if (getString(challenge,"type") == "WebAuthn") {
+                        multichallenge.add(new WebAuthn(
+                                getString(challenge, "serial"),
+                                getString(challenge, "message"),
+                                getString(challenge, "transaction_id"),
+                                getString(challenge, "type"),
+                                getString(obj.getAsJsonObject("challenge.detail.attributes"), "WebAuthnSignRequest")
+                        ));
+                    }else {
                         multichallenge.add(new Challenge(
                                 getString(challenge, "serial"),
                                 getString(challenge, "message"),
@@ -93,6 +102,7 @@ public class PIResponse {
                     }
                 }
             }
+
         }
     }
 
