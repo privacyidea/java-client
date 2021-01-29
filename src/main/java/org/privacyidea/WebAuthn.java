@@ -6,11 +6,11 @@ import java.util.List;
 public class WebAuthn extends Challenge{
 
     private final List<String> attributes = new ArrayList<>();
-    private final String WebAuthn;
+    private final String webAuthn;
 
-    public WebAuthn(String serial, String message, String transaction_id, String type, String WebAuthn) {
+    public WebAuthn(String serial, String message, String transaction_id, String type,  String webAuthn) {
         super(serial, message, transaction_id, type);
-        this.WebAuthn = WebAuthn;
+        this.webAuthn = webAuthn;
     }
 
     public List<String> getAttributes() {
@@ -19,6 +19,6 @@ public class WebAuthn extends Challenge{
 
 
     public String getWebAuthn() {
-        return WebAuthn;
+        return webAuthn;
     }
 }

@@ -84,14 +84,18 @@ public class PIResponse {
             if (arrChallenges != null) {
                 for (int i = 0; i < arrChallenges.size(); i++) {
                     JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
-                    if (getString(challenge,"type") == "WebAuthn") {
-                        multichallenge.add(new WebAuthn(
-                                getString(challenge, "serial"),
-                                getString(challenge, "message"),
-                                getString(challenge, "transaction_id"),
-                                getString(challenge, "type"),
-                                getString(obj.getAsJsonObject("challenge.detail.attributes"), "WebAuthnSignRequest")
-                        ));
+                    if (getString(challenge,"type").equals("WebAuthn")) {
+                        JsonObject attrObj = challenge.getAsJsonObject("attributes");
+                            if (attrObj != null && !attrObj.isJsonNull()) {
+                                JsonObject webauthnObj = attrObj.getAsJsonObject("webAuthnSignRequest");
+                                multichallenge.add(new WebAuthn(
+                                        getString(challenge, "serial"),
+                                        getString(challenge, "message"),
+                                        getString(challenge, "transaction_id"),
+                                        "WebAuthn",
+                                        webauthnObj.toString()
+                                ));
+                            }
                     }else {
                         multichallenge.add(new Challenge(
                                 getString(challenge, "serial"),
