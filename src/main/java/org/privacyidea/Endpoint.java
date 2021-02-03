@@ -42,7 +42,7 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
-    private List<String> logExcludedEndpointPrints = Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //  Collections.emptyList();
+    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //
     private final PIConfig piconfig;
     private final OkHttpClient client;
 
@@ -149,7 +149,7 @@ class Endpoint {
         }
 
         Request request = requestBuilder.build();
-        privacyIDEA.log("HEADERS:\n" + request.headers().toString());
+        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
 
         try {
             Response response = client.newCall(request).execute();
