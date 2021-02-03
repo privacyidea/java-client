@@ -1,5 +1,8 @@
 package org.privacyidea;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
  * <p>
@@ -16,13 +19,20 @@ package org.privacyidea;
  * limitations under the License.
  */
 
-public interface PIPollTransactionCallback {
+class PIConfig {
 
-    /**
-     * If this method is invoked, the polling the status of the transaction_id passed to org.privacyidea.PrivacyIDEA::asyncPollTransaction
-     * returned true.
-     *
-     * @param response the response of the finalizing call to /validate/check
-     */
-    void transactionFinalized(PIResponse response);
+    String serverURL = "";
+    String realm = "";
+    boolean doSSLVerify = true;
+    String serviceAccountName = "";
+    String serviceAccountPass = "";
+    String serviceAccountRealm = "";
+    List<Integer> pollingIntervals = new ArrayList<>();
+    boolean disableLog = false;
+    String userAgent = "";
+
+    public PIConfig(String serverURL, String userAgent) {
+        this.serverURL = serverURL;
+        this.userAgent = userAgent;
+    }
 }

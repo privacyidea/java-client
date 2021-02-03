@@ -16,13 +16,12 @@ package org.privacyidea;
  * limitations under the License.
  */
 
-public interface PIPollTransactionCallback {
+public interface IPILogger {
+    void log(String message);
 
-    /**
-     * If this method is invoked, the polling the status of the transaction_id passed to org.privacyidea.PrivacyIDEA::asyncPollTransaction
-     * returned true.
-     *
-     * @param response the response of the finalizing call to /validate/check
-     */
-    void transactionFinalized(PIResponse response);
+    void error(String message);
+
+    void log(Throwable t);
+
+    void error(Throwable t);
 }

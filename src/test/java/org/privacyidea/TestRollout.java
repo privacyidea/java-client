@@ -22,7 +22,7 @@ public class TestRollout {
         privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
                 .setSSLVerify(false)
                 .setServiceAccount("admin", "admin")
-                .setLogger(new PILoggerBridge() {
+                .setLogger(new IPILogger() {
                     @Override
                     public void log(String message) {
                         System.out.println(message);
@@ -84,7 +84,7 @@ public class TestRollout {
                 "AAAASUVORK5CYII=";
 
         mockServer.when(HttpRequest.request()
-                .withPath(Constants.ENDPOINT_AUTH)
+                .withPath(PIConstants.ENDPOINT_AUTH)
                 .withMethod("POST")
                 .withBody(""))
                 .respond(HttpResponse.response()
@@ -121,7 +121,7 @@ public class TestRollout {
                                 "}"));
 
 
-        mockServer.when(HttpRequest.request().withPath(Constants.ENDPOINT_TOKEN_INIT)
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_TOKEN_INIT)
                 .withMethod("POST")
                 .withHeader(Header.header("Authorization", authToken)))
                 .respond(HttpResponse.response()

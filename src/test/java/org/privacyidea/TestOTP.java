@@ -8,13 +8,12 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
-import java.io.FileNotFoundException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
 
-public class TestOTP implements PILoggerBridge {
+public class TestOTP implements IPILogger {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;

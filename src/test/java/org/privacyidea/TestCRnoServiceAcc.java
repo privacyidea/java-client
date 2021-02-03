@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
-public class TestCRnoServiceAcc implements PILoggerBridge {
+public class TestCRnoServiceAcc implements IPILogger {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -32,7 +32,7 @@ public class TestCRnoServiceAcc implements PILoggerBridge {
         privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
                 .setSSLVerify(false)
                 .setLogger(this)
-                .setSimpleLog(System.out::println)
+                .setSimpleLogger(System.out::println)
                 .build();
     }
 

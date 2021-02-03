@@ -9,7 +9,7 @@ import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestServiceAccount implements PILoggerBridge {
+public class TestServiceAccount implements IPILogger {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
@@ -55,7 +55,7 @@ public class TestServiceAccount implements PILoggerBridge {
 
         mockServer.when(
                 HttpRequest.request()
-                        .withPath(Constants.ENDPOINT_AUTH)
+                        .withPath(PIConstants.ENDPOINT_AUTH)
                         .withMethod("POST")
                         .withBody(""))
                 .respond(HttpResponse.response()

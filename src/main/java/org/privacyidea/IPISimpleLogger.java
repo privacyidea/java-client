@@ -1,5 +1,5 @@
 package org.privacyidea;
 
-public interface PISimpleLogBridge {
+public interface IPISimpleLogger {
     void pilog(String message);
 }

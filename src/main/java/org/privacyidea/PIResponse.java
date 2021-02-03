@@ -6,6 +6,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.privacyidea.PIConstants.*;
+
+/**
+ * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 public class PIResponse {
 
     private String message;
@@ -42,36 +60,36 @@ public class PIResponse {
             return;
         }
 
-        this.id = getString(obj, "id");
-        this.version = getString(obj, "version");
-        this.versionNumber = getString(obj, "versionnumber");
-        this.signature = getString(obj, "signature");
-        this.jsonRPCVersion = getString(obj, "jsonrpc");
+        this.id = getString(obj, ID);
+        this.version = getString(obj, VERSION);
+        this.versionNumber = getString(obj, VERSION_NUMBER);
+        this.signature = getString(obj, SIGNATURE);
+        this.jsonRPCVersion = getString(obj, JSONRPC);
 
-        JsonObject result = obj.getAsJsonObject("result");
+        JsonObject result = obj.getAsJsonObject(RESULT);
         if (result != null) {
-            this.status = getBoolean(result, "status");
-            this.value = getBoolean(result, "value");
+            this.status = getBoolean(result, STATUS);
+            this.value = getBoolean(result, VALUE);
 
-            JsonElement errElem = result.get("error");
+            JsonElement errElem = result.get(ERROR);
             if (errElem != null && !errElem.isJsonNull()) {
-                JsonObject errObj = result.getAsJsonObject("error");
+                JsonObject errObj = result.getAsJsonObject(ERROR);
                 this.error = new Error();
-                this.error.code = getInt(errObj, "code");
-                this.error.message = getString(errObj, "message");
+                this.error.code = getInt(errObj, CODE);
+                this.error.message = getString(errObj, MESSAGE);
             }
         }
-        JsonElement detailElem = obj.get("detail");
+        JsonElement detailElem = obj.get(DETAIL);
         if (detailElem != null && !detailElem.isJsonNull()) {
-            JsonObject detail = obj.getAsJsonObject("detail");
+            JsonObject detail = obj.getAsJsonObject(DETAIL);
             if (detail != null) {
-                this.message = getString(detail, "message");
-                this.serial = getString(detail, "serial");
-                this.transaction_id = getString(detail, "transaction_id");
-                this.type = getString(detail, "type");
-                this.otplen = getInt(detail, "otplen");
+                this.message = getString(detail, MESSAGE);
+                this.serial = getString(detail, SERIAL);
+                this.transaction_id = getString(detail, TRANSACTION_ID);
+                this.type = getString(detail, TYPE);
+                this.otplen = getInt(detail, OTPLEN);
 
-                JsonArray arrMessages = detail.getAsJsonArray("messages");
+                JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
                 if (arrMessages != null) {
                     arrMessages.forEach(val -> {
                         if (val != null) {
@@ -80,16 +98,24 @@ public class PIResponse {
                     });
                 }
 
-                JsonArray arrChallenges = detail.getAsJsonArray("multi_challenge");
+                JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
                 if (arrChallenges != null) {
                     for (int i = 0; i < arrChallenges.size(); i++) {
-                        JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
-                        multichallenge.add(new Challenge(
-                                getString(challenge, "serial"),
-                                getString(challenge, "message"),
-                                getString(challenge, "transaction_id"),
-                                getString(challenge, "type")
-                        ));
+                        JsonObject challengeObj = arrChallenges.get(i).getAsJsonObject();
+                        Challenge challenge = new Challenge(
+                                getString(challengeObj, SERIAL),
+                                getString(challengeObj, MESSAGE),
+                                getString(challengeObj, TRANSACTION_ID),
+                                getString(challengeObj, TYPE));
+
+                        if (TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())) {
+                            JsonObject attrObj = challengeObj.getAsJsonObject(ATTRIBUTES);
+                            if (attrObj != null && !attrObj.isJsonNull()) {
+                                JsonObject webauthnObj = attrObj.getAsJsonObject(WEBAUTHN_SIGN_REQUEST);
+                                challenge.getAttributes().add(webauthnObj.toString());
+                            }
+                        }
+                        multichallenge.add(challenge);
                     }
                 }
             }

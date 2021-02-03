@@ -10,7 +10,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.privacyidea.PIConstants.ID;
+import static org.privacyidea.PIConstants.INFO;
+import static org.privacyidea.PIConstants.MAXFAIL;
+import static org.privacyidea.PIConstants.OTPLEN;
+import static org.privacyidea.PIConstants.REALMS;
+import static org.privacyidea.PIConstants.SERIAL;
+import static org.privacyidea.PIConstants.USERNAME;
 import static org.privacyidea.PIResponse.*;
+
+/**
+ * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 public class TokenInfo {
     private boolean active = false;
@@ -56,22 +79,22 @@ public class TokenInfo {
         this.countWindow = getInt(obj, "count_window");
         this.description = getString(obj, "description");
         this.failCount = getInt(obj, "failcount");
-        this.id = getInt(obj, "id");
+        this.id = getInt(obj, ID);
         this.locked = getBoolean(obj, "locked");
-        this.maxFail = getInt(obj, "maxfail");
-        this.otpLen = getInt(obj, "otplen");
+        this.maxFail = getInt(obj, MAXFAIL);
+        this.otpLen = getInt(obj, OTPLEN);
         this.resolver = getString(obj, "resolver");
         this.revoked = getBoolean(obj, "revoked");
         this.rolloutState = getString(obj, "rollout_state");
-        this.serial = getString(obj, "serial");
+        this.serial = getString(obj, SERIAL);
         this.syncWindow = getInt(obj, "sync_window");
         this.tokenType = getString(obj, "tokentype");
         this.userEditable = getBoolean(obj, "user_editable");
         this.userID = getString(obj, "user_id");
         this.userRealm = getString(obj, "user_realm");
-        this.username = getString(obj, "username");
+        this.username = getString(obj, USERNAME);
 
-        JsonObject info = obj.getAsJsonObject("info");
+        JsonObject info = obj.getAsJsonObject(INFO);
         if (info != null) {
             info.entrySet().forEach(entry -> {
                 if (entry.getKey() != null && entry.getValue() != null) {
@@ -80,7 +103,7 @@ public class TokenInfo {
             });
         }
 
-        JsonArray arrRealms = obj.getAsJsonArray("realms");
+        JsonArray arrRealms = obj.getAsJsonArray(REALMS);
         if (arrRealms != null) {
             arrRealms.forEach(val -> {
                 if (val != null) {
@@ -88,6 +111,10 @@ public class TokenInfo {
                 }
             });
         }
+    }
+
+    public String getRawJson() {
+        return rawJson;
     }
 
     public boolean isActive() {
