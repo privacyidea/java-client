@@ -184,14 +184,21 @@ class Endpoint {
         }
 
         String response = sendRequest(PIConstants.ENDPOINT_AUTH, params, false, POST);
-
-        JsonObject obj = JsonParser.parseString(response).getAsJsonObject();
-        if (obj != null) {
-            return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+        if (response != null && !response.isEmpty()) {
+            JsonElement root = JsonParser.parseString(response);
+            if (root != null) {
+                JsonObject obj = root.getAsJsonObject();
+                if (obj != null) {
+                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                } else {
+                    privacyIDEA.log("Response did not contain an authorization token: " + prettyFormatJson(response));
+                }
+            }
         } else {
-            privacyIDEA.log("Response did not contain an authorization token: " + prettyFormatJson(response));
-            return "";
+            privacyIDEA.error("/auth response was empty or null!");
         }
+
+        return "";
     }
 
     public static String prettyFormatJson(String json) {

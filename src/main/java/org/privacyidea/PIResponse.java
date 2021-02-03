@@ -79,46 +79,51 @@ public class PIResponse {
                 this.error.message = getString(errObj, MESSAGE);
             }
         }
+
         JsonElement detailElem = obj.get(DETAIL);
         if (detailElem != null && !detailElem.isJsonNull()) {
             JsonObject detail = obj.getAsJsonObject(DETAIL);
-            if (detail != null) {
-                this.message = getString(detail, MESSAGE);
-                this.serial = getString(detail, SERIAL);
-                this.transaction_id = getString(detail, TRANSACTION_ID);
-                this.type = getString(detail, TYPE);
-                this.otplen = getInt(detail, OTPLEN);
+            this.message = getString(detail, MESSAGE);
+            this.serial = getString(detail, SERIAL);
+            this.transaction_id = getString(detail, TRANSACTION_ID);
+            this.type = getString(detail, TYPE);
+            this.otplen = getInt(detail, OTPLEN);
 
-                JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
-                if (arrMessages != null) {
-                    arrMessages.forEach(val -> {
-                        if (val != null) {
-                            this.messages.add(val.getAsString());
+            JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
+            if (arrMessages != null) {
+                arrMessages.forEach(val -> {
+                    if (val != null) {
+                        this.messages.add(val.getAsString());
+                    }
+                });
+            }
+
+            JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
+            if (arrChallenges != null) {
+                for (int i = 0; i < arrChallenges.size(); i++) {
+                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+                    if (TOKEN_TYPE_WEBAUTHN.equals(getString(challenge, TYPE))) {
+                        JsonObject attrObj = challenge.getAsJsonObject(ATTRIBUTES);
+                        if (attrObj != null && !attrObj.isJsonNull()) {
+                            JsonObject webauthnObj = attrObj.getAsJsonObject(WEBAUTHN_SIGN_REQUEST);
+                            multichallenge.add(new WebAuthn(
+                                    getString(challenge, SERIAL),
+                                    getString(challenge, MESSAGE),
+                                    getString(challenge, TRANSACTION_ID),
+                                    webauthnObj.toString()
+                            ));
                         }
-                    });
-                }
-
-                JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
-                if (arrChallenges != null) {
-                    for (int i = 0; i < arrChallenges.size(); i++) {
-                        JsonObject challengeObj = arrChallenges.get(i).getAsJsonObject();
-                        Challenge challenge = new Challenge(
-                                getString(challengeObj, SERIAL),
-                                getString(challengeObj, MESSAGE),
-                                getString(challengeObj, TRANSACTION_ID),
-                                getString(challengeObj, TYPE));
-
-                        if (TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())) {
-                            JsonObject attrObj = challengeObj.getAsJsonObject(ATTRIBUTES);
-                            if (attrObj != null && !attrObj.isJsonNull()) {
-                                JsonObject webauthnObj = attrObj.getAsJsonObject(WEBAUTHN_SIGN_REQUEST);
-                                challenge.getAttributes().add(webauthnObj.toString());
-                            }
-                        }
-                        multichallenge.add(challenge);
+                    } else {
+                        multichallenge.add(new Challenge(
+                                getString(challenge, SERIAL),
+                                getString(challenge, MESSAGE),
+                                getString(challenge, TRANSACTION_ID),
+                                getString(challenge, TYPE)
+                        ));
                     }
                 }
             }
+
         }
     }
 
