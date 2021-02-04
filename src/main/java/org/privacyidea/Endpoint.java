@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.privacyidea;
 
 import com.google.gson.*;
@@ -15,6 +30,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static org.privacyidea.PIConstants.*;
 import static org.privacyidea.PIConstants.HEADER_AUTHORIZATION;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
 import static org.privacyidea.PIConstants.POST;
@@ -24,21 +40,8 @@ import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 
 /**
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This class handles sending sending requests to the server.
  */
-
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
@@ -95,7 +98,7 @@ class Endpoint {
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
 
-        if (PIConstants.GET.equals(method)) {
+        if (GET.equals(method)) {
             params.forEach((key, value) -> {
                 //privacyIDEA.log("" + key + "=" + value);
                 try {
@@ -133,6 +136,7 @@ class Endpoint {
             params.forEach((key, value) -> {
                 if (key != null && value != null) {
                     String enc_value = value;
+                    // WebAuthn params are excluded from url encoded, they are already in the correct format for the server
                     if (!WEBAUTHN_PARAMETERS.contains(key)) {
                         try {
                             enc_value = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
@@ -174,16 +178,16 @@ class Endpoint {
         }
 
         Map<String, String> params = new LinkedHashMap<>();
-        params.put(PIConstants.USERNAME, piconfig.serviceAccountName);
-        params.put(PIConstants.PASSWORD, piconfig.serviceAccountPass);
+        params.put(USERNAME, piconfig.serviceAccountName);
+        params.put(PASSWORD, piconfig.serviceAccountPass);
 
         if (piconfig.serviceAccountRealm != null && !piconfig.serviceAccountRealm.isEmpty()) {
-            params.put(PIConstants.REALM, piconfig.serviceAccountRealm);
+            params.put(REALM, piconfig.serviceAccountRealm);
         } else if (piconfig.realm != null && !piconfig.realm.isEmpty()) {
-            params.put(PIConstants.REALM, piconfig.realm);
+            params.put(REALM, piconfig.realm);
         }
 
-        String response = sendRequest(PIConstants.ENDPOINT_AUTH, params, false, POST);
+        String response = sendRequest(ENDPOINT_AUTH, params, false, POST);
         if (response != null && !response.isEmpty()) {
             JsonElement root = JsonParser.parseString(response);
             if (root != null) {

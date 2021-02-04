@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.privacyidea;
 
 import com.google.gson.JsonArray;
@@ -19,21 +34,9 @@ import static org.privacyidea.PIConstants.USERHANDLE;
 import static org.privacyidea.PIResponse.getString;
 
 /**
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This is the main class. It implements the common endpoints such as /validate/check as methods for easy usage.
+ * To create an instance of this class, use the nested PrivacyIDEA.Builder class.
  */
-
 public class PrivacyIDEA {
 
     private final PIConfig configuration;
@@ -439,7 +442,7 @@ public class PrivacyIDEA {
 
         /**
          * Set a logger, which will receive log and error/throwable messages to be passed to the plugins log/error output.
-         * This is implementation takes precedence over the IPISimpleLogger if both are set.
+         * This implementation takes precedence over the IPISimpleLogger if both are set.
          *
          * @param logger ILoggerBridge implementation
          * @return Builder
