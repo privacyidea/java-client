@@ -38,7 +38,7 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.google.code.gson</include>
-                                    <!--<include>com.squareup.okhttp3</include>-->
+                                    <include>com.squareup.okhttp3</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
