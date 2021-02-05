@@ -15,27 +15,42 @@
  */
 package org.privacyidea;
 
-import com.google.gson.*;
-
-import javax.net.ssl.*;
-import java.io.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
+import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_AUTHORIZATION;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
+import static org.privacyidea.PIConstants.PASSWORD;
 import static org.privacyidea.PIConstants.POST;
+import static org.privacyidea.PIConstants.REALM;
 import static org.privacyidea.PIConstants.RESULT;
 import static org.privacyidea.PIConstants.TOKEN;
+import static org.privacyidea.PIConstants.USERNAME;
 import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 

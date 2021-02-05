@@ -19,7 +19,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +31,9 @@ import static org.privacyidea.PIConstants.OTPLEN;
 import static org.privacyidea.PIConstants.REALMS;
 import static org.privacyidea.PIConstants.SERIAL;
 import static org.privacyidea.PIConstants.USERNAME;
-import static org.privacyidea.PIResponse.*;
+import static org.privacyidea.PIResponse.getBoolean;
+import static org.privacyidea.PIResponse.getInt;
+import static org.privacyidea.PIResponse.getString;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.

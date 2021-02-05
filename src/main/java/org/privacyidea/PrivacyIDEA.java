@@ -18,19 +18,39 @@ package org.privacyidea;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.privacyidea.PIConstants.*;
 import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
 import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
 import static org.privacyidea.PIConstants.CLIENTDATA;
 import static org.privacyidea.PIConstants.CREDENTIALID;
+import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
+import static org.privacyidea.PIConstants.ENDPOINT_TOKEN;
+import static org.privacyidea.PIConstants.ENDPOINT_TOKEN_INIT;
+import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
+import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
+import static org.privacyidea.PIConstants.GENKEY;
+import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_ORIGIN;
+import static org.privacyidea.PIConstants.PASS;
+import static org.privacyidea.PIConstants.POST;
+import static org.privacyidea.PIConstants.REALM;
+import static org.privacyidea.PIConstants.RESULT;
+import static org.privacyidea.PIConstants.SERIAL;
 import static org.privacyidea.PIConstants.SIGNATUREDATA;
+import static org.privacyidea.PIConstants.TOKENS;
+import static org.privacyidea.PIConstants.TRANSACTION_ID;
+import static org.privacyidea.PIConstants.TYPE;
+import static org.privacyidea.PIConstants.USER;
 import static org.privacyidea.PIConstants.USERHANDLE;
+import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIResponse.getString;
 
 /**

@@ -16,13 +16,37 @@
  */
 package org.privacyidea;
 
-import com.google.gson.*;
-
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.ATTRIBUTES;
+import static org.privacyidea.PIConstants.CODE;
+import static org.privacyidea.PIConstants.DETAIL;
+import static org.privacyidea.PIConstants.ERROR;
+import static org.privacyidea.PIConstants.ID;
+import static org.privacyidea.PIConstants.JSONRPC;
+import static org.privacyidea.PIConstants.MESSAGE;
+import static org.privacyidea.PIConstants.MESSAGES;
+import static org.privacyidea.PIConstants.MULTI_CHALLENGE;
+import static org.privacyidea.PIConstants.OTPLEN;
+import static org.privacyidea.PIConstants.RESULT;
+import static org.privacyidea.PIConstants.SERIAL;
+import static org.privacyidea.PIConstants.SIGNATURE;
+import static org.privacyidea.PIConstants.STATUS;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.TRANSACTION_ID;
+import static org.privacyidea.PIConstants.TYPE;
+import static org.privacyidea.PIConstants.VALUE;
+import static org.privacyidea.PIConstants.VERSION;
+import static org.privacyidea.PIConstants.VERSION_NUMBER;
+import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
