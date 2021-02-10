@@ -237,8 +237,9 @@ public class PrivacyIDEA {
             int count = 0;
             while (runPoll.get()) {
                 // Get the current sleep interval from config, if max use the last value repeatedly
-                if (count == configuration.pollingIntervals.size())
+                if (count == configuration.pollingIntervals.size()) {
                     count--;
+                }
                 int msToSleep = configuration.pollingIntervals.get(count) * 1000;
                 count++;
                 try {
@@ -263,10 +264,6 @@ public class PrivacyIDEA {
      * @return the AuthToken or empty string if error
      */
     public String getAuthToken() {
-        if (!checkServiceAccountAvailable()) {
-            log("Cannot retrieve auth token without service account!");
-            return null;
-        }
         return endpoint.getAuthTokenFromServer();
     }
 
