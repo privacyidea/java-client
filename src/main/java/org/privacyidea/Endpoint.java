@@ -159,7 +159,7 @@ class Endpoint {
                             privacyIDEA.error(e);
                         }
                     }
-                    //privacyIDEA.log("" + key + "=" + enc_value);
+                    //privacyIDEA.log("" + key + "=" + encValue);
                     formBodyBuilder.add(key, encValue);
                 }
             });
