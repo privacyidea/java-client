@@ -73,10 +73,24 @@ public class PrivacyIDEA {
     }
 
     /**
-     * @see PrivacyIDEA#validateCheck(String, String, String)
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
      */
     public PIResponse validateCheck(String username, String otp) {
-        return validateCheck(username, otp, null);
+        return this.validateCheck(username, otp, null, Collections.emptyMap());
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
+     */
+    public PIResponse validateCheck(String username, String otp, Map<String, String> headers) {
+        return this.validateCheck(username, otp, null, headers);
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
+     */
+    public PIResponse validateCheck(String username, String otp, String transactionId) {
+        return this.validateCheck(username, otp, transactionId, Collections.emptyMap());
     }
 
     /**
@@ -87,9 +101,10 @@ public class PrivacyIDEA {
      * @param username      username
      * @param otp           the OTP, PIN+OTP or password to use.
      * @param transactionId optional, will be appended if set
+     * @param headers       optional headers for the request
      * @return PIResponse object containing the response or null if error
      */
-    public PIResponse validateCheck(String username, String otp, String transactionId) {
+    public PIResponse validateCheck(String username, String otp, String transactionId, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put(USER, username);
@@ -101,15 +116,22 @@ public class PrivacyIDEA {
 
         appendRealm(params);
 
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, false, POST);
+        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return checkServerResponse(response);
     }
 
     /**
-     * @see PrivacyIDEA#validateCheckSerial(String, String, String)
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
      */
     public PIResponse validateCheckSerial(String serial, String otp) {
-        return validateCheckSerial(serial, otp, null);
+        return this.validateCheckSerial(serial, otp, null, Collections.emptyMap());
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     */
+    public PIResponse validateCheckSerial(String serial, String otp, Map<String, String> headers) {
+        return this.validateCheckSerial(serial, otp, null, headers);
     }
 
     /**
@@ -120,7 +142,7 @@ public class PrivacyIDEA {
      * @param transactionId transactionId
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckSerial(String serial, String otp, String transactionId) {
+    public PIResponse validateCheckSerial(String serial, String otp, String transactionId, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put(SERIAL, serial);
@@ -132,8 +154,15 @@ public class PrivacyIDEA {
 
         appendRealm(params);
 
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, false, POST);
+        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return checkServerResponse(response);
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheckWebAuthn(String, String, String, String, Map)
+     */
+    public PIResponse validateCheckWebAuthn(String user, String transactionId, String signResponse, String origin) {
+        return this.validateCheckWebAuthn(user, transactionId, signResponse, origin, Collections.emptyMap());
     }
 
     /**
@@ -143,9 +172,10 @@ public class PrivacyIDEA {
      * @param transactionId transactionId
      * @param signResponse  the WebAuthnSignResponse as returned from the
      * @param origin        server name that was used for
+     * @param headers       optional headers for the request
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckWebAuthn(String user, String transactionId, String signResponse, String origin) {
+    public PIResponse validateCheckWebAuthn(String user, String transactionId, String signResponse, String origin, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put(USER, user);
@@ -156,7 +186,7 @@ public class PrivacyIDEA {
         try {
             obj = JsonParser.parseString(signResponse).getAsJsonObject();
         } catch (JsonSyntaxException e) {
-            error(e);
+            error("WebAuthn sign response has the wrong format: " + e.getLocalizedMessage());
             return null;
         }
 
@@ -176,17 +206,30 @@ public class PrivacyIDEA {
         }
 
         appendRealm(params);
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, Collections.singletonMap(HEADER_ORIGIN, origin), false, POST);
+
+        Map<String, String> hdrs = new LinkedHashMap<>();
+        hdrs.put(HEADER_ORIGIN, origin);
+        hdrs.putAll(headers);
+
+        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
         return checkServerResponse(response);
+    }
+
+    /**
+     * @see PrivacyIDEA#triggerChallenges(String, Map)
+     */
+    public PIResponse triggerChallenges(String username) {
+        return this.triggerChallenges(username, Collections.emptyMap());
     }
 
     /**
      * Trigger all challenges for the given username. This requires a service account to be set.
      *
      * @param username username to trigger challenges for
+     * @param headers  optional headers for the request
      * @return the server response or null if error
      */
-    public PIResponse triggerChallenges(String username) {
+    public PIResponse triggerChallenges(String username, Map<String, String> headers) {
         Objects.requireNonNull(username, "Username is required!");
 
         if (!checkServiceAccountAvailable()) {
@@ -197,7 +240,7 @@ public class PrivacyIDEA {
         params.put(USER, username);
 
         appendRealm(params);
-        String response = endpoint.sendRequest(ENDPOINT_TRIGGERCHALLENGE, params, true, POST);
+        String response = endpoint.sendRequest(ENDPOINT_TRIGGERCHALLENGE, params, headers, true, POST);
         return checkServerResponse(response);
     }
 

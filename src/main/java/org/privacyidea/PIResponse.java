@@ -130,16 +130,20 @@ public class PIResponse {
                 for (int i = 0; i < arrChallenges.size(); i++) {
                     JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
                     if (TOKEN_TYPE_WEBAUTHN.equals(getString(challenge, TYPE))) {
-                        JsonObject attrObj = challenge.getAsJsonObject(ATTRIBUTES);
-                        if (attrObj != null && !attrObj.isJsonNull()) {
-                            JsonObject webauthnObj = attrObj.getAsJsonObject(WEBAUTHN_SIGN_REQUEST);
-                            multichallenge.add(new WebAuthn(
-                                    getString(challenge, SERIAL),
-                                    getString(challenge, MESSAGE),
-                                    getString(challenge, TRANSACTION_ID),
-                                    webauthnObj.toString()
-                            ));
+                        String webAuthnSignRequest = "";
+                        JsonElement attrElem = challenge.get(ATTRIBUTES);
+                        if (attrElem != null && !attrElem.isJsonNull()) {
+                            JsonElement webauthnElem = attrElem.getAsJsonObject().get(WEBAUTHN_SIGN_REQUEST);
+                            if (webauthnElem != null && !webauthnElem.isJsonNull()) {
+                                webAuthnSignRequest = webauthnElem.toString();
+                            }
                         }
+                        multichallenge.add(new WebAuthn(
+                                getString(challenge, SERIAL),
+                                getString(challenge, MESSAGE),
+                                getString(challenge, TRANSACTION_ID),
+                                webAuthnSignRequest
+                        ));
                     } else {
                         multichallenge.add(new Challenge(
                                 getString(challenge, SERIAL),
@@ -150,7 +154,6 @@ public class PIResponse {
                     }
                 }
             }
-
         }
     }
 
