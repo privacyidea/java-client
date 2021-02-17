@@ -24,6 +24,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.privacyidea.PIConstants.ATTRIBUTES;
@@ -40,6 +41,7 @@ import static org.privacyidea.PIConstants.RESULT;
 import static org.privacyidea.PIConstants.SERIAL;
 import static org.privacyidea.PIConstants.SIGNATURE;
 import static org.privacyidea.PIConstants.STATUS;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
@@ -193,6 +195,45 @@ public class PIResponse {
         return message;
     }
 
+    public boolean isPushAvailable() {
+        return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+    }
+
+    /**
+     * Get the messages of all triggered push challenges reduced to a string to show on the push UI.
+     *
+     * @return messages of all push challenges combined
+     */
+    public String getPushMessage() {
+        return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+    }
+
+    /**
+     * Get the messages of all token that require an input field (HOTP, TOTP, SMS, Email...) reduced to a single string
+     * to show with the input field.
+     *
+     * @return message string
+     */
+    public String getOTPMessage() {
+        // Any challenge that is not WebAuthn or Push is considered OTP
+        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_WEBAUTHN.equals(c.getType())) && !(TOKEN_TYPE_PUSH.equals(c.getType())));
+    }
+
+    private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(multichallenge
+                .stream()
+                .filter(predicate)
+                .map(Challenge::getMessage)
+                .reduce("", (a, s) -> a + s + ", ").trim());
+
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        return sb.toString();
+    }
+
     /**
      * @return list of token types that were triggered or an empty list
      */
@@ -212,6 +253,21 @@ public class PIResponse {
      */
     public List<Challenge> getMultiChallenge() {
         return multichallenge;
+    }
+
+    /**
+     * Get all WebAuthn challenges from the multi_challenge.
+     *
+     * @return List of WebAuthn objects or empty list
+     */
+    public List<WebAuthn> getWebAuthnSignRequests() {
+        List<WebAuthn> ret = new ArrayList<>();
+        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c -> {
+            if (c instanceof WebAuthn) {
+                ret.add((WebAuthn) c);
+            }
+        });
+        return ret;
     }
 
     /**
@@ -268,7 +324,7 @@ public class PIResponse {
         return type;
     }
 
-    public int getOTPlength() {
+    public int getOTPLength() {
         return otplen;
     }
 

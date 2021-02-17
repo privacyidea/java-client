@@ -27,6 +27,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,7 +61,7 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
-    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //
+    private List<String> logExcludedEndpointPrints = Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
     private final PIConfig piconfig;
     private final OkHttpClient client;
 

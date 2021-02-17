@@ -20,7 +20,6 @@ import java.util.List;
 
 public class WebAuthn extends Challenge {
 
-    private final List<String> attributes = new ArrayList<>();
     private final String signRequest;
 
     public WebAuthn(String serial, String message, String transaction_id, String signRequest) {
@@ -28,11 +27,12 @@ public class WebAuthn extends Challenge {
         this.signRequest = signRequest;
     }
 
-    public List<String> getAttributes() {
-        return attributes;
-    }
-
-
+    /**
+     * Returns the WebAuthnSignRequest in JSON format as a string, ready to use with pi-webauthn.js.
+     * If this returns an empty string, it *might* indicate that the PIN of this token should be changed.
+     *
+     * @return sign request or empty string
+     */
     public String getSignRequest() {
         return signRequest;
     }
