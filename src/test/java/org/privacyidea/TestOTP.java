@@ -76,7 +76,7 @@ public class TestOTP implements IPILogger {
         // Assert everything
         assertEquals("1", response.getID());
         assertEquals("matching 1 tokens", response.getMessage());
-        assertEquals(6, response.getOTPlength());
+        assertEquals(6, response.getOTPLength());
         assertEquals("PISP0001C673", response.getSerial());
         //assertEquals("140536383567616", response.getThreadID());
         //assertEquals("1589276995.4397042", response.getTime());

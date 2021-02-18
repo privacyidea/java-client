@@ -27,6 +27,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,7 +61,7 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
-    private List<String> logExcludedEndpointPrints = Collections.emptyList(); //Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //
+    private List<String> logExcludedEndpointPrints = Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
     private final PIConfig piconfig;
     private final OkHttpClient client;
 
@@ -117,9 +118,9 @@ class Endpoint {
             params.forEach((key, value) -> {
                 //privacyIDEA.log("" + key + "=" + value);
                 try {
-                    String enc_value = value;
-                    enc_value = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-                    urlBuilder.addQueryParameter(key, enc_value);
+                    String encValue = value;
+                    encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+                    urlBuilder.addQueryParameter(key, encValue);
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -150,17 +151,17 @@ class Endpoint {
             FormBody.Builder formBodyBuilder = new FormBody.Builder();
             params.forEach((key, value) -> {
                 if (key != null && value != null) {
-                    String enc_value = value;
+                    String encValue = value;
                     // WebAuthn params are excluded from url encoded, they are already in the correct format for the server
                     if (!WEBAUTHN_PARAMETERS.contains(key)) {
                         try {
-                            enc_value = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+                            encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
                         } catch (UnsupportedEncodingException e) {
                             privacyIDEA.error(e);
                         }
                     }
-                    //privacyIDEA.log("" + key + "=" + enc_value);
-                    formBodyBuilder.add(key, enc_value);
+                    //privacyIDEA.log("" + key + "=" + encValue);
+                    formBodyBuilder.add(key, encValue);
                 }
             });
             // This switches okhttp to make a post request
@@ -174,7 +175,9 @@ class Endpoint {
             Response response = client.newCall(request).execute();
             if (response.body() != null) {
                 String ret = response.body().string();
-                endpointLog(endpoint, ret);
+                if (!logExcludedEndpointPrints.contains(endpoint)) {
+                    privacyIDEA.log(prettyFormatJson(ret));
+                }
                 return ret;
             } else {
                 privacyIDEA.log("Response body is null.");
@@ -188,7 +191,7 @@ class Endpoint {
 
     String getAuthTokenFromServer() {
         if (!privacyIDEA.checkServiceAccountAvailable()) {
-            privacyIDEA.log("Service account information not set, cannot retrieve auth token");
+            privacyIDEA.error("Cannot retrieve auth token from server without service account!");
             return "";
         }
 
@@ -206,11 +209,11 @@ class Endpoint {
         if (response != null && !response.isEmpty()) {
             JsonElement root = JsonParser.parseString(response);
             if (root != null) {
-                JsonObject obj = root.getAsJsonObject();
-                if (obj != null) {
+                try {
+                    JsonObject obj = root.getAsJsonObject();
                     return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
-                } else {
-                    privacyIDEA.log("Response did not contain an authorization token: " + prettyFormatJson(response));
+                } catch (Exception e) {
+                    privacyIDEA.error("Response did not contain an authorization token: " + prettyFormatJson(response));
                 }
             }
         } else {
@@ -233,12 +236,6 @@ class Endpoint {
         }
 
         return gson.toJson(obj);
-    }
-
-    private void endpointLog(String endpoint, String response) {
-        if (!logExcludedEndpointPrints.contains(endpoint)) {
-            privacyIDEA.log(prettyFormatJson(response));
-        }
     }
 
     public List<String> getLogExcludedEndpoints() {
