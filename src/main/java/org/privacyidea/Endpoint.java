@@ -15,12 +15,6 @@
  */
 package org.privacyidea;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -29,34 +23,26 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 import static org.privacyidea.PIConstants.GET;
-import static org.privacyidea.PIConstants.HEADER_AUTHORIZATION;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
-import static org.privacyidea.PIConstants.PASSWORD;
 import static org.privacyidea.PIConstants.POST;
-import static org.privacyidea.PIConstants.REALM;
-import static org.privacyidea.PIConstants.RESULT;
-import static org.privacyidea.PIConstants.TOKEN;
-import static org.privacyidea.PIConstants.USERNAME;
-import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 
 /**
- * This class handles sending sending requests to the server.
+ * This class handles sending requests to the server.
  */
 class Endpoint {
 
@@ -84,7 +70,7 @@ class Endpoint {
 
     Endpoint(PrivacyIDEA privacyIDEA) {
         this.privacyIDEA = privacyIDEA;
-        this.piconfig = privacyIDEA.getConfiguration();
+        this.piconfig = privacyIDEA.configuration();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (!this.piconfig.doSSLVerify) {
@@ -102,11 +88,44 @@ class Endpoint {
         this.client = builder.build();
     }
 
-    String sendRequest(String endpoint, Map<String, String> params, boolean authTokenRequired, String method) {
-        return sendRequest(endpoint, params, Collections.emptyMap(), authTokenRequired, method);
+    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback) {
+        Request request = prepareRequest(endpoint, params, headers, method);
+        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
+        if (request!= null) {
+            client.newCall(request).enqueue(callback);
+        } else {
+            // Invoke the callback to stop the thread that called this
+            callback.onFailure(null, new IOException("Request could not be created!"));
+        }
     }
 
-    String sendRequest(String endpoint, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method) {
+    String sendRequest(String endpoint, Map<String, String> params, String method) {
+        return sendRequest(endpoint, params, Collections.emptyMap(), method);
+    }
+
+    String sendRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method) {
+        Request request = prepareRequest(endpoint, params, headers, method);
+        if (request != null) {
+            try {
+                Response response = client.newCall(request).execute();
+                if (response.body() != null) {
+                    String ret = response.body().string();
+                    if (!logExcludedEndpointPrints.contains(endpoint)) {
+                        privacyIDEA.log(privacyIDEA.parser.formatJson(ret));
+                    }
+                    return ret;
+                } else {
+                    privacyIDEA.log("Response body is null.");
+                }
+            } catch (IOException e) {
+                privacyIDEA.error(e);
+            }
+        }
+
+        return "";
+    }
+
+    private Request prepareRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method) {
         HttpUrl httpUrl = HttpUrl.parse(piconfig.serverURL + endpoint);
         if (httpUrl == null) {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
@@ -131,15 +150,6 @@ class Endpoint {
         //privacyIDEA.log("using URL: " + url);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url);
-
-        if (authTokenRequired) {
-            String authToken = getAuthTokenFromServer();
-            if (authToken.isEmpty()) {
-                privacyIDEA.error("Failed to fetch authorization token from server!");
-                return "";
-            }
-            requestBuilder.addHeader(HEADER_AUTHORIZATION, authToken);
-        }
 
         // Add the headers
         requestBuilder.addHeader(HEADER_USER_AGENT, piconfig.userAgent);
@@ -168,81 +178,14 @@ class Endpoint {
             requestBuilder.post(formBodyBuilder.build());
         }
 
-        Request request = requestBuilder.build();
-        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-
-        try {
-            Response response = client.newCall(request).execute();
-            if (response.body() != null) {
-                String ret = response.body().string();
-                if (!logExcludedEndpointPrints.contains(endpoint)) {
-                    privacyIDEA.log(prettyFormatJson(ret));
-                }
-                return ret;
-            } else {
-                privacyIDEA.log("Response body is null.");
-            }
-        } catch (IOException e) {
-            privacyIDEA.error(e);
-        }
-
-        return "";
+        return requestBuilder.build();
     }
 
-    String getAuthTokenFromServer() {
-        if (!privacyIDEA.checkServiceAccountAvailable()) {
-            privacyIDEA.error("Cannot retrieve auth token from server without service account!");
-            return "";
-        }
-
-        Map<String, String> params = new LinkedHashMap<>();
-        params.put(USERNAME, piconfig.serviceAccountName);
-        params.put(PASSWORD, piconfig.serviceAccountPass);
-
-        if (piconfig.serviceAccountRealm != null && !piconfig.serviceAccountRealm.isEmpty()) {
-            params.put(REALM, piconfig.serviceAccountRealm);
-        } else if (piconfig.realm != null && !piconfig.realm.isEmpty()) {
-            params.put(REALM, piconfig.realm);
-        }
-
-        String response = sendRequest(ENDPOINT_AUTH, params, false, POST);
-        if (response != null && !response.isEmpty()) {
-            JsonElement root = JsonParser.parseString(response);
-            if (root != null) {
-                try {
-                    JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
-                } catch (Exception e) {
-                    privacyIDEA.error("Response did not contain an authorization token: " + prettyFormatJson(response));
-                }
-            }
-        } else {
-            privacyIDEA.error("/auth response was empty or null!");
-        }
-
-        return "";
-    }
-
-    public static String prettyFormatJson(String json) {
-        if (json == null || json.isEmpty()) return "";
-
-        JsonObject obj;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
-            e.printStackTrace();
-            return json;
-        }
-
-        return gson.toJson(obj);
-    }
-
-    public List<String> getLogExcludedEndpoints() {
+    public List<String> logExcludedEndpoints() {
         return logExcludedEndpointPrints;
     }
 
-    public void setLogExcludedEndpoints(List<String> list) {
+    public void logExcludedEndpoints(List<String> list) {
         logExcludedEndpointPrints = list;
     }
 }

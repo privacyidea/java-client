@@ -15,22 +15,22 @@
  */
 package org.privacyidea;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
-import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
-import static org.privacyidea.PIConstants.CLIENTDATA;
-import static org.privacyidea.PIConstants.CREDENTIALID;
+import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
 import static org.privacyidea.PIConstants.ENDPOINT_TOKEN;
 import static org.privacyidea.PIConstants.ENDPOINT_TOKEN_INIT;
@@ -38,20 +38,17 @@ import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
 import static org.privacyidea.PIConstants.GENKEY;
 import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_AUTHORIZATION;
 import static org.privacyidea.PIConstants.HEADER_ORIGIN;
 import static org.privacyidea.PIConstants.PASS;
+import static org.privacyidea.PIConstants.PASSWORD;
 import static org.privacyidea.PIConstants.POST;
 import static org.privacyidea.PIConstants.REALM;
-import static org.privacyidea.PIConstants.RESULT;
 import static org.privacyidea.PIConstants.SERIAL;
-import static org.privacyidea.PIConstants.SIGNATUREDATA;
-import static org.privacyidea.PIConstants.TOKENS;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
 import static org.privacyidea.PIConstants.USER;
-import static org.privacyidea.PIConstants.USERHANDLE;
-import static org.privacyidea.PIConstants.VALUE;
-import static org.privacyidea.PIResponse.getString;
+import static org.privacyidea.PIConstants.USERNAME;
 
 /**
  * This is the main class. It implements the common endpoints such as /validate/check as methods for easy usage.
@@ -64,12 +61,17 @@ public class PrivacyIDEA {
     private final IPISimpleLogger simpleLog;
     private final AtomicBoolean runPoll = new AtomicBoolean(true);
     private final Endpoint endpoint;
+    // Thread pool for connections
+    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(100);
+    private final ExecutorService threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
+    final JSONParser parser;
 
     private PrivacyIDEA(PIConfig configuration, IPILogger logger, IPISimpleLogger simpleLog) {
         this.log = logger;
         this.simpleLog = simpleLog;
         this.configuration = configuration;
         this.endpoint = new Endpoint(this);
+        this.parser = new JSONParser(this);
     }
 
     /**
@@ -105,6 +107,17 @@ public class PrivacyIDEA {
      * @return PIResponse object containing the response or null if error
      */
     public PIResponse validateCheck(String username, String otp, String transactionId, Map<String, String> headers) {
+        Future<PIResponse> future = validateCheckAsync(username, otp, transactionId, headers);
+        PIResponse response = null;
+        try {
+            response = future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log(e);
+        }
+        return response;
+    }
+
+    public Future<PIResponse> validateCheckAsync(String username, String otp, String transactionId, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put(USER, username);
@@ -116,8 +129,8 @@ public class PrivacyIDEA {
 
         appendRealm(params);
 
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return checkServerResponse(response);
+        Callable<PIResponse> callable = new AsyncRequestCallable(this, endpoint, ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        return threadPool.submit(callable);
     }
 
     /**
@@ -143,19 +156,29 @@ public class PrivacyIDEA {
      * @return PIResponse or null if error
      */
     public PIResponse validateCheckSerial(String serial, String otp, String transactionId, Map<String, String> headers) {
+        Future<PIResponse> future = validateCheckAsync(serial, otp, transactionId, headers);
+        PIResponse response = null;
+        try {
+            response = future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log(e);
+        }
+        return response;
+    }
+
+    public Future<PIResponse> validateCheckSerialAsync(String serial, String otp, String transactionId, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put(SERIAL, serial);
         params.put(PASS, (otp != null ? otp : ""));
-
         if (transactionId != null && transactionId.isEmpty()) {
             params.put(TRANSACTION_ID, transactionId);
         }
 
         appendRealm(params);
 
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return checkServerResponse(response);
+        Callable<PIResponse> callable = new AsyncRequestCallable(this, endpoint, ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        return threadPool.submit(callable);
     }
 
     /**
@@ -168,51 +191,48 @@ public class PrivacyIDEA {
     /**
      * Sends a request to /validate/check with the data required to authenticate a WebAuthn token.
      *
-     * @param user          username
-     * @param transactionId transactionId
-     * @param signResponse  the WebAuthnSignResponse as returned from the
-     * @param origin        server name that was used for
-     * @param headers       optional headers for the request
+     * @param user                 username
+     * @param transactionId        transactionId
+     * @param webAuthnSignResponse the WebAuthnSignResponse as returned from the
+     * @param origin               server name that was used for
+     * @param headers              optional headers for the request
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckWebAuthn(String user, String transactionId, String signResponse, String origin, Map<String, String> headers) {
+    public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse,
+                                            String origin, Map<String, String> headers) {
+        Future<PIResponse> fut = validateCheckWebAuthnAsync(user, transactionId, webAuthnSignResponse, origin, headers);
+        PIResponse response = null;
+        try {
+            response = fut.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log(e);
+        }
+        return response;
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheckWebAuthn(String, String, String, String, Map) but returns a future instead.
+     */
+    public Future<PIResponse> validateCheckWebAuthnAsync(String user, String transactionId, String webAuthnSignResponse,
+                                                         String origin, Map<String, String> headers) {
         Map<String, String> params = new LinkedHashMap<>();
 
+        // Standard validateCheck data
         params.put(USER, user);
         params.put(TRANSACTION_ID, transactionId);
         params.put(PASS, "");
-
-        JsonObject obj;
-        try {
-            obj = JsonParser.parseString(signResponse).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
-            error("WebAuthn sign response has the wrong format: " + e.getLocalizedMessage());
-            return null;
-        }
-
-        params.put(CREDENTIALID, getString(obj, CREDENTIALID));
-        params.put(CLIENTDATA, getString(obj, CLIENTDATA));
-        params.put(SIGNATUREDATA, getString(obj, SIGNATUREDATA));
-        params.put(AUTHENTICATORDATA, getString(obj, AUTHENTICATORDATA));
-
-        // The userhandle and assertionclientextension fields are optional
-        String userhandle = getString(obj, USERHANDLE);
-        if (!userhandle.isEmpty()) {
-            params.put(USERHANDLE, userhandle);
-        }
-        String extensions = getString(obj, ASSERTIONCLIENTEXTENSIONS);
-        if (!extensions.isEmpty()) {
-            params.put(ASSERTIONCLIENTEXTENSIONS, extensions);
-        }
-
         appendRealm(params);
+
+        // Additional WebAuthn data
+        Map<String, String> wanParams = parser.parseWebAuthnSignResponse(webAuthnSignResponse);
+        params.putAll(wanParams);
 
         Map<String, String> hdrs = new LinkedHashMap<>();
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = endpoint.sendRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
-        return checkServerResponse(response);
+        Callable<PIResponse> runner = new AsyncRequestCallable(this, this.endpoint, ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        return threadPool.submit(runner);
     }
 
     /**
@@ -230,9 +250,20 @@ public class PrivacyIDEA {
      * @return the server response or null if error
      */
     public PIResponse triggerChallenges(String username, Map<String, String> headers) {
+        Future<PIResponse> future = triggerChallengesAsync(username, headers);
+        PIResponse response = null;
+        try {
+            response = future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log(e);
+        }
+        return response;
+    }
+
+    public Future<PIResponse> triggerChallengesAsync(String username, Map<String, String> headers) {
         Objects.requireNonNull(username, "Username is required!");
 
-        if (!checkServiceAccountAvailable()) {
+        if (!serviceAccountAvailable()) {
             log("No service account configured. Cannot trigger challenges");
             return null;
         }
@@ -240,8 +271,9 @@ public class PrivacyIDEA {
         params.put(USER, username);
 
         appendRealm(params);
-        String response = endpoint.sendRequest(ENDPOINT_TRIGGERCHALLENGE, params, headers, true, POST);
-        return checkServerResponse(response);
+
+        Callable<PIResponse> callable = new AsyncRequestCallable(this, endpoint, ENDPOINT_TRIGGERCHALLENGE, params, headers, true, POST);
+        return threadPool.submit(callable);
     }
 
     /**
@@ -254,11 +286,22 @@ public class PrivacyIDEA {
         Objects.requireNonNull(transactionId, "TransactionID is required!");
 
         // suppress passing the error out of this function but it will still be logged
-        PIResponse response = new PIResponse(endpoint.sendRequest(ENDPOINT_POLLTRANSACTION,
+        /*PIResponse response = new PIResponse(endpoint.sendRequest(ENDPOINT_POLLTRANSACTION,
                 Collections.singletonMap(TRANSACTION_ID, transactionId),
                 false, GET));
+*/
+        //return response.value();
+        Future<PIResponse> future = threadPool.submit(
+                new AsyncRequestCallable(this, endpoint, ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionId),
+                        Collections.emptyMap(), false, GET));
 
-        return response.getValue();
+        try {
+            PIResponse response = future.get();
+            return response.value;
+        } catch (InterruptedException | ExecutionException e) {
+            log(e);
+            return false;
+        }
     }
 
     /**
@@ -301,13 +344,27 @@ public class PrivacyIDEA {
         t.start();
     }
 
-    /**
-     * Get the Authorization token for the service account.
-     *
-     * @return the AuthToken or empty string if error
-     */
     public String getAuthToken() {
-        return endpoint.getAuthTokenFromServer();
+        if (!serviceAccountAvailable()) {
+            error("Cannot retrieve auth token without service account!");
+            return null;
+        }
+
+        String response = endpoint.sendRequest(ENDPOINT_AUTH, serviceAccountParam(), POST);
+        return parser.parseAuthToken(response);
+    }
+
+    Map<String, String> serviceAccountParam() {
+        Map<String, String> authTokenParams = new LinkedHashMap<>();
+        authTokenParams.put(USERNAME, configuration.serviceAccountName);
+        authTokenParams.put(PASSWORD, configuration.serviceAccountPass);
+
+        if (configuration.serviceAccountRealm != null && !configuration.serviceAccountRealm.isEmpty()) {
+            authTokenParams.put(REALM, configuration.serviceAccountRealm);
+        } else if (configuration.realm != null && !configuration.realm.isEmpty()) {
+            authTokenParams.put(REALM, configuration.realm);
+        }
+        return authTokenParams;
     }
 
     /**
@@ -318,41 +375,22 @@ public class PrivacyIDEA {
      */
     public List<TokenInfo> getTokenInfo(String username) {
         Objects.requireNonNull(username);
-        if (!checkServiceAccountAvailable()) {
+        if (!serviceAccountAvailable()) {
             error("Cannot retrieve token info without service account!");
             return null;
         }
 
-        List<TokenInfo> ret = new ArrayList<>();
+        String authToken = getAuthToken();
+        if (authToken != null) {
+            String response = endpoint.sendRequest(ENDPOINT_TOKEN, Collections.singletonMap(USER, username),
+                    Collections.singletonMap(HEADER_AUTHORIZATION, authToken), GET);
 
-        String response = endpoint.sendRequest(ENDPOINT_TOKEN, Collections.singletonMap(USER, username), true, GET);
-
-        if (response == null || response.isEmpty()) {
-            return null;
-        }
-
-        JsonObject object;
-        try {
-            object = JsonParser.parseString(response).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
-            error(e);
-            return null;
-        }
-
-        JsonObject result = object.getAsJsonObject(RESULT);
-        if (result != null) {
-            JsonObject value = result.getAsJsonObject(VALUE);
-            if (value != null) {
-                JsonArray tokens = value.getAsJsonArray(TOKENS);
-                if (tokens != null) {
-                    List<TokenInfo> infos = new ArrayList<>();
-                    tokens.forEach(jsonValue -> infos.add(new TokenInfo(jsonValue.toString())));
-                    ret = infos;
-                }
+            if (response != null) {
+                return parser.parseTokenInfo(response);
             }
         }
 
-        return ret;
+        return null;
     }
 
     /**
@@ -364,7 +402,7 @@ public class PrivacyIDEA {
      * @return RolloutInfo which contains all info for the token or null if error
      */
     public RolloutInfo tokenRollout(String username, String typeToEnroll) {
-        if (!checkServiceAccountAvailable()) {
+        if (!serviceAccountAvailable()) {
             error("Cannot do rollout without service account!");
             return null;
         }
@@ -374,11 +412,15 @@ public class PrivacyIDEA {
         params.put(TYPE, typeToEnroll);
         params.put(GENKEY, "1"); // Let the server generate the secret
 
-        String response = endpoint.sendRequest(ENDPOINT_TOKEN_INIT, params, true, POST);
-        if (response == null || response.isEmpty()) {
-            return null;
+        String authToken = getAuthToken();
+        if (authToken != null) {
+            String response = endpoint.sendRequest(ENDPOINT_TOKEN_INIT, params,
+                    Collections.singletonMap(HEADER_AUTHORIZATION, authToken), POST);
+            if (response != null) {
+                return parser.parseRolloutInfo(response);
+            }
         }
-        return new RolloutInfo(response);
+        return null;
     }
 
     private void appendRealm(Map<String, String> params) {
@@ -387,19 +429,14 @@ public class PrivacyIDEA {
         }
     }
 
-    /**
-     * Encapsulate how to handle missing server responses here.
-     *
-     * @param response raw response from endpoint
-     * @return PIResponse or null if response null/empty
-     */
-    private PIResponse checkServerResponse(String response) {
+
+    /*private PIResponse checkServerResponse(String response) {
         if (response == null || response.isEmpty()) {
             return null;
         }
         return new PIResponse(response);
     }
-
+*/
     /*
      * Stop the poll loop.
      */
@@ -411,22 +448,22 @@ public class PrivacyIDEA {
      * @return list of endpoints for which the response is not printed
      */
     public List<String> getLogExcludedEndpoints() {
-        return endpoint.getLogExcludedEndpoints();
+        return endpoint.logExcludedEndpoints();
     }
 
     /**
      * @param list list of endpoints for which the response should not be printed
      */
-    public void setLogExcludedEndpoints(List<String> list) {
-        endpoint.setLogExcludedEndpoints(list);
+    public void logExcludedEndpoints(List<String> list) {
+        endpoint.logExcludedEndpoints(list);
     }
 
-    public boolean checkServiceAccountAvailable() {
+    public boolean serviceAccountAvailable() {
         return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
                 && configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
     }
 
-    PIConfig getConfiguration() {
+    PIConfig configuration() {
         return configuration;
     }
 
@@ -478,6 +515,10 @@ public class PrivacyIDEA {
         }
     }
 
+    public static Builder newBuilder(String serverURL, String userAgent) {
+        return new Builder(serverURL, userAgent);
+    }
+
     public static class Builder {
         private String serverURL = "";
         private String realm = "";
@@ -495,7 +536,7 @@ public class PrivacyIDEA {
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
          * @param userAgent the user agent that should be used in the http requests. Should refer to the plugin, something like "privacyIDEA-Keycloak"
          */
-        public Builder(String serverURL, String userAgent) {
+        private Builder(String serverURL, String userAgent) {
             this.userAgent = userAgent;
             this.serverURL = serverURL;
         }
@@ -507,7 +548,7 @@ public class PrivacyIDEA {
          * @param logger ILoggerBridge implementation
          * @return Builder
          */
-        public Builder setLogger(IPILogger logger) {
+        public Builder logger(IPILogger logger) {
             this.logger = logger;
             return this;
         }
@@ -519,7 +560,7 @@ public class PrivacyIDEA {
          * @param simpleLog IPISimpleLogger implementation
          * @return Builder
          */
-        public Builder setSimpleLogger(IPISimpleLogger simpleLog) {
+        public Builder simpleLogger(IPISimpleLogger simpleLog) {
             this.simpleLogBridge = simpleLog;
             return this;
         }
@@ -530,7 +571,7 @@ public class PrivacyIDEA {
          * @param realm realm
          * @return Builder
          */
-        public Builder setRealm(String realm) {
+        public Builder realm(String realm) {
             this.realm = realm;
             return this;
         }
@@ -539,11 +580,11 @@ public class PrivacyIDEA {
          * Set whether to verify the peer when connecting.
          * It is not recommended to set this to false in productive environments.
          *
-         * @param doSSLVerify boolean
+         * @param sslVerify boolean
          * @return Builder
          */
-        public Builder setSSLVerify(boolean doSSLVerify) {
-            this.doSSLVerify = doSSLVerify;
+        public Builder sslVerify(boolean sslVerify) {
+            this.doSSLVerify = sslVerify;
             return this;
         }
 
@@ -554,19 +595,19 @@ public class PrivacyIDEA {
          * @param serviceAccountPass account password
          * @return Builder
          */
-        public Builder setServiceAccount(String serviceAccountName, String serviceAccountPass) {
+        public Builder serviceAccount(String serviceAccountName, String serviceAccountPass) {
             this.serviceAccountName = serviceAccountName;
             this.serviceAccountPass = serviceAccountPass;
             return this;
         }
 
         /**
-         * Set the realm for the service account if the account is found in a separate realm from the realm set in {@link Builder#setRealm(String)}.
+         * Set the realm for the service account if the account is found in a separate realm from the realm set in {@link Builder#realm(String)}.
          *
          * @param serviceAccountRealm realm of the service account
          * @return Builder
          */
-        public Builder setServiceAccountRealm(String serviceAccountRealm) {
+        public Builder serviceRealm(String serviceAccountRealm) {
             this.serviceAccountRealm = serviceAccountRealm;
             return this;
         }
@@ -578,7 +619,7 @@ public class PrivacyIDEA {
          * @param intervals list of integers that represent seconds
          * @return Builder
          */
-        public Builder setPollingIntervals(List<Integer> intervals) {
+        public Builder pollingIntervals(List<Integer> intervals) {
             this.pollingIntervals = intervals;
             return this;
         }

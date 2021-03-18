@@ -15,6 +15,9 @@
  */
 package org.privacyidea;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,11 +27,10 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestCRnoServiceAcc implements IPILogger {
 
@@ -44,10 +46,10 @@ public class TestCRnoServiceAcc implements IPILogger {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
-                .setSSLVerify(false)
-                .setLogger(this)
-                .setSimpleLogger(System.out::println)
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                .sslVerify(false)
+                .logger(this)
+                .simpleLogger(System.out::println)
                 .build();
     }
 
@@ -111,7 +113,7 @@ public class TestCRnoServiceAcc implements IPILogger {
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
 
         // Check the triggered challenges - the other things are already tested in org.privacyidea.TestOTP
-        List<Challenge> challenges = initialResponse.getMultiChallenge();
+        List<Challenge> challenges = initialResponse.multiChallenge();
 
         Challenge hotpChallenge = challenges.stream().filter(c -> c.getSerial().equals("OATH00020121")).findFirst().orElse(null);
         assertNotNull(hotpChallenge);
@@ -127,34 +129,34 @@ public class TestCRnoServiceAcc implements IPILogger {
         assertEquals("push", pushChallenge.getType());
         assertTrue(pushChallenge.getAttributes().isEmpty());
 
-        List<String> triggeredTypes = initialResponse.getTriggeredTokenTypes();
+        List<String> triggeredTypes = initialResponse.triggeredTokenTypes();
         assertTrue(triggeredTypes.contains("push"));
         assertTrue(triggeredTypes.contains("hotp"));
 
-        List<String> transactionIDs = initialResponse.getTransactionIDs();
+        List<String> transactionIDs = initialResponse.transactionIDs();
         assertEquals(1, transactionIDs.size());
-        assertTrue(transactionIDs.contains(initialResponse.getTransactionID()));
+        assertTrue(transactionIDs.contains(initialResponse.transactionID));
 
-        assertEquals(2, initialResponse.getMessages().size());
+        assertEquals(2, initialResponse.messages.size());
 
         // Set the server up to respond to the polling requests twice with false
         setPollTransactionResponse(false, 2);
 
         // Polling is controlled by the code using the sdk
         for (int i = 0; i < 2; i++) {
-            assertFalse(privacyIDEA.pollTransaction(initialResponse.getTransactionID()));
+            assertFalse(privacyIDEA.pollTransaction(initialResponse.transactionID));
             Thread.sleep(500);
         }
 
         // Set the server to respond with true
         setPollTransactionResponse(true, 1);
-        assertTrue(privacyIDEA.pollTransaction(initialResponse.getTransactionID()));
+        assertTrue(privacyIDEA.pollTransaction(initialResponse.transactionID));
 
         // Now the transaction has to be finalized manually
-        setFinalizationResponse(initialResponse.getTransactionID());
+        setFinalizationResponse(initialResponse.transactionID);
 
-        PIResponse response = privacyIDEA.validateCheck(username, null, initialResponse.getTransactionID());
-        assertTrue(response.getValue());
+        PIResponse response = privacyIDEA.validateCheck(username, null, initialResponse.transactionID);
+        assertTrue(response.value);
     }
 
     @Test
@@ -167,7 +169,7 @@ public class TestCRnoServiceAcc implements IPILogger {
         setFinalizationResponse("02659936574063359702"); // fixed for all tests
 
         privacyIDEA.asyncPollTransaction("02659936574063359702", username, response -> {
-            assertTrue(response.getValue());
+            assertTrue(response.value);
             waitingForCallback.set(false);
         });
 

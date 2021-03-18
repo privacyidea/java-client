@@ -77,7 +77,6 @@ public class PIConstants {
     public static final String JSONRPC = "jsonrpc";
     public static final String SIGNATURE = "signature";
     public static final String VERSION_NUMBER = "versionnumber";
-    public static final String VERSION = "version";
     public static final String ID = "id";
     public static final String MAXFAIL = "maxfail";
     public static final String INFO = "info";

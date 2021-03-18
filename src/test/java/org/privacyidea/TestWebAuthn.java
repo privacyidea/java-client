@@ -15,15 +15,16 @@
  */
 package org.privacyidea;
 
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import java.util.Optional;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 
 public class TestWebAuthn implements IPILogger {
@@ -35,9 +36,9 @@ public class TestWebAuthn implements IPILogger {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
-                .setSSLVerify(false)
-                .setLogger(this)
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                .sslVerify(false)
+                .logger(this)
                 .build();
     }
 
@@ -131,13 +132,13 @@ public class TestWebAuthn implements IPILogger {
                                 ""));
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
-        Optional<Challenge> opt = response.getMultiChallenge().stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
+        Optional<Challenge> opt = response.multiChallenge().stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
         assertTrue(opt.isPresent());
         Challenge a = opt.get();
         if (a instanceof WebAuthn) {
             WebAuthn b = (WebAuthn) a;
             String trimmedRequest = webauthnrequest.replaceAll("\n", "").replaceAll(" ", "");
-            assertEquals(trimmedRequest, b.getSignRequest());
+            assertEquals(trimmedRequest, b.signRequest());
         } else {
             fail();
         }
