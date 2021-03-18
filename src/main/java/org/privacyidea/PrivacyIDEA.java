@@ -108,13 +108,7 @@ public class PrivacyIDEA {
      */
     public PIResponse validateCheck(String username, String otp, String transactionId, Map<String, String> headers) {
         Future<PIResponse> future = validateCheckAsync(username, otp, transactionId, headers);
-        PIResponse response = null;
-        try {
-            response = future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log(e);
-        }
-        return response;
+        return getFromFutureOrNull(future);
     }
 
     public Future<PIResponse> validateCheckAsync(String username, String otp, String transactionId, Map<String, String> headers) {
@@ -157,13 +151,7 @@ public class PrivacyIDEA {
      */
     public PIResponse validateCheckSerial(String serial, String otp, String transactionId, Map<String, String> headers) {
         Future<PIResponse> future = validateCheckAsync(serial, otp, transactionId, headers);
-        PIResponse response = null;
-        try {
-            response = future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log(e);
-        }
-        return response;
+        return getFromFutureOrNull(future);
     }
 
     public Future<PIResponse> validateCheckSerialAsync(String serial, String otp, String transactionId, Map<String, String> headers) {
@@ -200,14 +188,8 @@ public class PrivacyIDEA {
      */
     public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse,
                                             String origin, Map<String, String> headers) {
-        Future<PIResponse> fut = validateCheckWebAuthnAsync(user, transactionId, webAuthnSignResponse, origin, headers);
-        PIResponse response = null;
-        try {
-            response = fut.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log(e);
-        }
-        return response;
+        Future<PIResponse> future = validateCheckWebAuthnAsync(user, transactionId, webAuthnSignResponse, origin, headers);
+        return getFromFutureOrNull(future);
     }
 
     /**
@@ -231,8 +213,8 @@ public class PrivacyIDEA {
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        Callable<PIResponse> runner = new AsyncRequestCallable(this, this.endpoint, ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
-        return threadPool.submit(runner);
+        Callable<PIResponse> callable = new AsyncRequestCallable(this, this.endpoint, ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        return threadPool.submit(callable);
     }
 
     /**
@@ -251,13 +233,7 @@ public class PrivacyIDEA {
      */
     public PIResponse triggerChallenges(String username, Map<String, String> headers) {
         Future<PIResponse> future = triggerChallengesAsync(username, headers);
-        PIResponse response = null;
-        try {
-            response = future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            log(e);
-        }
-        return response;
+        return getFromFutureOrNull(future);
     }
 
     public Future<PIResponse> triggerChallengesAsync(String username, Map<String, String> headers) {
@@ -284,13 +260,6 @@ public class PrivacyIDEA {
      */
     public boolean pollTransaction(String transactionId) {
         Objects.requireNonNull(transactionId, "TransactionID is required!");
-
-        // suppress passing the error out of this function but it will still be logged
-        /*PIResponse response = new PIResponse(endpoint.sendRequest(ENDPOINT_POLLTRANSACTION,
-                Collections.singletonMap(TRANSACTION_ID, transactionId),
-                false, GET));
-*/
-        //return response.value();
         Future<PIResponse> future = threadPool.submit(
                 new AsyncRequestCallable(this, endpoint, ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionId),
                         Collections.emptyMap(), false, GET));
@@ -429,6 +398,15 @@ public class PrivacyIDEA {
         }
     }
 
+    private <T> T getFromFutureOrNull(Future<T> future) {
+        T ret = null;
+        try {
+            ret = future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            error(e);
+        }
+        return ret;
+    }
 
     /*private PIResponse checkServerResponse(String response) {
         if (response == null || response.isEmpty()) {
