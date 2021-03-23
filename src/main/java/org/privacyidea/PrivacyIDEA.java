@@ -59,7 +59,6 @@ public class PrivacyIDEA {
     private final PIConfig configuration;
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
-    private final AtomicBoolean runPoll = new AtomicBoolean(true);
     private final Endpoint endpoint;
     // Thread pool for connections
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(100);
@@ -323,6 +322,17 @@ public class PrivacyIDEA {
         }
     }
 
+    /**
+     * Run a request in a thread of the thread pool. Then join that thread to the one that was calling this method.
+     * If the server takes longer to answer a request, the other requests do not have to wait.
+     *
+     * @param path path to the endpoint of the privacyIDEA server
+     * @param params request parameters
+     * @param headers request headers
+     * @param authTokenRequired whether an auth token should be acquired prior to the request
+     * @param method http request method
+     * @return response of the server as string or null
+     */
     private String runRequestAsync(String path, Map<String, String> params,
                                    Map<String, String> headers, boolean authTokenRequired, String method) {
 
@@ -336,13 +346,6 @@ public class PrivacyIDEA {
             log(e);
         }
         return response;
-    }
-
-    /*
-     * Stop the poll loop.
-     */
-    public void stopPolling() {
-        runPoll.set(false);
     }
 
     /**
@@ -368,6 +371,10 @@ public class PrivacyIDEA {
         return configuration;
     }
 
+    /**
+     * Pass the message to the appropriate logger implementation.
+     * @param message message to log.
+     */
     void error(String message) {
         if (!configuration.disableLog) {
             if (this.log != null) {
@@ -380,6 +387,10 @@ public class PrivacyIDEA {
         }
     }
 
+    /**
+     * Pass the error to the appropriate logger implementation.
+     * @param e error to log.
+     */
     void error(Throwable e) {
         if (!configuration.disableLog) {
             if (this.log != null) {
@@ -392,6 +403,10 @@ public class PrivacyIDEA {
         }
     }
 
+    /**
+     * Pass the message to the appropriate logger implementation.
+     * @param message message to log.
+     */
     void log(String message) {
         if (!configuration.disableLog) {
             if (this.log != null) {
@@ -404,6 +419,10 @@ public class PrivacyIDEA {
         }
     }
 
+    /**
+     * Pass the error to the appropriate logger implementation.
+     * @param e error to log.
+     */
     void log(Throwable e) {
         if (!configuration.disableLog) {
             if (this.log != null) {
@@ -416,6 +435,12 @@ public class PrivacyIDEA {
         }
     }
 
+    /**
+     * Get a new Builder to create a PrivacyIDEA instance.
+     * @param serverURL url of the privacyIDEA server.
+     * @param userAgent userAgent of the plugin using the SDK.
+     * @return Builder
+     */
     public static Builder newBuilder(String serverURL, String userAgent) {
         return new Builder(serverURL, userAgent);
     }

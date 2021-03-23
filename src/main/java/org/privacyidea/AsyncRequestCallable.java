@@ -12,6 +12,9 @@ import org.jetbrains.annotations.NotNull;
 
 import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 
+/**
+ * Instances of this class are submitted to the thread pool so that requests can be executed in parallel.
+ */
 public class AsyncRequestCallable implements Callable<String>, Callback {
 
     private String path;

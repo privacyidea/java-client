@@ -83,22 +83,22 @@ class Endpoint {
         this.client = builder.build();
     }
 
+    /**
+     * Add a request to the okhttp queue. The callback will be invoked upon success or failure.
+     *
+     * @param endpoint server endpoint
+     * @param params request parameters
+     * @param headers request headers
+     * @param method http request method
+     * @param callback okhttp3 callback
+     */
     void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback) {
-        Request request = prepareRequest(endpoint, params, headers, method);
-        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-        if (request != null) {
-            client.newCall(request).enqueue(callback);
-        } else {
-            // Invoke the callback to stop the thread that called this
-            callback.onFailure(null, new IOException("Request could not be created!"));
-        }
-    }
-
-    private Request prepareRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method) {
         HttpUrl httpUrl = HttpUrl.parse(piconfig.serverURL + endpoint);
         if (httpUrl == null) {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
-            return null;
+            // Invoke the callback to terminate the thread that called this method.
+            callback.onFailure(null, new IOException("Request could not be created!"));
+            return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
 
@@ -147,6 +147,8 @@ class Endpoint {
             requestBuilder.post(formBodyBuilder.build());
         }
 
-        return requestBuilder.build();
+        Request request = requestBuilder.build();
+        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
+        client.newCall(request).enqueue(callback);
     }
 }

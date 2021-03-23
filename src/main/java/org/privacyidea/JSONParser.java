@@ -54,6 +54,12 @@ public class JSONParser {
         this.privacyIDEA = privacyIDEA;
     }
 
+    /**
+     * Format a json string with indentation.
+     *
+     * @param json json string
+     * @return formatted json string
+     */
     public String formatJson(String json) {
         if (json == null || json.isEmpty()) return "";
 
@@ -69,6 +75,12 @@ public class JSONParser {
         return gson.toJson(obj);
     }
 
+    /**
+     * Extract the auth token from the response of the server.
+     *
+     * @param serverResponse response of the server
+     * @return the auth token or null if error
+     */
     String extractAuthToken(String serverResponse) {
         if (serverResponse != null && !serverResponse.isEmpty()) {
             JsonElement root = JsonParser.parseString(serverResponse);
@@ -86,6 +98,12 @@ public class JSONParser {
         return null;
     }
 
+    /**
+     * Parse the response of the server into a PIResponse object.
+     *
+     * @param serverResponse response of the server
+     * @return PIResponse or null if input is empty
+     */
     PIResponse parsePIResponse(String serverResponse) {
         if (serverResponse == null || serverResponse.isEmpty()) return null;
 
@@ -170,6 +188,11 @@ public class JSONParser {
         return response;
     }
 
+    /**
+     * Parse the response of the /token endpoint into a list of objects.
+     * @param serverResponse response of the server.
+     * @return list of token info objects or null
+     */
     List<TokenInfo> parseTokenInfoList(String serverResponse) {
         if (serverResponse == null || serverResponse.isEmpty()) return null;
 
@@ -197,6 +220,11 @@ public class JSONParser {
         return ret;
     }
 
+    /**
+     * Parse the info of a single token into an object.
+     * @param json json array element as string
+     * @return TokenInfo object, might be null object is json is empty
+     */
     private TokenInfo parseSingleTokenInfo(String json) {
         TokenInfo info = new TokenInfo();
         if (json == null || json.isEmpty()) {
@@ -253,6 +281,11 @@ public class JSONParser {
         return info;
     }
 
+    /**
+     * Parse the response of /token/init into an object.
+     * @param serverResponse response of /token/init
+     * @return RolloutInfo object, might be null object if response is empty
+     */
     RolloutInfo parseRolloutInfo(String serverResponse) {
         RolloutInfo rinfo = new RolloutInfo();
         rinfo.raw = serverResponse;
@@ -302,6 +335,13 @@ public class JSONParser {
         return rinfo;
     }
 
+    /**
+     * Parse the json string that is returned from the browser after signing the WebAuthnSignRequest into a map.
+     * The map contains the parameters with the corresponding keys ready to be sent to the server.
+     *
+     * @param json json string from the browser
+     * @return map
+     */
     Map<String, String> parseWebAuthnSignResponse(String json) {
         Map<String, String> params = new LinkedHashMap<>();
         JsonObject obj;
