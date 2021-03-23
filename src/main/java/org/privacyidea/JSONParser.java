@@ -69,7 +69,7 @@ public class JSONParser {
         return gson.toJson(obj);
     }
 
-    String parseAuthToken(String serverResponse) {
+    String extractAuthToken(String serverResponse) {
         if (serverResponse != null && !serverResponse.isEmpty()) {
             JsonElement root = JsonParser.parseString(serverResponse);
             if (root != null) {
@@ -83,15 +83,14 @@ public class JSONParser {
         } else {
             privacyIDEA.error("/auth response was empty or null!");
         }
-        return "";
+        return null;
     }
 
     PIResponse parsePIResponse(String serverResponse) {
-        PIResponse response = new PIResponse();
-        if (serverResponse == null) return response;
-        response.rawMessage = serverResponse;
+        if (serverResponse == null || serverResponse.isEmpty()) return null;
 
-        if (serverResponse.isEmpty()) return response;
+        PIResponse response = new PIResponse();
+        response.rawMessage = serverResponse;
 
         JsonObject obj;
         try {
@@ -171,7 +170,9 @@ public class JSONParser {
         return response;
     }
 
-    List<TokenInfo> parseTokenInfo(String serverResponse) {
+    List<TokenInfo> parseTokenInfoList(String serverResponse) {
+        if (serverResponse == null || serverResponse.isEmpty()) return null;
+
         List<TokenInfo> ret = new ArrayList<>();
         JsonObject object;
         try {
@@ -300,7 +301,7 @@ public class JSONParser {
         }
         return rinfo;
     }
-    
+
     Map<String, String> parseWebAuthnSignResponse(String json) {
         Map<String, String> params = new LinkedHashMap<>();
         JsonObject obj;

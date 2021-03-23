@@ -29,23 +29,23 @@ import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
  */
 public class PIResponse {
 
-    public String message;
+    public String message = "";
     public List<String> messages = new ArrayList<>();
     public List<Challenge> multichallenge = new ArrayList<>();
-    public String transactionID;
+    public String transactionID = "";
     public List<String> transactionIDs = new ArrayList<>();
-    public String serial;
-    public String id;
-    public String jsonRPCVersion;
+    public String serial = "";
+    public String id = "";
+    public String jsonRPCVersion = "";
     public boolean status = false;
     public boolean value = false;
-    public String piVersion; // e.g. 3.2.1
-    public String rawMessage;
-    public String time;
-    public String signature;
-    public String type; // Type of token that was matching the request
+    public String piVersion = ""; // e.g. 3.2.1
+    public String rawMessage = "";
+    public String time = "";
+    public String signature = "";
+    public String type = ""; // Type of token that was matching the request
     public int otpLength = 0;
-    public String threadID;
+    public String threadID = "";
     public Error error = null;
 
     public static class Error {

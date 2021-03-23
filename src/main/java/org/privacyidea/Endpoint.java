@@ -21,9 +21,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -34,7 +31,6 @@ import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
@@ -47,7 +43,6 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 class Endpoint {
 
     private final PrivacyIDEA privacyIDEA;
-    private List<String> logExcludedEndpointPrints = Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
     private final PIConfig piconfig;
     private final OkHttpClient client;
 
@@ -91,38 +86,12 @@ class Endpoint {
     void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback) {
         Request request = prepareRequest(endpoint, params, headers, method);
         //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-        if (request!= null) {
+        if (request != null) {
             client.newCall(request).enqueue(callback);
         } else {
             // Invoke the callback to stop the thread that called this
             callback.onFailure(null, new IOException("Request could not be created!"));
         }
-    }
-
-    String sendRequest(String endpoint, Map<String, String> params, String method) {
-        return sendRequest(endpoint, params, Collections.emptyMap(), method);
-    }
-
-    String sendRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method) {
-        Request request = prepareRequest(endpoint, params, headers, method);
-        if (request != null) {
-            try {
-                Response response = client.newCall(request).execute();
-                if (response.body() != null) {
-                    String ret = response.body().string();
-                    if (!logExcludedEndpointPrints.contains(endpoint)) {
-                        privacyIDEA.log(privacyIDEA.parser.formatJson(ret));
-                    }
-                    return ret;
-                } else {
-                    privacyIDEA.log("Response body is null.");
-                }
-            } catch (IOException e) {
-                privacyIDEA.error(e);
-            }
-        }
-
-        return "";
     }
 
     private Request prepareRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method) {
@@ -135,7 +104,7 @@ class Endpoint {
 
         if (GET.equals(method)) {
             params.forEach((key, value) -> {
-                //privacyIDEA.log("" + key + "=" + value);
+                //privacyIDEA.log(key + "=" + value);
                 try {
                     String encValue = value;
                     encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
@@ -147,7 +116,7 @@ class Endpoint {
         }
 
         String url = urlBuilder.build().toString();
-        //privacyIDEA.log("using URL: " + url);
+        //privacyIDEA.log("URL: " + url);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url);
 
@@ -170,7 +139,7 @@ class Endpoint {
                             privacyIDEA.error(e);
                         }
                     }
-                    //privacyIDEA.log("" + key + "=" + encValue);
+                    //privacyIDEA.log(key + "=" + encValue);
                     formBodyBuilder.add(key, encValue);
                 }
             });
@@ -179,13 +148,5 @@ class Endpoint {
         }
 
         return requestBuilder.build();
-    }
-
-    public List<String> logExcludedEndpoints() {
-        return logExcludedEndpointPrints;
-    }
-
-    public void logExcludedEndpoints(List<String> list) {
-        logExcludedEndpointPrints = list;
     }
 }

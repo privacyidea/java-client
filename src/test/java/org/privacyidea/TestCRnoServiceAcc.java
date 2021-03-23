@@ -159,25 +159,6 @@ public class TestCRnoServiceAcc implements IPILogger {
         assertTrue(response.value);
     }
 
-    @Test
-    public void testPushAsync() {
-        // Skip the inital triggering
-        // Since everything is done automatically, setup the responses at the start
-        // 3x polling false, then true, then a /validate/check response for the finalization
-        setPollTransactionResponse(false, 3);
-        setPollTransactionResponse(true, 1);
-        setFinalizationResponse("02659936574063359702"); // fixed for all tests
-
-        privacyIDEA.asyncPollTransaction("02659936574063359702", username, response -> {
-            assertTrue(response.value);
-            waitingForCallback.set(false);
-        });
-
-        while (waitingForCallback.get()) {
-        }
-
-    }
-
     @After
     public void tearDown() {
         mockServer.stop();

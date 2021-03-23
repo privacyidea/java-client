@@ -20,12 +20,12 @@ package org.privacyidea;
  */
 public class RolloutInfo {
 
-    public GoogleURL googleurl;
-    public OATHURL oathurl;
-    public OTPKey otpkey;
-    public String raw;
-    public String serial;
-    public String rolloutState;
+    public GoogleURL googleurl = new GoogleURL();
+    public OATHURL oathurl = new OATHURL();
+    public OTPKey otpkey = new OTPKey();
+    public String raw = "";
+    public String serial = "";
+    public String rolloutState = "";
 
     public static class GoogleURL {
         public String description = "", img = "", value = "";

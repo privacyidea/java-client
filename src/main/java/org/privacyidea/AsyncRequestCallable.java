@@ -10,10 +10,13 @@ import okhttp3.Callback;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
-public class AsyncRequestCallable implements Callable<PIResponse>, Callback {
+import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 
-    private final String path, method;
-    private final Map<String, String> headers, params;
+public class AsyncRequestCallable implements Callable<String>, Callback {
+
+    private String path;
+    private final String method;
+    private Map<String, String> headers, params;
     private final boolean authTokenRequired;
     private final Endpoint endpoint;
     private final PrivacyIDEA privacyIDEA;
@@ -32,7 +35,7 @@ public class AsyncRequestCallable implements Callable<PIResponse>, Callback {
     }
 
     @Override
-    public PIResponse call() throws Exception {
+    public String call() throws Exception {
         // If an auth token is required for the request get that first then do the actual request
         if (this.authTokenRequired) {
             if (!privacyIDEA.serviceAccountAvailable()) {
@@ -40,18 +43,20 @@ public class AsyncRequestCallable implements Callable<PIResponse>, Callback {
                 return null;
             }
             latch = new CountDownLatch(1);
-
-            endpoint.sendRequestAsync(path, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
+            String tmpPath = path;
+            path = ENDPOINT_AUTH;
+            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
             latch.await();
             // Extract the auth token from the response
             String response = callbackResult[0];
-            String authToken = privacyIDEA.parser.parseAuthToken(response);
+            String authToken = privacyIDEA.parser.extractAuthToken(response);
             if (authToken == null) {
                 // the parser already logs the error.
                 return null;
             }
             // Add the auth token to the header
             headers.put(PIConstants.HEADER_AUTHORIZATION, authToken);
+            path = tmpPath;
             callbackResult[0] = null;
         }
 
@@ -59,11 +64,7 @@ public class AsyncRequestCallable implements Callable<PIResponse>, Callback {
         latch = new CountDownLatch(1);
         endpoint.sendRequestAsync(path, params, headers, method, this);
         latch.await();
-
-        if (callbackResult[0] != null && !callbackResult[0].isEmpty()) {
-            return privacyIDEA.parser.parsePIResponse(callbackResult[0]);
-        }
-        return null;
+        return callbackResult[0];
     }
 
     @Override
@@ -76,7 +77,9 @@ public class AsyncRequestCallable implements Callable<PIResponse>, Callback {
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
         if (response.body() != null) {
             String s = response.body().string();
-            //privacyIDEA.log(s);
+            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path)) {
+                privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
+            }
             callbackResult[0] = s;
         }
         latch.countDown();
