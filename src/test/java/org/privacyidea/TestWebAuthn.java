@@ -17,6 +17,7 @@ package org.privacyidea;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.After;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
@@ -39,6 +40,11 @@ public class TestWebAuthn implements IPILogger {
                 .setSSLVerify(false)
                 .setLogger(this)
                 .build();
+    }
+
+    @After
+    public void teardown() {
+        mockServer.stop();
     }
 
     @Test
