@@ -15,9 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class WebAuthn extends Challenge {
 
     private final String signRequest;
@@ -33,7 +30,7 @@ public class WebAuthn extends Challenge {
      *
      * @return sign request or empty string
      */
-    public String getSignRequest() {
+    public String signRequest() {
         return signRequest;
     }
 }

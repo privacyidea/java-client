@@ -15,6 +15,7 @@
  */
 package org.privacyidea;
 
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,9 +24,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class TestOTP implements IPILogger {
@@ -42,9 +43,9 @@ public class TestOTP implements IPILogger {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
-                .setSSLVerify(false)
-                .setLogger(this)
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                .sslVerify(false)
+                .logger(this)
                 .build();
     }
 
@@ -74,23 +75,22 @@ public class TestOTP implements IPILogger {
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
         // Assert everything
-        assertEquals("1", response.getID());
-        assertEquals("matching 1 tokens", response.getMessage());
-        assertEquals(6, response.getOTPLength());
-        assertEquals("PISP0001C673", response.getSerial());
+        assertEquals("1", response.id);
+        assertEquals("matching 1 tokens", response.message);
+        assertEquals(6, response.otpLength);
+        assertEquals("PISP0001C673", response.serial);
         //assertEquals("140536383567616", response.getThreadID());
         //assertEquals("1589276995.4397042", response.getTime());
-        assertEquals("totp", response.getType());
-        assertEquals("2.0", response.getJSONRPCVersion());
-        assertEquals("privacyIDEA 3.2.1", response.getPrivacyIDEAVersion());
-        assertEquals("3.2.1", response.getPrivacyIDEAVersionNumber());
-        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.getSignature());
+        assertEquals("totp", response.type);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertEquals("3.2.1", response.piVersion);
+        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
         // Trim all whitespaces, newlines
-        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.getRawMessage().replaceAll("[\n\r]", ""));
+        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.rawMessage.replaceAll("[\n\r]", ""));
         assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString().replaceAll("[\n\r]", ""));
         // result
-        assertTrue(response.getStatus());
-        assertTrue(response.getValue());
+        assertTrue(response.status);
+        assertTrue(response.value);
     }
 
     @Test

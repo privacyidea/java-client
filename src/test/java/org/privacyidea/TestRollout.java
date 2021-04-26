@@ -23,7 +23,9 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestRollout {
 
@@ -34,10 +36,10 @@ public class TestRollout {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = new PrivacyIDEA.Builder("https://127.0.0.1:1080", "test")
-                .setSSLVerify(false)
-                .setServiceAccount("admin", "admin")
-                .setLogger(new IPILogger() {
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                .sslVerify(false)
+                .serviceAccount("admin", "admin")
+                .logger(new IPILogger() {
                     @Override
                     public void log(String message) {
                         System.out.println(message);
