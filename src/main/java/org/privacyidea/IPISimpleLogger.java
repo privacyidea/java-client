@@ -18,6 +18,7 @@ package org.privacyidea;
 /**
  * The sdk will log infos/errors to this interface if it set and there is no IPILogger set.
  */
-public interface IPISimpleLogger {
+public interface IPISimpleLogger
+{
     void pilog(String message);
 }

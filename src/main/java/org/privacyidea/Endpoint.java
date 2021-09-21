@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -40,43 +41,50 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 /**
  * This class handles sending requests to the server.
  */
-class Endpoint {
-
+class Endpoint
+{
     private final PrivacyIDEA privacyIDEA;
     private final PIConfig piconfig;
     private final OkHttpClient client;
 
-    final TrustManager[] trustAllManager = new TrustManager[]{
-            new X509TrustManager() {
-                @Override
-                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                }
+    final TrustManager[] trustAllManager = new TrustManager[]{new X509TrustManager()
+    {
+        @Override
+        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+        {
+        }
 
-                @Override
-                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
-                }
+        @Override
+        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+        {
+        }
 
-                @Override
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                    return new java.security.cert.X509Certificate[]{};
-                }
-            }
-    };
+        @Override
+        public java.security.cert.X509Certificate[] getAcceptedIssuers()
+        {
+            return new java.security.cert.X509Certificate[]{};
+        }
+    }};
 
-    Endpoint(PrivacyIDEA privacyIDEA) {
+    Endpoint(PrivacyIDEA privacyIDEA)
+    {
         this.privacyIDEA = privacyIDEA;
         this.piconfig = privacyIDEA.configuration();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        if (!this.piconfig.doSSLVerify) {
+        if (!this.piconfig.doSSLVerify)
+        {
             // Trust all certs and verify every host
-            try {
+            try
+            {
                 final SSLContext sslContext = SSLContext.getInstance("SSL");
                 sslContext.init(null, trustAllManager, new java.security.SecureRandom());
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllManager[0]);
                 builder.hostnameVerifier((s, sslSession) -> true);
-            } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            }
+            catch (KeyManagementException | NoSuchAlgorithmException e)
+            {
                 privacyIDEA.error(e);
             }
         }
@@ -87,14 +95,23 @@ class Endpoint {
      * Add a request to the okhttp queue. The callback will be invoked upon success or failure.
      *
      * @param endpoint server endpoint
-     * @param params request parameters
-     * @param headers request headers
-     * @param method http request method
+     * @param params   request parameters
+     * @param headers  request headers
+     * @param method   http request method
      * @param callback okhttp3 callback
      */
-    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback) {
+    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method,
+                          Callback callback)
+    {
+        String strParams = params.keySet().stream().map(key -> key + "=" +
+                                                               (key.equals("pass") || key.equals("password") ?
+                                                                params.get(key) != null ? "******" : "empty pass" :
+                                                                params.get(key))).collect(Collectors.joining(", "));
+
+        privacyIDEA.log("Sending " + strParams + " to " + endpoint);
         HttpUrl httpUrl = HttpUrl.parse(piconfig.serverURL + endpoint);
-        if (httpUrl == null) {
+        if (httpUrl == null)
+        {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
             callback.onFailure(null, new IOException("Request could not be created!"));
@@ -102,47 +119,59 @@ class Endpoint {
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
 
-        if (GET.equals(method)) {
-            params.forEach((key, value) -> {
-                //privacyIDEA.log(key + "=" + value);
-                try {
-                    String encValue = value;
-                    encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-                    urlBuilder.addQueryParameter(key, encValue);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            });
+        if (GET.equals(method))
+        {
+            params.forEach((key, value) ->
+                           {
+                               //privacyIDEA.log(key + "=" + value);
+                               try
+                               {
+                                   String encValue = value;
+                                   encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+                                   urlBuilder.addQueryParameter(key, encValue);
+                               }
+                               catch (UnsupportedEncodingException e)
+                               {
+                                   e.printStackTrace();
+                               }
+                           });
         }
 
         String url = urlBuilder.build().toString();
         //privacyIDEA.log("URL: " + url);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url);
+        Request.Builder requestBuilder = new Request.Builder().url(url);
 
         // Add the headers
         requestBuilder.addHeader(HEADER_USER_AGENT, piconfig.userAgent);
-        if (headers != null && !headers.isEmpty()) {
+        if (headers != null && !headers.isEmpty())
+        {
             headers.forEach(requestBuilder::addHeader);
         }
 
-        if (POST.equals(method)) {
+        if (POST.equals(method))
+        {
             FormBody.Builder formBodyBuilder = new FormBody.Builder();
-            params.forEach((key, value) -> {
-                if (key != null && value != null) {
-                    String encValue = value;
-                    // WebAuthn params are excluded from url encoded, they are already in the correct format for the server
-                    if (!WEBAUTHN_PARAMETERS.contains(key)) {
-                        try {
-                            encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-                        } catch (UnsupportedEncodingException e) {
-                            privacyIDEA.error(e);
-                        }
-                    }
-                    //privacyIDEA.log(key + "=" + encValue);
-                    formBodyBuilder.add(key, encValue);
-                }
-            });
+            params.forEach((key, value) ->
+                           {
+                               if (key != null && value != null)
+                               {
+                                   String encValue = value;
+                                   // WebAuthn params are excluded from url encoded, they are already in the correct format for the server
+                                   if (!WEBAUTHN_PARAMETERS.contains(key))
+                                   {
+                                       try
+                                       {
+                                           encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+                                       }
+                                       catch (UnsupportedEncodingException e)
+                                       {
+                                           privacyIDEA.error(e);
+                                       }
+                                   }
+                                   //privacyIDEA.log(key + "=" + encValue);
+                                   formBodyBuilder.add(key, encValue);
+                               }
+                           });
             // This switches okhttp to make a post request
             requestBuilder.post(formBodyBuilder.build());
         }

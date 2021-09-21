@@ -28,48 +28,38 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
-public class TestOTP implements IPILogger {
-
+public class TestOTP implements IPILogger
+{
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
     private final String username = "testuser";
     private final String otp = "123456";
-
+    private final String realm = "testrealm";
     private Throwable lastError;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .sslVerify(false)
-                .logger(this)
-                .build();
+                                 .sslVerify(false)
+                                 .realm(realm)
+                                 .logger(this)
+                                 .build();
     }
 
     @Test
-    public void testOTPSuccess() {
-        String responseBody = "{\n" +
-                "  \"detail\": {\n" +
-                "    \"message\": \"matching 1 tokens\",\n" +
-                "    \"otplen\": 6,\n" +
-                "    \"serial\": \"PISP0001C673\",\n" +
-                "    \"threadid\": 140536383567616,\n" +
-                "    \"type\": \"totp\"\n" +
-                "  },\n" +
-                "  \"id\": 1,\n" +
-                "  \"jsonrpc\": \"2.0\",\n" +
-                "  \"result\": {\n" +
-                "    \"status\": true,\n" +
-                "    \"value\": true\n" +
-                "  },\n" +
-                "  \"time\": 1589276995.4397042,\n" +
-                "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                "  \"versionnumber\": \"3.2.1\",\n" +
-                "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" +
-                "}";
+    public void testOTPSuccess()
+    {
+        String responseBody =
+                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
+                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
+                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
+                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
+                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
+                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
         setResponseBody(responseBody);
 
         PIResponse response = privacyIDEA.validateCheck(username, otp);
@@ -94,7 +84,8 @@ public class TestOTP implements IPILogger {
     }
 
     @Test
-    public void testEmptyResponse() {
+    public void testEmptyResponse()
+    {
         setResponseBody("");
 
         PIResponse response = privacyIDEA.validateCheck(username, otp);
@@ -104,7 +95,8 @@ public class TestOTP implements IPILogger {
     }
 
     @Test
-    public void testNoResponse() {
+    public void testNoResponse()
+    {
         // No server setup - server might be offline/unreachable etc
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
@@ -113,41 +105,43 @@ public class TestOTP implements IPILogger {
         //assertTrue(lastError instanceof FileNotFoundException);
     }
 
-    private void setResponseBody(String s) {
-        mockServer.when(
-                HttpRequest.request()
-                        .withMethod("POST")
-                        .withPath("/validate/check")
-                        .withBody("user=" + username + "&pass=" + otp))
-                .respond(HttpResponse.response()
-                        .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(s)
-                        .withDelay(TimeUnit.MILLISECONDS, 50));
+    private void setResponseBody(String s)
+    {
+        mockServer.when(HttpRequest.request().withMethod("POST").withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                   .withPath("/validate/check")
+                                   .withBody("user=" + username + "&pass=" + otp + "&realm=" + realm)).respond(
+                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(s)
+                            .withDelay(TimeUnit.MILLISECONDS, 50));
     }
 
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         mockServer.stop();
     }
 
     @Override
-    public void error(String message) {
+    public void error(String message)
+    {
         System.err.println(message);
     }
 
     @Override
-    public void log(String message) {
+    public void log(String message)
+    {
         System.out.println(message);
     }
 
     @Override
-    public void error(Throwable t) {
+    public void error(Throwable t)
+    {
         lastError = t;
         t.printStackTrace();
     }
 
     @Override
-    public void log(Throwable t) {
+    public void log(Throwable t)
+    {
         lastError = t;
         t.printStackTrace();
     }

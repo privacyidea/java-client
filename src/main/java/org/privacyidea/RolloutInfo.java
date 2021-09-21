@@ -18,8 +18,8 @@ package org.privacyidea;
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
  */
-public class RolloutInfo {
-
+public class RolloutInfo
+{
     public GoogleURL googleurl = new GoogleURL();
     public OATHURL oathurl = new OATHURL();
     public OTPKey otpkey = new OTPKey();
@@ -27,15 +27,18 @@ public class RolloutInfo {
     public String serial = "";
     public String rolloutState = "";
 
-    public static class GoogleURL {
+    public static class GoogleURL
+    {
         public String description = "", img = "", value = "";
     }
 
-    public static class OATHURL {
+    public static class OATHURL
+    {
         public String description = "", img = "", value = "";
     }
 
-    public static class OTPKey {
+    public static class OTPKey
+    {
         public String description = "", img = "", value = "", value_b32 = "";
     }
 }

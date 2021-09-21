@@ -21,35 +21,34 @@ import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.MediaType;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestServiceAccount implements IPILogger {
+public class TestServiceAccount implements IPILogger
+{
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
-
-    private final String username = "testuser";
-    private final String otp = "123456";
-
     private final String serviceUser = "admin";
     private final String servicePass = "admin";
 
-    private Throwable lastError;
-
     @Before
-    public void setup() {
+    public void setup()
+    {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .serviceAccount(serviceUser, servicePass)
-                .sslVerify(false)
-                .logger(this)
-                .build();
+                                 .serviceAccount(serviceUser, servicePass)
+                                 .sslVerify(false)
+                                 .logger(this)
+                                 .build();
     }
 
     @Test
-    public void testGettingAuthToken() {
-        String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU" +
+    public void testGettingAuthToken()
+    {
+        String authToken =
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU" +
                 "4ZDVhODY5YzUzNGI5ZmY1MWFmNzI2ZjI5OTE2YmYiLCJyb2xlIjoiYWRtaW4iLCJhdXRodHlwZSI6InBhc3N3b3JkIiwiZXhwIjoxNTg5NDUwMzk0LC" +
                 "JyaWdodHMiOlsicG9saWN5ZGVsZXRlIiwic3RhdGlzdGljc19yZWFkIiwiYXVkaXRsb2ciLCJlbmFibGUiLCJ1c2VybGlzdCIsInVwZGF0ZXVzZXIiL" +
                 "CJhZGR1c2VyIiwiZW5yb2xsU1BBU1MiLCJjYWNvbm5lY3RvcndyaXRlIiwidW5hc3NpZ24iLCJkZWxldGV1c2VyIiwic2V0cGluIiwiZGlzYWJsZSIs" +
@@ -68,72 +67,63 @@ public class TestServiceAccount implements IPILogger {
                 "LCJtcmVzb2x2ZXJyZWFkIiwicGVyaW9kaWN0YXNrX3dyaXRlIiwicG9saWN5d3JpdGUiLCJyZXNvbHZlcnJlYWQiLCJlbnJvbGxDRVJUSUZJQ0FURSI" +
                 "sImFzc2lnbiIsImNvbmZpZ2RlbGV0ZSIsImVucm9sbFlVQklLRVkiLCJyZXN5bmMiXX0.HvP_hgA-UJFINXnwoBVmAurqcaaMmwM-AsD1S6chGIM";
 
-        mockServer.when(
-                HttpRequest.request()
-                        .withPath(PIConstants.ENDPOINT_AUTH)
-                        .withMethod("POST")
-                        .withBody(""))
-                .respond(HttpResponse.response()
-                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                        .withBody("{\n" +
-                                "    \"id\": 1,\n" +
-                                "    \"jsonrpc\": \"2.0\",\n" +
-                                "    \"result\": {\n" +
-                                "        \"status\": true,\n" +
-                                "        \"value\": {\n" +
-                                "            \"log_level\": 20,\n" +
-                                "            \"menus\": [\n" +
-                                "                \"components\",\n" +
-                                "                \"machines\"\n" +
-                                "            ],\n" +
-                                "            \"realm\": \"\",\n" +
-                                "            \"rights\": [\n" +
-                                "                \"policydelete\",\n" +
-                                "                \"resync\"\n" +
-                                "            ],\n" +
-                                "            \"role\": \"admin\",\n" +
-                                "            \"token\": \"" + authToken + "\",\n" +
-                                "            \"username\": \"admin\",\n" +
-                                "            \"logout_time\": 120,\n" +
-                                "            \"default_tokentype\": \"hotp\",\n" +
-                                "            \"user_details\": false,\n" +
-                                "            \"subscription_status\": 0\n" +
-                                "        }\n" +
-                                "    },\n" +
-                                "    \"time\": 1589446794.8502703,\n" +
-                                "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                "    \"versionnumber\": \"3.2.1\",\n" +
-                                "    \"signature\": \"rsa_sha256_pss:\"\n" +
-                                "}"));
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withContentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                   .withBody("username=" + serviceUser + "&password=" + servicePass))
+                  .respond(HttpResponse.response()
+                                       // This response is simplified because it is very long and contains info that is not (yet) processed anyway
+                                       .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
+                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
+                                                 "        \"value\": {\n" + "            \"log_level\": 20,\n" +
+                                                 "            \"menus\": [\n" + "                \"components\",\n" +
+                                                 "                \"machines\"\n" + "            ],\n" +
+                                                 "            \"realm\": \"\",\n" + "            \"rights\": [\n" +
+                                                 "                \"policydelete\",\n" +
+                                                 "                \"resync\"\n" + "            ],\n" +
+                                                 "            \"role\": \"admin\",\n" + "            \"token\": \"" +
+                                                 authToken + "\",\n" + "            \"username\": \"admin\",\n" +
+                                                 "            \"logout_time\": 120,\n" +
+                                                 "            \"default_tokentype\": \"hotp\",\n" +
+                                                 "            \"user_details\": false,\n" +
+                                                 "            \"subscription_status\": 0\n" + "        }\n" +
+                                                 "    },\n" + "    \"time\": 1589446794.8502703,\n" +
+                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
+                                                 "    \"versionnumber\": \"3.2.1\",\n" +
+                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
 
         String retAuthToken = privacyIDEA.getAuthToken();
         assertEquals(authToken, retAuthToken);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         mockServer.stop();
     }
 
     @Override
-    public void error(String message) {
+    public void error(String message)
+    {
         System.err.println(message);
     }
 
     @Override
-    public void log(String message) {
+    public void log(String message)
+    {
         System.out.println(message);
     }
 
     @Override
-    public void error(Throwable t) {
+    public void error(Throwable t)
+    {
         t.printStackTrace();
-        lastError = t;
     }
 
     @Override
-    public void log(Throwable t) {
+    public void log(Throwable t)
+    {
         t.printStackTrace();
-        lastError = t;
     }
 }

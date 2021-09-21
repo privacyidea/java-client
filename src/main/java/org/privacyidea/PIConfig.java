@@ -18,8 +18,8 @@ package org.privacyidea;
 import java.util.ArrayList;
 import java.util.List;
 
-class PIConfig {
-
+class PIConfig
+{
     String serverURL = "";
     String realm = "";
     boolean doSSLVerify = true;
@@ -30,7 +30,8 @@ class PIConfig {
     boolean disableLog = false;
     String userAgent = "";
 
-    public PIConfig(String serverURL, String userAgent) {
+    public PIConfig(String serverURL, String userAgent)
+    {
         this.serverURL = serverURL;
         this.userAgent = userAgent;
     }

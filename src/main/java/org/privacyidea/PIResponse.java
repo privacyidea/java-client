@@ -27,8 +27,8 @@ import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
  */
-public class PIResponse {
-
+public class PIResponse
+{
     public String message = "";
     public List<String> messages = new ArrayList<>();
     public List<Challenge> multichallenge = new ArrayList<>();
@@ -48,20 +48,24 @@ public class PIResponse {
     public String threadID = "";
     public Error error = null;
 
-    public static class Error {
+    public static class Error
+    {
         int code = 0;
         String message = "";
 
-        int code() {
+        int code()
+        {
             return code;
         }
 
-        String message() {
+        String message()
+        {
             return message;
         }
     }
 
-    public boolean pushAvailable() {
+    public boolean pushAvailable()
+    {
         return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
@@ -70,7 +74,8 @@ public class PIResponse {
      *
      * @return messages of all push challenges combined
      */
-    public String pushMessage() {
+    public String pushMessage()
+    {
         return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
@@ -80,20 +85,22 @@ public class PIResponse {
      *
      * @return message string
      */
-    public String otpMessage() {
+    public String otpMessage()
+    {
         // Any challenge that is not WebAuthn or Push is considered OTP
-        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_WEBAUTHN.equals(c.getType())) && !(TOKEN_TYPE_PUSH.equals(c.getType())));
+        return reduceChallengeMessagesWhere(
+                c -> !(TOKEN_TYPE_WEBAUTHN.equals(c.getType())) && !(TOKEN_TYPE_PUSH.equals(c.getType())));
     }
 
-    private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate) {
+    private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
+    {
         StringBuilder sb = new StringBuilder();
-        sb.append(multichallenge
-                .stream()
-                .filter(predicate)
-                .map(Challenge::getMessage)
-                .reduce("", (a, s) -> a + s + ", ").trim());
+        sb.append(
+                multichallenge.stream().filter(predicate).map(Challenge::getMessage).reduce("", (a, s) -> a + s + ", ")
+                              .trim());
 
-        if (sb.length() > 0) {
+        if (sb.length() > 0)
+        {
             sb.deleteCharAt(sb.length() - 1);
         }
 
@@ -103,14 +110,16 @@ public class PIResponse {
     /**
      * @return list of token types that were triggered or an empty list
      */
-    public List<String> triggeredTokenTypes() {
+    public List<String> triggeredTokenTypes()
+    {
         return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     /**
      * @return a list of challenges that were triggered or an empty list if none were triggered
      */
-    public List<Challenge> multiChallenge() {
+    public List<Challenge> multiChallenge()
+    {
         return multichallenge;
     }
 
@@ -119,25 +128,31 @@ public class PIResponse {
      *
      * @return List of WebAuthn objects or empty list
      */
-    public List<WebAuthn> webAuthnSignRequests() {
+    public List<WebAuthn> webAuthnSignRequests()
+    {
         List<WebAuthn> ret = new ArrayList<>();
-        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c -> {
-            if (c instanceof WebAuthn) {
-                ret.add((WebAuthn) c);
-            }
-        });
+        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList())
+                      .forEach(c ->
+                               {
+                                   if (c instanceof WebAuthn)
+                                   {
+                                       ret.add((WebAuthn) c);
+                                   }
+                               });
         return ret;
     }
 
     /**
      * @return list which might be empty if no transactions were triggered
      */
-    public List<String> transactionIDs() {
+    public List<String> transactionIDs()
+    {
         return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return rawMessage;
     }
 }
