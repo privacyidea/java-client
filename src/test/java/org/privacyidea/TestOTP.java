@@ -15,7 +15,10 @@
  */
 package org.privacyidea;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,10 +118,10 @@ public class TestOTP implements IPILogger {
 
     private void setResponseBody(String s) {
         mockServer.when(
-                HttpRequest.request()
-                        .withMethod("POST")
-                        .withPath("/validate/check")
-                        .withBody("user=" + username + "&pass=" + otp))
+                        HttpRequest.request()
+                                .withMethod("POST")
+                                .withPath("/validate/check")
+                                .withBody("user=" + username + "&pass=" + otp))
                 .respond(HttpResponse.response()
                         .withContentType(MediaType.APPLICATION_JSON)
                         .withBody(s)

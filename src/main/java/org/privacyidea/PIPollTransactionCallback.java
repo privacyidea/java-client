@@ -16,8 +16,8 @@ package org.privacyidea;
  * limitations under the License.
  */
 
-public interface PIPollTransactionCallback {
-
+public interface PIPollTransactionCallback
+{
     /**
      * If this method is invoked, the polling the status of the transaction_id passed to org.privacyidea.PrivacyIDEA::asyncPollTransaction
      * returned true.

@@ -19,7 +19,8 @@ package org.privacyidea;
  * The sdk will log infos and errors to this interface if it is set.
  * Implementations of this interface (the plugins) should map these methods to their corresponding loggers.
  */
-public interface IPILogger {
+public interface IPILogger
+{
     void log(String message);
 
     void error(String message);

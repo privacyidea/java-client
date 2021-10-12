@@ -15,7 +15,8 @@ import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 /**
  * Instances of this class are submitted to the thread pool so that requests can be executed in parallel.
  */
-public class AsyncRequestCallable implements Callable<String>, Callback {
+public class AsyncRequestCallable implements Callable<String>, Callback
+{
 
     private String path;
     private final String method;
@@ -27,7 +28,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback {
     private CountDownLatch latch;
 
     public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
-                                Map<String, String> headers, boolean authTokenRequired, String method) {
+                                Map<String, String> headers, boolean authTokenRequired, String method)
+    {
         this.privacyIDEA = privacyIDEA;
         this.endpoint = endpoint;
         this.path = path;
@@ -38,22 +40,27 @@ public class AsyncRequestCallable implements Callable<String>, Callback {
     }
 
     @Override
-    public String call() throws Exception {
+    public String call() throws Exception
+    {
         // If an auth token is required for the request get that first then do the actual request
-        if (this.authTokenRequired) {
-            if (!privacyIDEA.serviceAccountAvailable()) {
+        if (this.authTokenRequired)
+        {
+            if (!privacyIDEA.serviceAccountAvailable())
+            {
                 privacyIDEA.error("Service account is required to retrieve auth token!");
                 return null;
             }
             latch = new CountDownLatch(1);
             String tmpPath = path;
             path = ENDPOINT_AUTH;
-            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
+            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(),
+                                      PIConstants.POST, this);
             latch.await();
             // Extract the auth token from the response
             String response = callbackResult[0];
             String authToken = privacyIDEA.parser.extractAuthToken(response);
-            if (authToken == null) {
+            if (authToken == null)
+            {
                 // the parser already logs the error.
                 return null;
             }
@@ -71,16 +78,22 @@ public class AsyncRequestCallable implements Callable<String>, Callback {
     }
 
     @Override
-    public void onFailure(@NotNull Call call, @NotNull IOException e) {
+    public void onFailure(@NotNull Call call, @NotNull IOException e)
+    {
         privacyIDEA.error(e);
         latch.countDown();
     }
 
     @Override
-    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-        if (response.body() != null) {
-            String s = response.body().string();
-            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path)) {
+    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException
+    {
+        if (response.body() != null)
+        {
+            String s = response.body()
+                               .string();
+            if (!privacyIDEA.logExcludedEndpoints()
+                            .contains(path) && !ENDPOINT_AUTH.equals(path))
+            {
                 privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
             }
             callbackResult[0] = s;
