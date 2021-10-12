@@ -83,7 +83,7 @@ public class PIResponse {
      */
     public String otpMessage() {
         // Any challenge that is not WebAuthn, U2F or Push is considered OTP
-        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_WEBAUTHN.equals(c.getType())) && !(TOKEN_TYPE_U2F.equals(c.getType())) && !(TOKEN_TYPE_PUSH.equals(c.getType())));
+        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_PUSH.equals(c.getType())));
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate) {
