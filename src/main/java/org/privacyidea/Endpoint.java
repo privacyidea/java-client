@@ -26,6 +26,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -87,9 +88,9 @@ class Endpoint {
      * Add a request to the okhttp queue. The callback will be invoked upon success or failure.
      *
      * @param endpoint server endpoint
-     * @param params request parameters
-     * @param headers request headers
-     * @param method http request method
+     * @param params   request parameters
+     * @param headers  request headers
+     * @param method   http request method
      * @param callback okhttp3 callback
      */
     void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback) {
@@ -101,6 +102,18 @@ class Endpoint {
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
+        privacyIDEA.log("Sending params:");
+        params.forEach((k, v) -> {
+            StringBuilder tmp = new StringBuilder();
+            if (k.equals("pass") || k.equals("password")) {
+                for (int i = 0; i < v.length(); i++) {
+                    tmp.append("*");
+                }
+                v = tmp.toString();
+            }
+
+            privacyIDEA.log(k + "=" + v);
+        });
 
         if (GET.equals(method)) {
             params.forEach((key, value) -> {

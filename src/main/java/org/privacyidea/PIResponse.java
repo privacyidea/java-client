@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
@@ -81,8 +82,8 @@ public class PIResponse {
      * @return message string
      */
     public String otpMessage() {
-        // Any challenge that is not WebAuthn or Push is considered OTP
-        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_WEBAUTHN.equals(c.getType())) && !(TOKEN_TYPE_PUSH.equals(c.getType())));
+        // Any challenge that is not WebAuthn, U2F or Push is considered OTP
+        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_PUSH.equals(c.getType())));
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate) {
@@ -91,6 +92,7 @@ public class PIResponse {
                 .stream()
                 .filter(predicate)
                 .map(Challenge::getMessage)
+                .distinct()
                 .reduce("", (a, s) -> a + s + ", ").trim());
 
         if (sb.length() > 0) {
@@ -124,6 +126,21 @@ public class PIResponse {
         multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c -> {
             if (c instanceof WebAuthn) {
                 ret.add((WebAuthn) c);
+            }
+        });
+        return ret;
+    }
+
+    /**
+     * Get all U2F challenges from the multi_challenge.
+     *
+     * @return List of U2F objects or empty list
+     */
+    public List<U2F> u2fSignRequests() {
+        List<U2F> ret = new ArrayList<>();
+        multichallenge.stream().filter(c -> TOKEN_TYPE_U2F.equals(c.getType())).collect(Collectors.toList()).forEach(c -> {
+            if (c instanceof U2F) {
+                ret.add((U2F) c);
             }
         });
         return ret;
