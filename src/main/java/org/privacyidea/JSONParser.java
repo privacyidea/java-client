@@ -49,11 +49,13 @@ import static org.privacyidea.PIConstants.VERSION_NUMBER;
 import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
 import static org.privacyidea.PIConstants.U2F_SIGN_REQUEST;
 
-public class JSONParser {
+public class JSONParser
+{
 
     private final PrivacyIDEA privacyIDEA;
 
-    public JSONParser(PrivacyIDEA privacyIDEA) {
+    public JSONParser(PrivacyIDEA privacyIDEA)
+    {
         this.privacyIDEA = privacyIDEA;
     }
 
@@ -63,14 +65,23 @@ public class JSONParser {
      * @param json json string
      * @return formatted json string
      */
-    public String formatJson(String json) {
-        if (json == null || json.isEmpty()) return "";
+    public String formatJson(String json)
+    {
+        if (json == null || json.isEmpty())
+        {
+            return "";
+        }
 
         JsonObject obj;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        Gson gson = new GsonBuilder().setPrettyPrinting()
+                                     .create();
+        try
+        {
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error(e);
             return json;
         }
@@ -84,18 +95,29 @@ public class JSONParser {
      * @param serverResponse response of the server
      * @return the auth token or null if error
      */
-    String extractAuthToken(String serverResponse) {
-        if (serverResponse != null && !serverResponse.isEmpty()) {
+    String extractAuthToken(String serverResponse)
+    {
+        if (serverResponse != null && !serverResponse.isEmpty())
+        {
             JsonElement root = JsonParser.parseString(serverResponse);
-            if (root != null) {
-                try {
+            if (root != null)
+            {
+                try
+                {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
-                } catch (Exception e) {
+                    return obj.getAsJsonObject(RESULT)
+                              .getAsJsonObject(VALUE)
+                              .getAsJsonPrimitive(TOKEN)
+                              .getAsString();
+                }
+                catch (Exception e)
+                {
                     privacyIDEA.error("Response did not contain an authorization token: " + formatJson(serverResponse));
                 }
             }
-        } else {
+        }
+        else
+        {
             privacyIDEA.error("/auth response was empty or null!");
         }
         return null;
@@ -107,16 +129,24 @@ public class JSONParser {
      * @param serverResponse response of the server
      * @return PIResponse or null if input is empty
      */
-    PIResponse parsePIResponse(String serverResponse) {
-        if (serverResponse == null || serverResponse.isEmpty()) return null;
+    PIResponse parsePIResponse(String serverResponse)
+    {
+        if (serverResponse == null || serverResponse.isEmpty())
+        {
+            return null;
+        }
 
         PIResponse response = new PIResponse();
         response.rawMessage = serverResponse;
 
         JsonObject obj;
-        try {
-            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            obj = JsonParser.parseString(serverResponse)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error(e);
             return response;
         }
@@ -127,12 +157,14 @@ public class JSONParser {
         response.jsonRPCVersion = getString(obj, JSONRPC);
 
         JsonObject result = obj.getAsJsonObject(RESULT);
-        if (result != null) {
+        if (result != null)
+        {
             response.status = getBoolean(result, STATUS);
             response.value = getBoolean(result, VALUE);
 
             JsonElement errElem = result.get(ERROR);
-            if (errElem != null && !errElem.isJsonNull()) {
+            if (errElem != null && !errElem.isJsonNull())
+            {
                 JsonObject errObj = result.getAsJsonObject(ERROR);
                 response.error = new PIResponse.Error();
                 response.error.code = getInt(errObj, CODE);
@@ -141,7 +173,8 @@ public class JSONParser {
         }
 
         JsonElement detailElem = obj.get(DETAIL);
-        if (detailElem != null && !detailElem.isJsonNull()) {
+        if (detailElem != null && !detailElem.isJsonNull())
+        {
             JsonObject detail = obj.getAsJsonObject(DETAIL);
             response.message = getString(detail, MESSAGE);
             response.serial = getString(detail, SERIAL);
@@ -150,55 +183,62 @@ public class JSONParser {
             response.otpLength = getInt(detail, OTPLEN);
 
             JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
-            if (arrMessages != null) {
-                arrMessages.forEach(val -> {
-                    if (val != null) {
-                        response.messages.add(val.getAsString());
-                    }
-                });
+            if (arrMessages != null)
+            {
+                arrMessages.forEach(val ->
+                                    {
+                                        if (val != null)
+                                        {
+                                            response.messages.add(val.getAsString());
+                                        }
+                                    });
             }
 
             JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
-            if (arrChallenges != null) {
-                for (int i = 0; i < arrChallenges.size(); i++) {
-                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
-                    if (TOKEN_TYPE_WEBAUTHN.equals(getString(challenge, TYPE))) {
+            if (arrChallenges != null)
+            {
+                for (int i = 0; i < arrChallenges.size(); i++)
+                {
+                    JsonObject challenge = arrChallenges.get(i)
+                                                        .getAsJsonObject();
+                    if (TOKEN_TYPE_WEBAUTHN.equals(getString(challenge, TYPE)))
+                    {
                         String webAuthnSignRequest = "";
                         JsonElement attrElem = challenge.get(ATTRIBUTES);
-                        if (attrElem != null && !attrElem.isJsonNull()) {
-                            JsonElement webauthnElem = attrElem.getAsJsonObject().get(WEBAUTHN_SIGN_REQUEST);
-                            if (webauthnElem != null && !webauthnElem.isJsonNull()) {
+                        if (attrElem != null && !attrElem.isJsonNull())
+                        {
+                            JsonElement webauthnElem = attrElem.getAsJsonObject()
+                                                               .get(WEBAUTHN_SIGN_REQUEST);
+                            if (webauthnElem != null && !webauthnElem.isJsonNull())
+                            {
                                 webAuthnSignRequest = webauthnElem.toString();
                             }
                         }
-                        response.multichallenge.add(new WebAuthn(
-                                getString(challenge, SERIAL),
-                                getString(challenge, MESSAGE),
-                                getString(challenge, TRANSACTION_ID),
-                                webAuthnSignRequest
-                        ));
-                    } else if (TOKEN_TYPE_U2F.equals(getString(challenge, TYPE))) {
+                        response.multichallenge.add(
+                                new WebAuthn(getString(challenge, SERIAL), getString(challenge, MESSAGE),
+                                             getString(challenge, TRANSACTION_ID), webAuthnSignRequest));
+                    }
+                    else if (TOKEN_TYPE_U2F.equals(getString(challenge, TYPE)))
+                    {
                         String u2fSignRequest = "";
                         JsonElement attrElem = challenge.get(ATTRIBUTES);
-                        if (attrElem != null && !attrElem.isJsonNull()) {
-                            JsonElement u2fElem = attrElem.getAsJsonObject().get(U2F_SIGN_REQUEST);
-                            if (u2fElem != null && !u2fElem.isJsonNull()) {
+                        if (attrElem != null && !attrElem.isJsonNull())
+                        {
+                            JsonElement u2fElem = attrElem.getAsJsonObject()
+                                                          .get(U2F_SIGN_REQUEST);
+                            if (u2fElem != null && !u2fElem.isJsonNull())
+                            {
                                 u2fSignRequest = u2fElem.toString();
                             }
                         }
-                        response.multichallenge.add(new U2F(
-                                getString(challenge, SERIAL),
-                                getString(challenge, MESSAGE),
-                                getString(challenge, TRANSACTION_ID),
-                                u2fSignRequest
-                        ));
-                    } else {
-                        response.multichallenge.add(new Challenge(
-                                getString(challenge, SERIAL),
-                                getString(challenge, MESSAGE),
-                                getString(challenge, TRANSACTION_ID),
-                                getString(challenge, TYPE)
-                        ));
+                        response.multichallenge.add(new U2F(getString(challenge, SERIAL), getString(challenge, MESSAGE),
+                                                            getString(challenge, TRANSACTION_ID), u2fSignRequest));
+                    }
+                    else
+                    {
+                        response.multichallenge.add(
+                                new Challenge(getString(challenge, SERIAL), getString(challenge, MESSAGE),
+                                              getString(challenge, TRANSACTION_ID), getString(challenge, TYPE)));
                     }
                 }
             }
@@ -212,24 +252,35 @@ public class JSONParser {
      * @param serverResponse response of the server.
      * @return list of token info objects or null
      */
-    List<TokenInfo> parseTokenInfoList(String serverResponse) {
-        if (serverResponse == null || serverResponse.isEmpty()) return null;
+    List<TokenInfo> parseTokenInfoList(String serverResponse)
+    {
+        if (serverResponse == null || serverResponse.isEmpty())
+        {
+            return null;
+        }
 
         List<TokenInfo> ret = new ArrayList<>();
         JsonObject object;
-        try {
-            object = JsonParser.parseString(serverResponse).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            object = JsonParser.parseString(serverResponse)
+                               .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error(e);
             return ret;
         }
 
         JsonObject result = object.getAsJsonObject(RESULT);
-        if (result != null) {
+        if (result != null)
+        {
             JsonObject value = result.getAsJsonObject(VALUE);
-            if (value != null) {
+            if (value != null)
+            {
                 JsonArray tokens = value.getAsJsonArray(TOKENS);
-                if (tokens != null) {
+                if (tokens != null)
+                {
                     List<TokenInfo> infos = new ArrayList<>();
                     tokens.forEach(jsonValue -> infos.add(parseSingleTokenInfo(jsonValue.toString())));
                     ret = infos;
@@ -245,18 +296,24 @@ public class JSONParser {
      * @param json json array element as string
      * @return TokenInfo object, might be null object is json is empty
      */
-    private TokenInfo parseSingleTokenInfo(String json) {
+    private TokenInfo parseSingleTokenInfo(String json)
+    {
         TokenInfo info = new TokenInfo();
-        if (json == null || json.isEmpty()) {
+        if (json == null || json.isEmpty())
+        {
             return info;
         }
 
         info.rawJson = json;
 
         JsonObject obj;
-        try {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error(e);
             return info;
         }
@@ -282,21 +339,29 @@ public class JSONParser {
         info.username = getString(obj, USERNAME);
 
         JsonObject joInfo = obj.getAsJsonObject(INFO);
-        if (joInfo != null) {
-            joInfo.entrySet().forEach(entry -> {
-                if (entry.getKey() != null && entry.getValue() != null) {
-                    info.info.put(entry.getKey(), entry.getValue().getAsString());
-                }
-            });
+        if (joInfo != null)
+        {
+            joInfo.entrySet()
+                  .forEach(entry ->
+                           {
+                               if (entry.getKey() != null && entry.getValue() != null)
+                               {
+                                   info.info.put(entry.getKey(), entry.getValue()
+                                                                      .getAsString());
+                               }
+                           });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
-        if (arrRealms != null) {
-            arrRealms.forEach(val -> {
-                if (val != null) {
-                    info.realms.add(val.getAsString());
-                }
-            });
+        if (arrRealms != null)
+        {
+            arrRealms.forEach(val ->
+                              {
+                                  if (val != null)
+                                  {
+                                      info.realms.add(val.getAsString());
+                                  }
+                              });
         }
         return info;
     }
@@ -307,43 +372,53 @@ public class JSONParser {
      * @param serverResponse response of /token/init
      * @return RolloutInfo object, might be null object if response is empty
      */
-    RolloutInfo parseRolloutInfo(String serverResponse) {
+    RolloutInfo parseRolloutInfo(String serverResponse)
+    {
         RolloutInfo rinfo = new RolloutInfo();
         rinfo.raw = serverResponse;
         rinfo.googleurl = new RolloutInfo.GoogleURL();
         rinfo.oathurl = new RolloutInfo.OATHURL();
         rinfo.otpkey = new RolloutInfo.OTPKey();
 
-        if (serverResponse == null || serverResponse.isEmpty()) {
+        if (serverResponse == null || serverResponse.isEmpty())
+        {
             return rinfo;
         }
 
         JsonObject obj;
-        try {
-            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            obj = JsonParser.parseString(serverResponse)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error(e);
             return rinfo;
         }
 
         JsonObject detail = obj.getAsJsonObject("detail");
-        if (detail != null) {
+        if (detail != null)
+        {
             JsonObject google = detail.getAsJsonObject("googleurl");
-            if (google != null) {
+            if (google != null)
+            {
                 rinfo.googleurl.description = getString(google, "description");
                 rinfo.googleurl.img = getString(google, "img");
                 rinfo.googleurl.value = getString(google, "value");
             }
 
             JsonObject oath = detail.getAsJsonObject("oath");
-            if (oath != null) {
+            if (oath != null)
+            {
                 rinfo.oathurl.description = getString(oath, "description");
                 rinfo.oathurl.img = getString(oath, "img");
                 rinfo.oathurl.value = getString(oath, "value");
             }
 
             JsonObject otp = detail.getAsJsonObject("otpkey");
-            if (otp != null) {
+            if (otp != null)
+            {
                 rinfo.otpkey.description = getString(otp, "description");
                 rinfo.otpkey.img = getString(otp, "img");
                 rinfo.otpkey.value = getString(otp, "value");
@@ -363,12 +438,17 @@ public class JSONParser {
      * @param json json string from the browser
      * @return map
      */
-    Map<String, String> parseWebAuthnSignResponse(String json) {
+    Map<String, String> parseWebAuthnSignResponse(String json)
+    {
         Map<String, String> params = new LinkedHashMap<>();
         JsonObject obj;
-        try {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error("WebAuthn sign response has the wrong format: " + e.getLocalizedMessage());
             return null;
         }
@@ -380,11 +460,13 @@ public class JSONParser {
 
         // The userhandle and assertionclientextension fields are optional
         String userhandle = getString(obj, USERHANDLE);
-        if (!userhandle.isEmpty()) {
+        if (!userhandle.isEmpty())
+        {
             params.put(USERHANDLE, userhandle);
         }
         String extensions = getString(obj, ASSERTIONCLIENTEXTENSIONS);
-        if (!extensions.isEmpty()) {
+        if (!extensions.isEmpty())
+        {
             params.put(ASSERTIONCLIENTEXTENSIONS, extensions);
         }
         return params;
@@ -397,12 +479,17 @@ public class JSONParser {
      * @param json json string from the browser
      * @return map
      */
-    Map<String, String> parseU2FSignResponse(String json) {
+    Map<String, String> parseU2FSignResponse(String json)
+    {
         Map<String, String> params = new LinkedHashMap<>();
         JsonObject obj;
-        try {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        } catch (JsonSyntaxException e) {
+        try
+        {
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
             privacyIDEA.error("U2F sign response has the wrong format: " + e.getLocalizedMessage());
             return null;
         }
@@ -413,17 +500,20 @@ public class JSONParser {
         return params;
     }
 
-    static boolean getBoolean(JsonObject obj, String name) {
+    static boolean getBoolean(JsonObject obj, String name)
+    {
         JsonPrimitive prim = obj.getAsJsonPrimitive(name);
         return prim != null && prim.getAsBoolean();
     }
 
-    static int getInt(JsonObject obj, String name) {
+    static int getInt(JsonObject obj, String name)
+    {
         JsonPrimitive prim = obj.getAsJsonPrimitive(name);
         return prim == null ? 0 : prim.getAsInt();
     }
 
-    static String getString(JsonObject obj, String name) {
+    static String getString(JsonObject obj, String name)
+    {
         JsonPrimitive prim = obj.getAsJsonPrimitive(name);
         return prim == null ? "" : prim.getAsString();
     }

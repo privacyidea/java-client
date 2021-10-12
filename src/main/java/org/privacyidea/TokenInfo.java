@@ -23,7 +23,8 @@ import java.util.Map;
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
  */
-public class TokenInfo {
+public class TokenInfo
+{
     boolean active = false;
     int count = 0;
     int countWindow = 0;

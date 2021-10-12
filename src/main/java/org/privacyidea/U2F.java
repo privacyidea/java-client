@@ -15,11 +15,13 @@
  */
 package org.privacyidea;
 
-public class U2F extends Challenge {
+public class U2F extends Challenge
+{
 
     private final String signRequest;
 
-    public U2F(String serial, String message, String transaction_id, String signRequest) {
+    public U2F(String serial, String message, String transaction_id, String signRequest)
+    {
         super(serial, message, transaction_id, PIConstants.TOKEN_TYPE_U2F);
         this.signRequest = signRequest;
     }
@@ -30,7 +32,8 @@ public class U2F extends Challenge {
      *
      * @return sign request or empty string
      */
-    public String signRequest() {
+    public String signRequest()
+    {
         return signRequest;
     }
 }

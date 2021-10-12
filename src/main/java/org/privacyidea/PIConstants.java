@@ -18,9 +18,11 @@ package org.privacyidea;
 import java.util.Arrays;
 import java.util.List;
 
-public class PIConstants {
+public class PIConstants
+{
 
-    private PIConstants() {
+    private PIConstants()
+    {
     }
 
     public static final String GET = "GET";
@@ -103,7 +105,9 @@ public class PIConstants {
 
 
     // These will be excluded from url encoding
-    public static final List<String> WEBAUTHN_PARAMETERS = Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE, ASSERTIONCLIENTEXTENSIONS);
+    public static final List<String> WEBAUTHN_PARAMETERS = Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA,
+                                                                         AUTHENTICATORDATA, USERHANDLE,
+                                                                         ASSERTIONCLIENTEXTENSIONS);
     public static final List<String> U2F_PARAMETERS = Arrays.asList(CLIENTDATA, SIGNATUREDATA);
 
 }
