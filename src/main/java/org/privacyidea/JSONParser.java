@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,6 +39,7 @@ import static org.privacyidea.PIConstants.STATUS;
 import static org.privacyidea.PIConstants.TOKEN;
 import static org.privacyidea.PIConstants.TOKENS;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
 import static org.privacyidea.PIConstants.USERHANDLE;
@@ -45,6 +47,7 @@ import static org.privacyidea.PIConstants.USERNAME;
 import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIConstants.VERSION_NUMBER;
 import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
+import static org.privacyidea.PIConstants.U2F_SIGN_REQUEST;
 
 public class JSONParser {
 
@@ -174,6 +177,21 @@ public class JSONParser {
                                 getString(challenge, TRANSACTION_ID),
                                 webAuthnSignRequest
                         ));
+                    } else if (TOKEN_TYPE_U2F.equals(getString(challenge, TYPE))) {
+                        String u2fSignRequest = "";
+                        JsonElement attrElem = challenge.get(ATTRIBUTES);
+                        if (attrElem != null && !attrElem.isJsonNull()) {
+                            JsonElement u2fElem = attrElem.getAsJsonObject().get(U2F_SIGN_REQUEST);
+                            if (u2fElem != null && !u2fElem.isJsonNull()) {
+                                u2fSignRequest = u2fElem.toString();
+                            }
+                        }
+                        response.multichallenge.add(new U2F(
+                                getString(challenge, SERIAL),
+                                getString(challenge, MESSAGE),
+                                getString(challenge, TRANSACTION_ID),
+                                u2fSignRequest
+                        ));
                     } else {
                         response.multichallenge.add(new Challenge(
                                 getString(challenge, SERIAL),
@@ -190,6 +208,7 @@ public class JSONParser {
 
     /**
      * Parse the response of the /token endpoint into a list of objects.
+     *
      * @param serverResponse response of the server.
      * @return list of token info objects or null
      */
@@ -222,6 +241,7 @@ public class JSONParser {
 
     /**
      * Parse the info of a single token into an object.
+     *
      * @param json json array element as string
      * @return TokenInfo object, might be null object is json is empty
      */
@@ -283,6 +303,7 @@ public class JSONParser {
 
     /**
      * Parse the response of /token/init into an object.
+     *
      * @param serverResponse response of /token/init
      * @return RolloutInfo object, might be null object if response is empty
      */
@@ -366,6 +387,29 @@ public class JSONParser {
         if (!extensions.isEmpty()) {
             params.put(ASSERTIONCLIENTEXTENSIONS, extensions);
         }
+        return params;
+    }
+
+    /**
+     * Parse the json string that is returned from the browser after signing the U2FSignRequest into a map.
+     * The map contains the parameters with the corresponding keys ready to be sent to the server.
+     *
+     * @param json json string from the browser
+     * @return map
+     */
+    Map<String, String> parseU2FSignResponse(String json) {
+        Map<String, String> params = new LinkedHashMap<>();
+        JsonObject obj;
+        try {
+            obj = JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonSyntaxException e) {
+            privacyIDEA.error("U2F sign response has the wrong format: " + e.getLocalizedMessage());
+            return null;
+        }
+
+        params.put(CLIENTDATA, getString(obj, "clientData"));
+        params.put(SIGNATUREDATA, getString(obj, "signatureData"));
+
         return params;
     }
 

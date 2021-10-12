@@ -201,6 +201,30 @@ public class PrivacyIDEA {
     }
 
     /**
+     * Sends a request to /validate/check with the data required to authenticate a U2F token.
+     *
+     * @param user                 username
+     * @param transactionId        transactionId
+     * @param u2fSignResponse      the U2F Sign Response as returned from the
+     * @return PIResponse or null if error
+     */
+    public PIResponse validateCheckU2F(String user, String transactionId, String u2fSignResponse, Map<String, String> headers) {
+        Map<String, String> params = new LinkedHashMap<>();
+        // Standard validateCheck data
+        params.put(USER, user);
+        params.put(TRANSACTION_ID, transactionId);
+        params.put(PASS, "");
+        appendRealm(params);
+
+        // Additional U2F data
+        Map<String, String> u2fParams = parser.parseU2FSignResponse(u2fSignResponse);
+        params.putAll(u2fParams);
+
+        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        return this.parser.parsePIResponse(response);
+    }
+
+    /**
      * @see PrivacyIDEA#triggerChallenges(String, Map)
      */
     public PIResponse triggerChallenges(String username) {
