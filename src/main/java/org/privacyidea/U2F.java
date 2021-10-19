@@ -17,7 +17,6 @@ package org.privacyidea;
 
 public class U2F extends Challenge
 {
-
     private final String signRequest;
 
     public U2F(String serial, String message, String transaction_id, String signRequest)

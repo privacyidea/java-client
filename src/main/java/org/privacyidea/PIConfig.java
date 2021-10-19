@@ -20,7 +20,6 @@ import java.util.List;
 
 class PIConfig
 {
-
     String serverURL = "";
     String realm = "";
     boolean doSSLVerify = true;

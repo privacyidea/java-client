@@ -27,6 +27,8 @@ public class RolloutInfo
     public String serial = "";
     public String rolloutState = "";
 
+    public PIError error = null;
+
     public static class GoogleURL
     {
         public String description = "", img = "", value = "";

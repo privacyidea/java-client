@@ -20,7 +20,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback
 
     private String path;
     private final String method;
-    private Map<String, String> headers, params;
+    private final Map<String, String> headers;
+    private final Map<String, String> params;
     private final boolean authTokenRequired;
     private final Endpoint endpoint;
     private final PrivacyIDEA privacyIDEA;
@@ -89,10 +90,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     {
         if (response.body() != null)
         {
-            String s = response.body()
-                               .string();
-            if (!privacyIDEA.logExcludedEndpoints()
-                            .contains(path) && !ENDPOINT_AUTH.equals(path))
+            String s = response.body().string();
+            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
             {
                 privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
             }
