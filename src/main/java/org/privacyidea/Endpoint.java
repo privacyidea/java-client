@@ -43,7 +43,6 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
  */
 class Endpoint
 {
-
     private final PrivacyIDEA privacyIDEA;
     private final PIConfig piconfig;
     private final OkHttpClient client;
@@ -109,16 +108,17 @@ class Endpoint
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
-            callback.onFailure(null, new IOException("Request could not be created!"));
+            callback.onFailure(null,
+                               new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
-        privacyIDEA.log("Sending params:");
+        privacyIDEA.log("Sending to " + endpoint);
         params.forEach((k, v) ->
                        {
-                           StringBuilder tmp = new StringBuilder();
                            if (k.equals("pass") || k.equals("password"))
                            {
+                               StringBuilder tmp = new StringBuilder();
                                for (int i = 0; i < v.length(); i++)
                                {
                                    tmp.append("*");
@@ -133,11 +133,9 @@ class Endpoint
         {
             params.forEach((key, value) ->
                            {
-                               //privacyIDEA.log(key + "=" + value);
                                try
                                {
-                                   String encValue = value;
-                                   encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+                                   String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
                                    urlBuilder.addQueryParameter(key, encValue);
                                }
                                catch (UnsupportedEncodingException e)
@@ -147,8 +145,7 @@ class Endpoint
                            });
         }
 
-        String url = urlBuilder.build()
-                               .toString();
+        String url = urlBuilder.build().toString();
         //privacyIDEA.log("URL: " + url);
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
@@ -167,7 +164,8 @@ class Endpoint
                                if (key != null && value != null)
                                {
                                    String encValue = value;
-                                   // WebAuthn params are excluded from url encoded, they are already in the correct format for the server
+                                   // WebAuthn params are excluded from url encoded,
+                                   // they are already in the correct format for the server
                                    if (!WEBAUTHN_PARAMETERS.contains(key))
                                    {
                                        try
@@ -179,7 +177,6 @@ class Endpoint
                                            privacyIDEA.error(e);
                                        }
                                    }
-                                   //privacyIDEA.log(key + "=" + encValue);
                                    formBodyBuilder.add(key, encValue);
                                }
                            });
@@ -189,7 +186,6 @@ class Endpoint
 
         Request request = requestBuilder.build();
         //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-        client.newCall(request)
-              .enqueue(callback);
+        client.newCall(request).enqueue(callback);
     }
 }

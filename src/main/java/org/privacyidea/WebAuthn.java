@@ -17,7 +17,6 @@ package org.privacyidea;
 
 public class WebAuthn extends Challenge
 {
-
     private final String signRequest;
 
     public WebAuthn(String serial, String message, String transaction_id, String signRequest)

@@ -30,12 +30,10 @@ import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
  */
 public class PIResponse
 {
-
     public String message = "";
     public List<String> messages = new ArrayList<>();
     public List<Challenge> multichallenge = new ArrayList<>();
     public String transactionID = "";
-    public List<String> transactionIDs = new ArrayList<>();
     public String serial = "";
     public String id = "";
     public String jsonRPCVersion = "";
@@ -43,33 +41,15 @@ public class PIResponse
     public boolean value = false;
     public String piVersion = ""; // e.g. 3.2.1
     public String rawMessage = "";
-    public String time = "";
     public String signature = "";
     public String type = ""; // Type of token that was matching the request
     public int otpLength = 0;
-    public String threadID = "";
-    public Error error = null;
 
-    public static class Error
-    {
-        int code = 0;
-        String message = "";
-
-        int code()
-        {
-            return code;
-        }
-
-        String message()
-        {
-            return message;
-        }
-    }
+    public PIError error = null;
 
     public boolean pushAvailable()
     {
-        return multichallenge.stream()
-                             .anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
     /**
@@ -97,12 +77,8 @@ public class PIResponse
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(multichallenge.stream()
-                                .filter(predicate)
-                                .map(Challenge::getMessage)
-                                .distinct()
-                                .reduce("", (a, s) -> a + s + ", ")
-                                .trim());
+        sb.append(multichallenge.stream().filter(predicate).map(Challenge::getMessage).distinct()
+                                .reduce("", (a, s) -> a + s + ", ").trim());
 
         if (sb.length() > 0)
         {
@@ -117,10 +93,7 @@ public class PIResponse
      */
     public List<String> triggeredTokenTypes()
     {
-        return multichallenge.stream()
-                             .map(Challenge::getType)
-                             .distinct()
-                             .collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     /**
@@ -139,9 +112,7 @@ public class PIResponse
     public List<WebAuthn> webAuthnSignRequests()
     {
         List<WebAuthn> ret = new ArrayList<>();
-        multichallenge.stream()
-                      .filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType()))
-                      .collect(Collectors.toList())
+        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList())
                       .forEach(c ->
                                {
                                    if (c instanceof WebAuthn)
@@ -160,9 +131,7 @@ public class PIResponse
     public List<U2F> u2fSignRequests()
     {
         List<U2F> ret = new ArrayList<>();
-        multichallenge.stream()
-                      .filter(c -> TOKEN_TYPE_U2F.equals(c.getType()))
-                      .collect(Collectors.toList())
+        multichallenge.stream().filter(c -> TOKEN_TYPE_U2F.equals(c.getType())).collect(Collectors.toList())
                       .forEach(c ->
                                {
                                    if (c instanceof U2F)
@@ -178,10 +147,7 @@ public class PIResponse
      */
     public List<String> transactionIDs()
     {
-        return multichallenge.stream()
-                             .map(Challenge::getTransactionID)
-                             .distinct()
-                             .collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
     }
 
     @Override

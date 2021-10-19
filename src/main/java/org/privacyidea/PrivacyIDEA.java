@@ -400,7 +400,7 @@ public class PrivacyIDEA
         }
         catch (InterruptedException | ExecutionException e)
         {
-            log(e);
+            log("runRequestAsync: " + e.getLocalizedMessage());
         }
         return response;
     }

@@ -20,7 +20,6 @@ import java.util.List;
 
 public class Challenge
 {
-
     private final List<String> attributes = new ArrayList<>();
     private final String serial;
     private final String message;

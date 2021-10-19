@@ -73,12 +73,10 @@ public class JSONParser
         }
 
         JsonObject obj;
-        Gson gson = new GsonBuilder().setPrettyPrinting()
-                                     .create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -105,10 +103,7 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT)
-                              .getAsJsonObject(VALUE)
-                              .getAsJsonPrimitive(TOKEN)
-                              .getAsString();
+                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
                 }
                 catch (Exception e)
                 {
@@ -142,8 +137,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -166,9 +160,8 @@ public class JSONParser
             if (errElem != null && !errElem.isJsonNull())
             {
                 JsonObject errObj = result.getAsJsonObject(ERROR);
-                response.error = new PIResponse.Error();
-                response.error.code = getInt(errObj, CODE);
-                response.error.message = getString(errObj, MESSAGE);
+                response.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
+                return response;
             }
         }
 
@@ -199,51 +192,45 @@ public class JSONParser
             {
                 for (int i = 0; i < arrChallenges.size(); i++)
                 {
-                    JsonObject challenge = arrChallenges.get(i)
-                                                        .getAsJsonObject();
-                    if (TOKEN_TYPE_WEBAUTHN.equals(getString(challenge, TYPE)))
+                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+                    String serial = getString(challenge, SERIAL);
+                    String message = getString(challenge, MESSAGE);
+                    String transactionid = getString(challenge, TRANSACTION_ID);
+                    String type = getString(challenge, TYPE);
+
+                    if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
-                        String webAuthnSignRequest = "";
-                        JsonElement attrElem = challenge.get(ATTRIBUTES);
-                        if (attrElem != null && !attrElem.isJsonNull())
-                        {
-                            JsonElement webauthnElem = attrElem.getAsJsonObject()
-                                                               .get(WEBAUTHN_SIGN_REQUEST);
-                            if (webauthnElem != null && !webauthnElem.isJsonNull())
-                            {
-                                webAuthnSignRequest = webauthnElem.toString();
-                            }
-                        }
-                        response.multichallenge.add(
-                                new WebAuthn(getString(challenge, SERIAL), getString(challenge, MESSAGE),
-                                             getString(challenge, TRANSACTION_ID), webAuthnSignRequest));
+                        String webAuthnSignRequest = getSignRequestFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
+                        response.multichallenge.add(new WebAuthn(serial, message, transactionid, webAuthnSignRequest));
                     }
-                    else if (TOKEN_TYPE_U2F.equals(getString(challenge, TYPE)))
+                    else if (TOKEN_TYPE_U2F.equals(type))
                     {
-                        String u2fSignRequest = "";
-                        JsonElement attrElem = challenge.get(ATTRIBUTES);
-                        if (attrElem != null && !attrElem.isJsonNull())
-                        {
-                            JsonElement u2fElem = attrElem.getAsJsonObject()
-                                                          .get(U2F_SIGN_REQUEST);
-                            if (u2fElem != null && !u2fElem.isJsonNull())
-                            {
-                                u2fSignRequest = u2fElem.toString();
-                            }
-                        }
-                        response.multichallenge.add(new U2F(getString(challenge, SERIAL), getString(challenge, MESSAGE),
-                                                            getString(challenge, TRANSACTION_ID), u2fSignRequest));
+                        String u2fSignRequest = getSignRequestFromAttributes(U2F_SIGN_REQUEST, challenge);
+                        response.multichallenge.add(new U2F(serial, message, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(
-                                new Challenge(getString(challenge, SERIAL), getString(challenge, MESSAGE),
-                                              getString(challenge, TRANSACTION_ID), getString(challenge, TYPE)));
+                        response.multichallenge.add(new Challenge(serial, message, transactionid, type));
                     }
                 }
             }
         }
         return response;
+    }
+
+    private String getSignRequestFromAttributes(String requestType, JsonObject jsonObject)
+    {
+        String ret = "";
+        JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
+        if (attributeElement != null && !attributeElement.isJsonNull())
+        {
+            JsonElement requestElement = attributeElement.getAsJsonObject().get(requestType);
+            if (requestElement != null && !requestElement.isJsonNull())
+            {
+                ret = requestElement.toString();
+            }
+        }
+        return ret;
     }
 
     /**
@@ -263,8 +250,7 @@ public class JSONParser
         JsonObject object;
         try
         {
-            object = JsonParser.parseString(serverResponse)
-                               .getAsJsonObject();
+            object = JsonParser.parseString(serverResponse).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -276,6 +262,7 @@ public class JSONParser
         if (result != null)
         {
             JsonObject value = result.getAsJsonObject(VALUE);
+
             if (value != null)
             {
                 JsonArray tokens = value.getAsJsonArray(TOKENS);
@@ -309,8 +296,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -341,15 +327,13 @@ public class JSONParser
         JsonObject joInfo = obj.getAsJsonObject(INFO);
         if (joInfo != null)
         {
-            joInfo.entrySet()
-                  .forEach(entry ->
-                           {
-                               if (entry.getKey() != null && entry.getValue() != null)
-                               {
-                                   info.info.put(entry.getKey(), entry.getValue()
-                                                                      .getAsString());
-                               }
-                           });
+            joInfo.entrySet().forEach(entry ->
+                                      {
+                                          if (entry.getKey() != null && entry.getValue() != null)
+                                          {
+                                              info.info.put(entry.getKey(), entry.getValue().getAsString());
+                                          }
+                                      });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
@@ -388,46 +372,55 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
+
+            JsonObject result = obj.getAsJsonObject(RESULT);
+            JsonElement errElem = result.get(ERROR);
+            if (errElem != null && !errElem.isJsonNull())
+            {
+                JsonObject errObj = result.getAsJsonObject(ERROR);
+                rinfo.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
+                return rinfo;
+            }
+
+            JsonObject detail = obj.getAsJsonObject("detail");
+            if (detail != null)
+            {
+                JsonObject google = detail.getAsJsonObject("googleurl");
+                if (google != null)
+                {
+                    rinfo.googleurl.description = getString(google, "description");
+                    rinfo.googleurl.img = getString(google, "img");
+                    rinfo.googleurl.value = getString(google, "value");
+                }
+
+                JsonObject oath = detail.getAsJsonObject("oath");
+                if (oath != null)
+                {
+                    rinfo.oathurl.description = getString(oath, "description");
+                    rinfo.oathurl.img = getString(oath, "img");
+                    rinfo.oathurl.value = getString(oath, "value");
+                }
+
+                JsonObject otp = detail.getAsJsonObject("otpkey");
+                if (otp != null)
+                {
+                    rinfo.otpkey.description = getString(otp, "description");
+                    rinfo.otpkey.img = getString(otp, "img");
+                    rinfo.otpkey.value = getString(otp, "value");
+                    rinfo.otpkey.value_b32 = getString(otp, "value_b32");
+                }
+
+                rinfo.serial = getString(detail, "serial");
+                rinfo.rolloutState = getString(detail, "rollout_state");
+            }
         }
-        catch (JsonSyntaxException e)
+        catch (JsonSyntaxException | ClassCastException e)
         {
             privacyIDEA.error(e);
             return rinfo;
         }
 
-        JsonObject detail = obj.getAsJsonObject("detail");
-        if (detail != null)
-        {
-            JsonObject google = detail.getAsJsonObject("googleurl");
-            if (google != null)
-            {
-                rinfo.googleurl.description = getString(google, "description");
-                rinfo.googleurl.img = getString(google, "img");
-                rinfo.googleurl.value = getString(google, "value");
-            }
-
-            JsonObject oath = detail.getAsJsonObject("oath");
-            if (oath != null)
-            {
-                rinfo.oathurl.description = getString(oath, "description");
-                rinfo.oathurl.img = getString(oath, "img");
-                rinfo.oathurl.value = getString(oath, "value");
-            }
-
-            JsonObject otp = detail.getAsJsonObject("otpkey");
-            if (otp != null)
-            {
-                rinfo.otpkey.description = getString(otp, "description");
-                rinfo.otpkey.img = getString(otp, "img");
-                rinfo.otpkey.value = getString(otp, "value");
-                rinfo.otpkey.value_b32 = getString(otp, "value_b32");
-            }
-
-            rinfo.serial = getString(detail, "serial");
-            rinfo.rolloutState = getString(detail, "rollout_state");
-        }
         return rinfo;
     }
 
@@ -444,8 +437,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -485,8 +477,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {

@@ -16,11 +16,11 @@ package org.privacyidea;
  * limitations under the License.
  */
 
-public interface PIPollTransactionCallback
+public interface IPIPollTransactionCallback
 {
     /**
-     * If this method is invoked, the polling the status of the transaction_id passed to org.privacyidea.PrivacyIDEA::asyncPollTransaction
-     * returned true.
+     * If this method is invoked, the polling the status of the transaction_id passed
+     * to org.privacyidea.PrivacyIDEA::asyncPollTransaction returned true.
      *
      * @param response the response of the finalizing call to /validate/check
      */
