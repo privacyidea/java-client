@@ -142,14 +142,6 @@ public class PIResponse
         return ret;
     }
 
-    /**
-     * @return list which might be empty if no transactions were triggered
-     */
-    public List<String> transactionIDs()
-    {
-        return multichallenge.stream().map(Challenge::getTransactionID).distinct().collect(Collectors.toList());
-    }
-
     @Override
     public String toString()
     {
