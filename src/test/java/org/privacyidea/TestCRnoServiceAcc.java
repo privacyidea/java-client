@@ -133,10 +133,6 @@ public class TestCRnoServiceAcc implements IPILogger {
         assertTrue(triggeredTypes.contains("push"));
         assertTrue(triggeredTypes.contains("hotp"));
 
-        List<String> transactionIDs = initialResponse.transactionIDs();
-        assertEquals(1, transactionIDs.size());
-        assertTrue(transactionIDs.contains(initialResponse.transactionID));
-
         assertEquals(2, initialResponse.messages.size());
 
         // Set the server up to respond to the polling requests twice with false
