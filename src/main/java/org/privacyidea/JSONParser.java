@@ -124,7 +124,7 @@ public class JSONParser
      * @param serverResponse response of the server
      * @return PIResponse or null if input is empty
      */
-    PIResponse parsePIResponse(String serverResponse)
+    public PIResponse parsePIResponse(String serverResponse)
     {
         if (serverResponse == null || serverResponse.isEmpty())
         {
@@ -491,21 +491,37 @@ public class JSONParser
         return params;
     }
 
-    static boolean getBoolean(JsonObject obj, String name)
+    private boolean getBoolean(JsonObject obj, String name)
     {
-        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
-        return prim != null && prim.getAsBoolean();
+        JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
+        return primitive != null && primitive.isBoolean() && primitive.getAsBoolean();
     }
 
-    static int getInt(JsonObject obj, String name)
+    private int getInt(JsonObject obj, String name)
     {
-        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
-        return prim == null ? 0 : prim.getAsInt();
+        JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
+        return primitive != null && primitive.isNumber() ? primitive.getAsInt() : 0;
     }
 
-    static String getString(JsonObject obj, String name)
+    private String getString(JsonObject obj, String name)
     {
-        JsonPrimitive prim = obj.getAsJsonPrimitive(name);
-        return prim == null ? "" : prim.getAsString();
+        JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
+        return primitive != null && primitive.isString() ? primitive.getAsString() : "";
+    }
+
+    private JsonPrimitive getPrimitiveOrNull(JsonObject obj, String name)
+    {
+        JsonPrimitive primitive = null;
+        try
+        {
+            primitive = obj.getAsJsonPrimitive(name);
+        }
+        catch (Exception e)
+        {
+            // Just catch the exception instead of checking to get some log
+            privacyIDEA.error("Cannot get " + name + " from JSON");
+            privacyIDEA.error(e);
+        }
+        return primitive;
     }
 }
