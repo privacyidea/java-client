@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
 import static org.privacyidea.PIConstants.ATTRIBUTES;
+import static org.privacyidea.PIConstants.AUTHENTICATION;
 import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
 import static org.privacyidea.PIConstants.CLIENTDATA;
 import static org.privacyidea.PIConstants.CODE;
@@ -153,6 +154,13 @@ public class JSONParser
         JsonObject result = obj.getAsJsonObject(RESULT);
         if (result != null)
         {
+            String r = getString(result, AUTHENTICATION);
+            for (AuthenticationStatus en : AuthenticationStatus.values())
+            {
+                if (en.toString().equals(r)) {
+                    response.authentication = r;
+                }
+            }
             response.status = getBoolean(result, STATUS);
             response.value = getBoolean(result, VALUE);
 
