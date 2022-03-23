@@ -158,7 +158,7 @@ public class JSONParser
             for (AuthenticationStatus en : AuthenticationStatus.values())
             {
                 if (en.toString().equals(r)) {
-                    response.authentication = r;
+                    response.authentication = en;
                 }
             }
             response.status = getBoolean(result, STATUS);

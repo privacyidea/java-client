@@ -4,5 +4,6 @@ public enum AuthenticationStatus
 {
     CHALLENGE,
     ACCEPT,
-    REJECT
+    REJECT,
+    NONE
 }
