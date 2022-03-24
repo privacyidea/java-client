@@ -16,6 +16,7 @@
  */
 package org.privacyidea;
 
+import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -23,8 +24,8 @@ import java.util.stream.Collectors;
 
 import static org.privacyidea.AuthenticationStatus.NONE;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
@@ -51,7 +52,8 @@ public class PIResponse
 
     public boolean pushAvailable()
     {
-        return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return multichallenge.stream()
+                             .anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
     /**
@@ -79,8 +81,12 @@ public class PIResponse
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(multichallenge.stream().filter(predicate).map(Challenge::getMessage).distinct()
-                                .reduce("", (a, s) -> a + s + ", ").trim());
+        sb.append(multichallenge.stream()
+                                .filter(predicate)
+                                .map(Challenge::getMessage)
+                                .distinct()
+                                .reduce("", (a, s) -> a + s + ", ")
+                                .trim());
 
         if (sb.length() > 0)
         {
@@ -95,7 +101,10 @@ public class PIResponse
      */
     public List<String> triggeredTokenTypes()
     {
-        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
+        return multichallenge.stream()
+                             .map(Challenge::getType)
+                             .distinct()
+                             .collect(Collectors.toList());
     }
 
     /**
@@ -114,7 +123,9 @@ public class PIResponse
     public List<WebAuthn> webAuthnSignRequests()
     {
         List<WebAuthn> ret = new ArrayList<>();
-        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList())
+        multichallenge.stream()
+                      .filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType()))
+                      .collect(Collectors.toList())
                       .forEach(c ->
                                {
                                    if (c instanceof WebAuthn)
@@ -126,6 +137,42 @@ public class PIResponse
     }
 
     /**
+     * Return the SignRequest that contains the merged allowCredentials so that the SignRequest can be used with any device that
+     * is allowed to answer the SignRequest.
+     *
+     * Can return an empty string if an error occurred or if no WebAuthn challenges have been triggered.
+     *
+     * @return merged SignRequest or empty string.
+     */
+    public String mergedSignRequest()
+    {
+        List<WebAuthn> webAuthnSignRequests = webAuthnSignRequests();
+        if (webAuthnSignRequests.isEmpty())
+        {
+            return "";
+        }
+        if (webAuthnSignRequests.size() == 1)
+        {
+            return webAuthnSignRequests.get(0)
+                                       .signRequest();
+        }
+
+        WebAuthn webAuthn = webAuthnSignRequests.get(0);
+        List<String> stringSignRequests = webAuthnSignRequests.stream()
+                                                              .map(WebAuthn::signRequest)
+                                                              .collect(Collectors.toList());
+
+        try
+        {
+            return JSONParser.mergeWebAuthnSignRequest(webAuthn, stringSignRequests);
+        }
+        catch (JsonSyntaxException e)
+        {
+            return "";
+        }
+    }
+
+    /**
      * Get all U2F challenges from the multi_challenge.
      *
      * @return List of U2F objects or empty list
@@ -133,7 +180,9 @@ public class PIResponse
     public List<U2F> u2fSignRequests()
     {
         List<U2F> ret = new ArrayList<>();
-        multichallenge.stream().filter(c -> TOKEN_TYPE_U2F.equals(c.getType())).collect(Collectors.toList())
+        multichallenge.stream()
+                      .filter(c -> TOKEN_TYPE_U2F.equals(c.getType()))
+                      .collect(Collectors.toList())
                       .forEach(c ->
                                {
                                    if (c instanceof U2F)

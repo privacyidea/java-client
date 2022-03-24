@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,16 +38,16 @@ import static org.privacyidea.PIConstants.SIGNATUREDATA;
 import static org.privacyidea.PIConstants.STATUS;
 import static org.privacyidea.PIConstants.TOKEN;
 import static org.privacyidea.PIConstants.TOKENS;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
+import static org.privacyidea.PIConstants.U2F_SIGN_REQUEST;
 import static org.privacyidea.PIConstants.USERHANDLE;
 import static org.privacyidea.PIConstants.USERNAME;
 import static org.privacyidea.PIConstants.VALUE;
 import static org.privacyidea.PIConstants.VERSION_NUMBER;
 import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
-import static org.privacyidea.PIConstants.U2F_SIGN_REQUEST;
 
 public class JSONParser
 {
@@ -74,10 +73,12 @@ public class JSONParser
         }
 
         JsonObject obj;
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().setPrettyPrinting()
+                                     .create();
         try
         {
-            obj = JsonParser.parseString(json).getAsJsonObject();
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -104,7 +105,10 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    return obj.getAsJsonObject(RESULT)
+                              .getAsJsonObject(VALUE)
+                              .getAsJsonPrimitive(TOKEN)
+                              .getAsString();
                 }
                 catch (Exception e)
                 {
@@ -138,7 +142,8 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse)
+                            .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -200,7 +205,8 @@ public class JSONParser
             {
                 for (int i = 0; i < arrChallenges.size(); i++)
                 {
-                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
+                    JsonObject challenge = arrChallenges.get(i)
+                                                        .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
                     String transactionid = getString(challenge, TRANSACTION_ID);
@@ -226,13 +232,34 @@ public class JSONParser
         return response;
     }
 
+    static String mergeWebAuthnSignRequest(WebAuthn webAuthn, List<String> arr) throws JsonSyntaxException
+    {
+        List<JsonArray> extracted = new ArrayList<>();
+        for (String signRequest : arr)
+        {
+            JsonObject obj = JsonParser.parseString(signRequest)
+                                       .getAsJsonObject();
+            extracted.add(obj.getAsJsonArray("allowCredentials"));
+        }
+
+        JsonObject signRequest = JsonParser.parseString(webAuthn.signRequest())
+                                           .getAsJsonObject();
+        JsonArray allowCredentials = new JsonArray();
+        extracted.forEach(allowCredentials::addAll);
+
+        signRequest.add("allowCredentials", allowCredentials);
+
+        return signRequest.toString();
+    }
+
     private String getSignRequestFromAttributes(String requestType, JsonObject jsonObject)
     {
         String ret = "";
         JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
         if (attributeElement != null && !attributeElement.isJsonNull())
         {
-            JsonElement requestElement = attributeElement.getAsJsonObject().get(requestType);
+            JsonElement requestElement = attributeElement.getAsJsonObject()
+                                                         .get(requestType);
             if (requestElement != null && !requestElement.isJsonNull())
             {
                 ret = requestElement.toString();
@@ -258,7 +285,8 @@ public class JSONParser
         JsonObject object;
         try
         {
-            object = JsonParser.parseString(serverResponse).getAsJsonObject();
+            object = JsonParser.parseString(serverResponse)
+                               .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -304,7 +332,8 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json).getAsJsonObject();
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -335,13 +364,15 @@ public class JSONParser
         JsonObject joInfo = obj.getAsJsonObject(INFO);
         if (joInfo != null)
         {
-            joInfo.entrySet().forEach(entry ->
-                                      {
-                                          if (entry.getKey() != null && entry.getValue() != null)
-                                          {
-                                              info.info.put(entry.getKey(), entry.getValue().getAsString());
-                                          }
-                                      });
+            joInfo.entrySet()
+                  .forEach(entry ->
+                           {
+                               if (entry.getKey() != null && entry.getValue() != null)
+                               {
+                                   info.info.put(entry.getKey(), entry.getValue()
+                                                                      .getAsString());
+                               }
+                           });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
@@ -380,7 +411,8 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse)
+                            .getAsJsonObject();
 
             JsonObject result = obj.getAsJsonObject(RESULT);
             JsonElement errElem = result.get(ERROR);
@@ -445,7 +477,8 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json).getAsJsonObject();
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -485,7 +518,8 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json).getAsJsonObject();
+            obj = JsonParser.parseString(json)
+                            .getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
