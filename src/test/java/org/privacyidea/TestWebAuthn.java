@@ -295,12 +295,6 @@ public class TestWebAuthn implements IPILogger {
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);
-
-        PIResponse piResponse2 = jsonParser.parsePIResponse(emptyPIResp);
-        String merged2 = piResponse2.mergedSignRequest();
-
-        assertEquals("", merged2);
-
     }
 
     @Override
