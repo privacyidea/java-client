@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.AuthenticationStatus.NONE;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
@@ -37,11 +36,11 @@ public class PIResponse
     public List<Challenge> multichallenge = new ArrayList<>();
     public String transactionID = "";
     public String serial = "";
-    public String id = "";
+    public int id = 0;
     public String jsonRPCVersion = "";
     public boolean status = false;
     public boolean value = false;
-    public AuthenticationStatus authentication = NONE;
+    public AuthenticationStatus authentication = AuthenticationStatus.NONE;
     public String piVersion = ""; // e.g. 3.2.1
     public String rawMessage = "";
     public String signature = "";
