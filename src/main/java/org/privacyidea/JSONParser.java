@@ -151,7 +151,7 @@ public class JSONParser
             return response;
         }
 
-        response.id = getString(obj, ID);
+        response.id = getInt(obj, ID);
         response.piVersion = getString(obj, VERSION_NUMBER);
         response.signature = getString(obj, SIGNATURE);
         response.jsonRPCVersion = getString(obj, JSONRPC);

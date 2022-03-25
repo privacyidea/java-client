@@ -131,6 +131,7 @@ public class TestWebAuthn implements IPILogger {
                                 "  \"id\": 1,\n" +
                                 "  \"jsonrpc\": \"2.0\",\n" +
                                 "  \"result\": {\n" +
+                                "    \"authentication\": \"CHALLENGE\",\n" +
                                 "    \"status\": true,\n" +
                                 "    \"value\": false\n" +
                                 "  },\n" +
@@ -142,6 +143,7 @@ public class TestWebAuthn implements IPILogger {
 
         Optional<Challenge> opt = response.multiChallenge().stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
         assertTrue(opt.isPresent());
+        assertEquals(AuthenticationStatus.CHALLENGE, response.authentication);
         Challenge a = opt.get();
         if (a instanceof WebAuthn) {
             WebAuthn b = (WebAuthn) a;
