@@ -65,6 +65,7 @@ public class TestOTP implements IPILogger {
                 "  \"id\": 1,\n" +
                 "  \"jsonrpc\": \"2.0\",\n" +
                 "  \"result\": {\n" +
+                "    \"authentication\": \"ACCEPT\",\n" +
                 "    \"status\": true,\n" +
                 "    \"value\": true\n" +
                 "  },\n" +
@@ -78,7 +79,7 @@ public class TestOTP implements IPILogger {
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
         // Assert everything
-        assertEquals("1", response.id);
+        assertEquals(1, response.id);
         assertEquals("matching 1 tokens", response.message);
         assertEquals(6, response.otpLength);
         assertEquals("PISP0001C673", response.serial);
@@ -94,6 +95,7 @@ public class TestOTP implements IPILogger {
         // result
         assertTrue(response.status);
         assertTrue(response.value);
+        assertEquals(AuthenticationStatus.ACCEPT, response.authentication);
     }
 
     @Test
