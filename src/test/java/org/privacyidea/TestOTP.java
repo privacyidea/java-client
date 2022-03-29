@@ -33,11 +33,8 @@ public class TestOTP implements IPILogger {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
-
     private final String username = "testuser";
     private final String otp = "123456";
-
-    private Throwable lastError;
 
     @Before
     public void setup() {
@@ -74,7 +71,6 @@ public class TestOTP implements IPILogger {
 
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
-        // Assert everything
         assertEquals(1, response.id);
         assertEquals("matching 1 tokens", response.message);
         assertEquals(6, response.otpLength);
@@ -140,13 +136,11 @@ public class TestOTP implements IPILogger {
 
     @Override
     public void error(Throwable t) {
-        lastError = t;
         t.printStackTrace();
     }
 
     @Override
     public void log(Throwable t) {
-        lastError = t;
         t.printStackTrace();
     }
 }

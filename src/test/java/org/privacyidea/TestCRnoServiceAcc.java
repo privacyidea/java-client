@@ -36,11 +36,7 @@ public class TestCRnoServiceAcc implements IPILogger {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
-
     private final String username = "testuser";
-    private final String otp = "123456";
-
-    private final AtomicBoolean waitingForCallback = new AtomicBoolean(true);
 
     @Before
     public void setup() {

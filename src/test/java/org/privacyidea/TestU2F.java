@@ -33,7 +33,6 @@ public class TestU2F implements IPILogger {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
-
     @Before
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
@@ -65,7 +64,6 @@ public class TestU2F implements IPILogger {
                         .withMethod("POST")
                         .withBody("user=Test&transaction_id=16786665691788289392&pass=&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
                 .respond(HttpResponse.response()
-                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                         .withBody("{\n" + "   \"detail\":{\n" + "      \"attributes\":{\n" +
                                   "         \"hideResponseInput\":true,\n" +
                                   "         \"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
@@ -201,7 +199,7 @@ public class TestU2F implements IPILogger {
             fail();
         }
 
-        //push
+        //push side functions
         boolean pushAvailable = response.pushAvailable();
         assertFalse(pushAvailable);
         String pushMessage = response.pushMessage();

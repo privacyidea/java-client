@@ -28,11 +28,6 @@ public class TestServiceAccount implements IPILogger {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
-    private final String username = "testuser";
-    private final String otp = "123456";
-
-    private Throwable lastError;
-
     @Before
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
@@ -127,12 +122,10 @@ public class TestServiceAccount implements IPILogger {
     @Override
     public void error(Throwable t) {
         t.printStackTrace();
-        lastError = t;
     }
 
     @Override
     public void log(Throwable t) {
         t.printStackTrace();
-        lastError = t;
     }
 }

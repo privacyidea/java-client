@@ -32,7 +32,6 @@ public class TestWebAuthn implements IPILogger {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
-
     @Before
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
@@ -51,7 +50,6 @@ public class TestWebAuthn implements IPILogger {
     @Test
     public void test() {
         String username = "Test";
-        String pass = username;
 
         String webauthnrequest = "{\n" +
                 "            \"allowCredentials\": [\n" +
@@ -77,7 +75,6 @@ public class TestWebAuthn implements IPILogger {
                         .withMethod("POST")
                         .withBody("user=Test&transaction_id=16786665691788289392&pass=&credentialid=kJCeTZ-AtzwuuF-BkzBNO_0-e4bkf8IVaqzjO4lkVjwNyLmOx9tHwO-BKwYxgitd4uoowT43EGm_x3mNhT1i-w&clientdata=eyJjaGFsbGVuZ2UiOiI3czZTOWQxRkFJMEptZUxYNHRobi5nZXQifQ&signaturedata=MEUCIQC4q6skdNOj2y7V85Z9ydKbehltoJBH3p_faB7Mn4uWEQIgZaNsdumasL-op4Zgxm7g&authenticatordata=YgXNXddv4CjdMv50VAhTaPANtrGt2a6niL1j3nAUulsFAAADDw"))
                 .respond(HttpResponse.response()
-                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                         .withBody("{\n" +
                                 "  \"detail\": {\n" +
                                 "    \"attributes\": {\n" +
