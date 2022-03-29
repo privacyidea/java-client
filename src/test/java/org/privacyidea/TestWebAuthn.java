@@ -16,15 +16,14 @@
 package org.privacyidea;
 
 import java.util.Optional;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.After;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
@@ -76,7 +75,7 @@ public class TestWebAuthn implements IPILogger {
                 HttpRequest.request()
                         .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                         .withMethod("POST")
-                        .withBody("user=" + username + "&pass=" + pass))
+                        .withBody("user=Test&transaction_id=16786665691788289392&pass=&credentialid=kJCeTZ-AtzwuuF-BkzBNO_0-e4bkf8IVaqzjO4lkVjwNyLmOx9tHwO-BKwYxgitd4uoowT43EGm_x3mNhT1i-w&clientdata=eyJjaGFsbGVuZ2UiOiI3czZTOWQxRkFJMEptZUxYNHRobi5nZXQifQ&signaturedata=MEUCIQC4q6skdNOj2y7V85Z9ydKbehltoJBH3p_faB7Mn4uWEQIgZaNsdumasL-op4Zgxm7g&authenticatordata=YgXNXddv4CjdMv50VAhTaPANtrGt2a6niL1j3nAUulsFAAADDw"))
                 .respond(HttpResponse.response()
                         // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                         .withBody("{\n" +
@@ -138,7 +137,12 @@ public class TestWebAuthn implements IPILogger {
                                 "}\n" +
                                 ""));
 
-        PIResponse response = privacyIDEA.validateCheck(username, pass);
+        String webauthnSignResponse = "{\"credentialid\":\"kJCeTZ-AtzwuuF-BkzBNO_0-e4bkf8IVaqzjO4lkVjwNyLmOx9tHwO-BKwYxgitd4uoowT43EGm_x3mNhT1i-w\"," +
+                                      "\"clientdata\":\"eyJjaGFsbGVuZ2UiOiI3czZTOWQxRkFJMEptZUxYNHRobi5nZXQifQ\"," +
+                                      "\"signaturedata\":\"MEUCIQC4q6skdNOj2y7V85Z9ydKbehltoJBH3p_faB7Mn4uWEQIgZaNsdumasL-op4Zgxm7g\"," +
+                                      "\"authenticatordata\":\"YgXNXddv4CjdMv50VAhTaPANtrGt2a6niL1j3nAUulsFAAADDw\"}";
+
+        PIResponse response = privacyIDEA.validateCheckWebAuthn(username, "16786665691788289392", webauthnSignResponse, "origin");
 
         Optional<Challenge> opt = response.multiChallenge().stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
         assertTrue(opt.isPresent());
@@ -168,8 +172,6 @@ public class TestWebAuthn implements IPILogger {
                                         "   \"challenge\":\"4h0W-GXDhDK63aNKHBBPhDtV9812l0BQI06mYSYcDTQ\",\n" +
                                         "   \"rpId\":\"office.netknights.it\",\n" + "   \"timeout\":60000,\n" +
                                         "   \"userVerification\":\"preferred\"\n" + "}";
-
-        String emptyPIResp = "";
 
         String respMultipleWebauthn = "{\n" + "   \"detail\":{\n" + "      \"attributes\":{\n" +
                                       "         \"hideResponseInput\":true,\n" +
@@ -293,7 +295,6 @@ public class TestWebAuthn implements IPILogger {
         PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
         String trimmedRequest = expectedMergedResponse.replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
-
         assertEquals(trimmedRequest, merged1);
     }
 
