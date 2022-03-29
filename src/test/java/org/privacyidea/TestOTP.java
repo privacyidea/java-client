@@ -15,10 +15,7 @@
  */
 package org.privacyidea;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +25,7 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -78,12 +76,10 @@ public class TestOTP implements IPILogger {
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
         // Assert everything
-        assertEquals("1", response.id);
+        assertEquals(1, response.id);
         assertEquals("matching 1 tokens", response.message);
         assertEquals(6, response.otpLength);
         assertEquals("PISP0001C673", response.serial);
-        //assertEquals("140536383567616", response.getThreadID());
-        //assertEquals("1589276995.4397042", response.getTime());
         assertEquals("totp", response.type);
         assertEquals("2.0", response.jsonRPCVersion);
         assertEquals("3.2.1", response.piVersion);

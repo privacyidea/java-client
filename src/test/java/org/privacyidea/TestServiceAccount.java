@@ -31,20 +31,19 @@ public class TestServiceAccount implements IPILogger {
     private final String username = "testuser";
     private final String otp = "123456";
 
-    private final String serviceUser = "admin";
-    private final String servicePass = "admin";
-
     private Throwable lastError;
 
     @Before
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
+        String serviceUser = "admin";
+        String servicePass = "admin";
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .serviceAccount(serviceUser, servicePass)
-                .sslVerify(false)
-                .logger(this)
-                .build();
+                                 .serviceAccount(serviceUser, servicePass)
+                                 .sslVerify(false)
+                                 .logger(this)
+                                 .build();
     }
 
     @Test
