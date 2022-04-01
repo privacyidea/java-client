@@ -34,8 +34,9 @@ public class TestServiceAccount implements IPILogger {
 
         String serviceUser = "admin";
         String servicePass = "admin";
+        String serviceAccountRealm = "realm";
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .serviceAccount(serviceUser, servicePass)
+                                 .serviceAccount(serviceUser, servicePass).serviceRealm(serviceAccountRealm).disableLog()
                                  .sslVerify(false)
                                  .logger(this)
                                  .build();

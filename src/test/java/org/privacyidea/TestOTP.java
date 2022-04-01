@@ -15,6 +15,8 @@
  */
 package org.privacyidea;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
@@ -91,7 +93,9 @@ public class TestOTP implements IPILogger {
     public void testEmptyResponse() {
         setResponseBody("");
 
-        PIResponse response = privacyIDEA.validateCheck(username, otp);
+        Map<String, String> header = new HashMap<>();
+        header.put("language", "german");
+        PIResponse response = privacyIDEA.validateCheck(username, otp, header);
 
         // An empty response returns null
         assertNull(response);
