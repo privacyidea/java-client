@@ -19,44 +19,40 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-public class TestErrors implements IPILogger
-{
+
+public class TestTriggerChallengeNoServiceAccount implements IPILogger {
+
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        String realm = "realm";
-
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").realm(realm).sslVerify(false).logger(this).build();
-    }
-
-    @After
-    public void teardown()
-    {
-        mockServer.stop();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                .sslVerify(false)
+                .logger(this)
+                .build();
     }
 
     @Test
-    public void test()
-    {
-        log("testLog");
-        error("testError");
+    public void testTriggerChallenge() {
+        String username = "testuser";
+        PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
 
-        String authToken = privacyIDEA.getAuthToken();
-
-        assertNull(authToken);
+        assertNull(responseTriggerChallenge);
     }
 
-    @Override
-    public void log(String message) {
-        System.out.println(message);
+    @After
+    public void tearDown() {
+        mockServer.stop();
     }
 
     @Override
@@ -65,12 +61,17 @@ public class TestErrors implements IPILogger
     }
 
     @Override
-    public void log(Throwable t) {
-        System.out.println(t.getMessage());
+    public void log(String message) {
+        System.out.println(message);
     }
 
     @Override
     public void error(Throwable t) {
-        System.err.println(t.getMessage());
+        t.printStackTrace();
+    }
+
+    @Override
+    public void log(Throwable t) {
+        t.printStackTrace();
     }
 }

@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class TestOTP implements IPILogger {
+public class TestValidateCheck implements IPILogger {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -94,7 +94,7 @@ public class TestOTP implements IPILogger {
         setResponseBody("");
 
         Map<String, String> header = new HashMap<>();
-        header.put("language", "german");
+        header.put("language", "english");
         PIResponse response = privacyIDEA.validateCheck(username, otp, header);
 
         // An empty response returns null

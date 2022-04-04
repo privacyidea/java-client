@@ -38,7 +38,7 @@ public class TestGetTokenInfoNoServiceAccount implements IPILogger
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false).logger(this).build();
+                .sslVerify(false).logger(this).build();
     }
 
     @After
@@ -51,6 +51,9 @@ public class TestGetTokenInfoNoServiceAccount implements IPILogger
     public void test()
     {
         String username = "Test";
+
+        log("test");
+        error("test");
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 
