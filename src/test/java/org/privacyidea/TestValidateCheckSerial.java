@@ -33,44 +33,28 @@ public class TestValidateCheckSerial
     private PrivacyIDEA privacyIDEA;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
-                                 .logger(new PILogImplementation())
-                                 .build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
     }
 
     @Test
-    public void testValidateCheckSerial() {
-        String responseBody = "{\n" +
-                              "  \"detail\": {\n" +
-                              "    \"message\": \"matching 1 tokens\",\n" +
-                              "    \"otplen\": 6,\n" +
-                              "    \"serial\": \"PISP0001C673\",\n" +
-                              "    \"threadid\": 140536383567616,\n" +
-                              "    \"type\": \"totp\"\n" +
-                              "  },\n" +
-                              "  \"id\": 1,\n" +
-                              "  \"jsonrpc\": \"2.0\",\n" +
-                              "  \"result\": {\n" +
-                              "    \"status\": true,\n" +
-                              "    \"value\": true\n" +
-                              "  },\n" +
-                              "  \"time\": 1589276995.4397042,\n" +
-                              "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                              "  \"versionnumber\": \"3.2.1\",\n" +
-                              "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" +
-                              "}";
+    public void testValidateCheckSerial()
+    {
+        String responseBody =
+                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
+                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
+                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
+                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
+                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
+                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
 
-        mockServer.when(
-                          HttpRequest.request()
-                                     .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
-                                     .withMethod("POST")
-                                     .withBody("serial=PISP0001C673&pass=123456"))
-                  .respond(HttpResponse.response()
-                                   .withBody(responseBody));
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+                                   .withBody("serial=PISP0001C673&pass=123456"))
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         String serial = "PISP0001C673";
         String otp = "123456";

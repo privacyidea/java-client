@@ -24,21 +24,18 @@ import static org.junit.Assert.assertNull;
 
 public class TestTriggerChallengeNoServiceAccount
 {
-    private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
     @Before
-    public void setup() {
-        mockServer = ClientAndServer.startClientAndServer(1080);
-
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .sslVerify(false)
-                .logger(new PILogImplementation())
-                .build();
+    public void setup()
+    {
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
     }
 
     @Test
-    public void testTriggerChallenge() {
+    public void testTriggerChallenge()
+    {
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
 

@@ -19,40 +19,34 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.model.Header;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class TestRolloutNoServiceAccount
 {
-
     private PrivacyIDEA privacyIDEA;
     private ClientAndServer mockServer;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .sslVerify(false)
-                .logger(new PILogImplementation())
-                .build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
     }
 
     @Test
-    public void test() {
+    public void test()
+    {
         RolloutInfo rolloutInfo = privacyIDEA.tokenRollout("games", "hotp");
 
         assertNull(rolloutInfo);
     }
 
     @After
-    public void teardown() {
+    public void teardown()
+    {
         mockServer.stop();
     }
 }
