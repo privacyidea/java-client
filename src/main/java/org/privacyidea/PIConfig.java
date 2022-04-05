@@ -26,7 +26,6 @@ class PIConfig
     String serviceAccountName = "";
     String serviceAccountPass = "";
     String serviceAccountRealm = "";
-    List<Integer> pollingIntervals = new ArrayList<>();
     boolean disableLog = false;
     String userAgent = "";
 

@@ -160,7 +160,7 @@ public class PrivacyIDEA
 
         params.put(SERIAL, serial);
         params.put(PASS, (otp != null ? otp : ""));
-        if (transactionId != null && transactionId.isEmpty())
+        if (transactionId != null && !transactionId.isEmpty())
         {
             params.put(TRANSACTION_ID, transactionId);
         }
@@ -648,19 +648,6 @@ public class PrivacyIDEA
         }
 
         /**
-         * Set the intervals at which the polling is done when using asyncPollTransaction.
-         * The last number will be repeated if the end of the list is reached.
-         *
-         * @param intervals list of integers that represent seconds
-         * @return Builder
-         */
-        public Builder pollingIntervals(List<Integer> intervals)
-        {
-            this.pollingIntervals = intervals;
-            return this;
-        }
-
-        /**
          * Disable logging completely regardless of any set loggers.
          *
          * @return Builder
@@ -679,7 +666,6 @@ public class PrivacyIDEA
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.serviceAccountRealm = serviceAccountRealm;
-            configuration.pollingIntervals = pollingIntervals;
             configuration.disableLog = disableLog;
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }

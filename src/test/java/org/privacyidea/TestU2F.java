@@ -39,14 +39,9 @@ public class TestU2F implements IPILogger {
     @Before
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
-        List<Integer> intervals = new ArrayList<Integer>();
-        intervals.add(1);
-        intervals.add(2);
-        intervals.add(3);
-        intervals.add(4);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .sslVerify(false).pollingIntervals(intervals)
+                .sslVerify(false)
                 .logger(this)
                 .build();
     }

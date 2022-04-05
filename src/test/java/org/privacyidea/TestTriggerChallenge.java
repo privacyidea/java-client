@@ -215,10 +215,7 @@ public class TestTriggerChallenge implements IPILogger {
                                      .withBody("user=testuser&realm=realm"))
                   .respond(HttpResponse.response()
                                        .withBody(response));
-
-        List<String> excludedEndpoint = new ArrayList<>();
-        excludedEndpoint.add("validate/samlcheck");
-        privacyIDEA.logExcludedEndpoints(excludedEndpoint);
+        // TODO
 
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);

@@ -42,7 +42,7 @@ public class TestValidateCheck implements IPILogger {
     public void setup() {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+        privacyIDEA = PrivacyIDEA.newBuilder(",ljkdndfd://127.0.0.1:1080", "test")
                 .sslVerify(false)
                 .logger(this)
                 .build();

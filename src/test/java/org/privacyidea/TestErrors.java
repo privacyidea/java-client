@@ -22,7 +22,7 @@ import org.mockserver.integration.ClientAndServer;
 
 import static org.junit.Assert.assertNull;
 
-public class TestErrors implements IPILogger
+public class TestErrors
 {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -34,7 +34,8 @@ public class TestErrors implements IPILogger
 
         String realm = "realm";
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").realm(realm).sslVerify(false).logger(this).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").realm(realm).sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
     }
 
     @After
@@ -46,31 +47,10 @@ public class TestErrors implements IPILogger
     @Test
     public void test()
     {
-        log("testLog");
-        error("testError");
-
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").realm("realm").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
         String authToken = privacyIDEA.getAuthToken();
 
         assertNull(authToken);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(Throwable t) {
-        System.out.println(t.getMessage());
-    }
-
-    @Override
-    public void error(Throwable t) {
-        System.err.println(t.getMessage());
     }
 }
