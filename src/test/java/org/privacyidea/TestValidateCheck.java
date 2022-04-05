@@ -31,7 +31,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-public class TestValidateCheck implements IPILogger {
+public class TestValidateCheck
+{
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -44,7 +45,7 @@ public class TestValidateCheck implements IPILogger {
 
         privacyIDEA = PrivacyIDEA.newBuilder(",ljkdndfd://127.0.0.1:1080", "test")
                 .sslVerify(false)
-                .logger(this)
+                .logger(new PILogImplementation())
                 .build();
     }
 
@@ -121,30 +122,5 @@ public class TestValidateCheck implements IPILogger {
                         .withContentType(MediaType.APPLICATION_JSON)
                         .withBody(s)
                         .withDelay(TimeUnit.MILLISECONDS, 50));
-    }
-
-    @After
-    public void tearDown() {
-        mockServer.stop();
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(Throwable t) {
-        t.printStackTrace();
-    }
-
-    @Override
-    public void log(Throwable t) {
-        t.printStackTrace();
     }
 }

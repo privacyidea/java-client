@@ -24,7 +24,8 @@ import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestServiceAccount implements IPILogger {
+public class TestServiceAccount
+{
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
@@ -38,7 +39,7 @@ public class TestServiceAccount implements IPILogger {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .serviceAccount(serviceUser, servicePass).serviceRealm(serviceAccountRealm).disableLog()
                                  .sslVerify(false)
-                                 .logger(this)
+                                 .logger(new PILogImplementation())
                                  .build();
     }
 
@@ -103,30 +104,5 @@ public class TestServiceAccount implements IPILogger {
 
         String retAuthToken = privacyIDEA.getAuthToken();
         assertEquals(authToken, retAuthToken);
-    }
-
-    @After
-    public void tearDown() {
-        mockServer.stop();
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(Throwable t) {
-        t.printStackTrace();
-    }
-
-    @Override
-    public void log(Throwable t) {
-        t.printStackTrace();
     }
 }

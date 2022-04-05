@@ -28,7 +28,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 
-public class TestWebAuthn implements IPILogger {
+public class TestWebAuthn
+{
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
@@ -38,7 +39,7 @@ public class TestWebAuthn implements IPILogger {
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                 .sslVerify(false)
-                .logger(this)
+                .logger(new PILogImplementation())
                 .build();
     }
 
@@ -293,25 +294,5 @@ public class TestWebAuthn implements IPILogger {
         String trimmedRequest = expectedMergedResponse.replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
         assertEquals(trimmedRequest, merged1);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(Throwable t) {
-        System.out.println(t.getMessage());
-    }
-
-    @Override
-    public void error(Throwable t) {
-        System.err.println(t.getMessage());
     }
 }

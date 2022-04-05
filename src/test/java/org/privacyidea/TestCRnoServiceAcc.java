@@ -32,7 +32,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestCRnoServiceAcc implements IPILogger {
+public class TestCRnoServiceAcc {
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -44,7 +44,7 @@ public class TestCRnoServiceAcc implements IPILogger {
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                 .sslVerify(false)
-                .logger(this)
+                .logger(new PILogImplementation())
                 .simpleLogger(System.out::println)
                 .build();
     }
@@ -204,25 +204,5 @@ public class TestCRnoServiceAcc implements IPILogger {
                                         "    \"signature\": \"rsa_sha256_pss:\"\n" +
                                         "}")
                                 .withDelay(TimeUnit.MILLISECONDS, 50));
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(Throwable t) {
-        t.printStackTrace();
-    }
-
-    @Override
-    public void log(Throwable t) {
-        t.printStackTrace();
     }
 }

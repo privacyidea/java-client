@@ -29,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestGetTokenInfo implements IPILogger
+public class TestGetTokenInfo
 {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -46,7 +46,7 @@ public class TestGetTokenInfo implements IPILogger
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .serviceAccount(serviceAccount, servicePassword).realm(realm).sslVerify(false)
-                                 .logger(this).build();
+                                 .logger(new PILogImplementation()).build();
     }
 
     @After
@@ -139,29 +139,5 @@ public class TestGetTokenInfo implements IPILogger
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNull(tokenInfoList);
-    }
-
-    @Override
-    public void log(String message)
-    {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(String message)
-    {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(Throwable t)
-    {
-        System.out.println(t.getMessage());
-    }
-
-    @Override
-    public void error(Throwable t)
-    {
-        System.err.println(t.getMessage());
     }
 }

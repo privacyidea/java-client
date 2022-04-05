@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestGetTokenInfoNoServiceAccount implements IPILogger
+public class TestGetTokenInfoNoServiceAccount
 {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -38,7 +38,7 @@ public class TestGetTokenInfoNoServiceAccount implements IPILogger
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                .sslVerify(false).logger(this).build();
+                .sslVerify(false).logger(new PILogImplementation()).build();
     }
 
     @After
@@ -52,31 +52,8 @@ public class TestGetTokenInfoNoServiceAccount implements IPILogger
     {
         String username = "Test";
 
-        log("test");
-        error("test");
-
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 
         assertNull(tokenInfoList);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(Throwable t) {
-        System.out.println(t.getMessage());
-    }
-
-    @Override
-    public void error(Throwable t) {
-        System.err.println(t.getMessage());
     }
 }

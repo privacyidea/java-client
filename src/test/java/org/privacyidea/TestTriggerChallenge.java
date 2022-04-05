@@ -15,8 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +27,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-public class TestTriggerChallenge implements IPILogger {
+public class TestTriggerChallenge
+{
 
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -42,7 +41,7 @@ public class TestTriggerChallenge implements IPILogger {
         String servicePass = "pass";
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .sslVerify(false).serviceAccount(serviceAccount, servicePass)
-                                 .logger(this).realm("realm")
+                                 .logger(new PILogImplementation()).realm("realm")
                                  .build();
     }
 
@@ -241,25 +240,5 @@ public class TestTriggerChallenge implements IPILogger {
     @After
     public void tearDown() {
         mockServer.stop();
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(Throwable t) {
-        t.printStackTrace();
-    }
-
-    @Override
-    public void log(Throwable t) {
-        t.printStackTrace();
     }
 }

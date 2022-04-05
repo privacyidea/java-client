@@ -15,20 +15,15 @@
  */
 package org.privacyidea;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 
-public class TestTriggerChallengeNoServiceAccount implements IPILogger {
-
+public class TestTriggerChallengeNoServiceAccount
+{
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
@@ -38,7 +33,7 @@ public class TestTriggerChallengeNoServiceAccount implements IPILogger {
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                 .sslVerify(false)
-                .logger(this)
+                .logger(new PILogImplementation())
                 .build();
     }
 
@@ -48,30 +43,5 @@ public class TestTriggerChallengeNoServiceAccount implements IPILogger {
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
 
         assertNull(responseTriggerChallenge);
-    }
-
-    @After
-    public void tearDown() {
-        mockServer.stop();
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(Throwable t) {
-        t.printStackTrace();
-    }
-
-    @Override
-    public void log(Throwable t) {
-        t.printStackTrace();
     }
 }

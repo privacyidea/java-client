@@ -39,27 +39,7 @@ public class TestRollout {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                 .sslVerify(false)
                 .serviceAccount("admin", "admin")
-                .logger(new IPILogger() {
-                    @Override
-                    public void log(String message) {
-                        System.out.println(message);
-                    }
-
-                    @Override
-                    public void error(String message) {
-                        System.err.println(message);
-                    }
-
-                    @Override
-                    public void log(Throwable t) {
-                        System.out.println(t);
-                    }
-
-                    @Override
-                    public void error(Throwable t) {
-                        System.err.println(t);
-                    }
-                })
+                .logger(new PILogImplementation())
                 .build();
     }
 

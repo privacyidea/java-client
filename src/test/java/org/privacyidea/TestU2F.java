@@ -15,9 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
 
-public class TestU2F implements IPILogger {
+public class TestU2F {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
 
@@ -42,7 +39,7 @@ public class TestU2F implements IPILogger {
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                 .sslVerify(false)
-                .logger(this)
+                .logger(new PILogImplementation())
                 .build();
     }
 
@@ -213,25 +210,5 @@ public class TestU2F implements IPILogger {
                      " Bitte scannen Sie den QR-Code, Bitte bestätigen Sie mit Ihrem U2F token (Yubico U2F EE Serial 61730834)," +
                      " Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)," +
                      " Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)", otpMessage);
-    }
-
-    @Override
-    public void log(String message) {
-        System.out.println(message);
-    }
-
-    @Override
-    public void error(String message) {
-        System.err.println(message);
-    }
-
-    @Override
-    public void log(Throwable t) {
-        System.out.println(t.getMessage());
-    }
-
-    @Override
-    public void error(Throwable t) {
-        System.err.println(t.getMessage());
     }
 }
