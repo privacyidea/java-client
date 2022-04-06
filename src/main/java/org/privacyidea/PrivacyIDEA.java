@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
@@ -114,22 +113,8 @@ public class PrivacyIDEA
      */
     public PIResponse validateCheck(String username, String otp, String transactionId, Map<String, String> headers)
     {
-        Map<String, String> params = new LinkedHashMap<>();
-
-        params.put(USER, username);
-        params.put(PASS, (otp != null ? otp : ""));
-
-        if (transactionId != null && !transactionId.isEmpty())
-        {
-            params.put(TRANSACTION_ID, transactionId);
-        }
-
-        appendRealm(params);
-
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return this.parser.parsePIResponse(response);
+        return getPiResponse(username, otp, transactionId, headers, USER);
     }
-
 
     /**
      * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
@@ -157,15 +142,29 @@ public class PrivacyIDEA
      */
     public PIResponse validateCheckSerial(String serial, String otp, String transactionId, Map<String, String> headers)
     {
-        Map<String, String> params = new LinkedHashMap<>();
+        return getPiResponse(serial, otp, transactionId, headers, SERIAL);
+    }
 
-        params.put(SERIAL, serial);
+    /**
+     * Collect the PIResponse for validateCheck and validateCheckSerial
+     *
+     * @param usernameOrSerial  username in case of validateCheck or serial of the token if validateCheckSerial
+     * @param otp               otp value
+     * @param transactionId     transaction ID
+     * @param headers           optional headers for the request
+     * @param userOrSerialConst constant for the username or token's serial
+     * @return PIResponse object containing the response or null if error
+     */
+    private PIResponse getPiResponse(String usernameOrSerial, String otp, String transactionId,
+                                     Map<String, String> headers, String userOrSerialConst)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(userOrSerialConst, usernameOrSerial);
         params.put(PASS, (otp != null ? otp : ""));
         if (transactionId != null && !transactionId.isEmpty())
         {
             params.put(TRANSACTION_ID, transactionId);
         }
-
         appendRealm(params);
 
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
