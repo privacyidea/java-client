@@ -161,7 +161,7 @@ public class PrivacyIDEA
 
         params.put(SERIAL, serial);
         params.put(PASS, (otp != null ? otp : ""));
-        if (transactionId != null && transactionId.isEmpty())
+        if (transactionId != null && !transactionId.isEmpty())
         {
             params.put(TRANSACTION_ID, transactionId);
         }
