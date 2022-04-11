@@ -49,14 +49,8 @@ public class TestGetTokenInfo
                                  .logger(new PILogImplementation()).build();
     }
 
-    @After
-    public void teardown()
-    {
-        mockServer.stop();
-    }
-
     @Test
-    public void test()
+    public void testSuccess()
     {
         String result = "{\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":{" +
                         "\"count\":1," + "\"current\":1," + "\"tokens\":[{" + "\"active\":true," + "\"count\":2," +
@@ -139,5 +133,22 @@ public class TestGetTokenInfo
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNull(tokenInfoList);
+    }
+
+    @Test
+    public void testNoServiceAccount()
+    {
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
+
+        List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
+
+        assertNull(tokenInfoList);
+    }
+
+    @After
+    public void teardown()
+    {
+        mockServer.stop();
     }
 }
