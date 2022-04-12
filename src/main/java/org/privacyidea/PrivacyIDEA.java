@@ -563,7 +563,6 @@ public class PrivacyIDEA
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
         private String userAgent = "";
-        private List<Integer> pollingIntervals = Collections.singletonList(1);
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;

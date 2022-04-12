@@ -39,11 +39,6 @@ public class PIConstants
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_USER_AGENT = "User-Agent";
 
-    // Will be used if single value from config cannot be parsed
-    public static final int DEFAULT_POLLING_INTERVAL = 1;
-    // Will be used if no intervals are specified
-    public static final List<Integer> DEFAULT_POLLING_ARRAY = Arrays.asList(4, 2, 1, 1, 2);
-
     // TOKEN TYPES
     public static final String TOKEN_TYPE_PUSH = "push";
     public static final String TOKEN_TYPE_OTP = "otp";
