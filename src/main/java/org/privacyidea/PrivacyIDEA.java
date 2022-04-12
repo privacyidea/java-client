@@ -147,6 +147,14 @@ public class PrivacyIDEA
     }
 
     /**
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     */
+    public PIResponse validateCheckSerial(String serial, String otp, String transactionId)
+    {
+        return this.validateCheckSerial(serial, otp, transactionId, Collections.emptyMap());
+    }
+
+    /**
      * Send a request to /validate/check with the serial rather than the username to identify the token.
      *
      * @param serial        serial of the token
