@@ -24,7 +24,9 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class TestValidateCheckSerial
@@ -42,32 +44,35 @@ public class TestValidateCheckSerial
     }
 
     @Test
-    public void testValidateCheckSerial()
+    public void testNoChallengeResponsePINPlusOTP()
     {
-        String responseBody =
-                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
-                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
-                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
-                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
-                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
+        String responseBody = "{\"detail\":{" + "\"message\":\"matching1tokens\"," + "\"otplen\":6," +
+                              "\"serial\":\"TOTP0001AFB9\"," + "\"threadid\":140050919388928," + "\"type\":\"totp\"}," +
+                              "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," +
+                              "\"value\":true}," + "\"time\":1649684011.250808," + "\"version\":\"privacyIDEA3.6.3\"," +
+                              "\"versionnumber\":\"3.6.3\"," +
+                              "\"signature\":\"rsa_sha256_pss:913056e002a...103456d32cca0222e5d\"}";
 
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
-                                   .withBody("serial=PISP0001C673&pass=123456"))
+                                   .withBody("serial=TOTP0001AFB9&pass=123456"))
                   .respond(HttpResponse.response().withBody(responseBody));
 
-        String serial = "PISP0001C673";
-        String otp = "123456";
-        String transactionID = "123";
+        String serial = "TOTP0001AFB9";
+        String pinPlusOTP = "123456";
 
-        PIResponse response = privacyIDEA.validateCheckSerial(serial, otp, transactionID, Collections.emptyMap());
-        PIResponse response1 = privacyIDEA.validateCheckSerial(serial, otp, Collections.emptyMap());
-        PIResponse response2 = privacyIDEA.validateCheckSerial(serial, otp);
+        PIResponse response = privacyIDEA.validateCheckSerial(serial, pinPlusOTP, Collections.emptyMap());
 
-        assertNotNull(response);
         assertEquals(responseBody, response.toString());
-        assertEquals(responseBody, response1.toString());
-        assertEquals(responseBody, response2.toString());
+        assertEquals("matching1tokens", response.message);
+        assertEquals(6, response.otpLength);
+        assertEquals("TOTP0001AFB9", response.serial);
+        assertEquals("totp", response.type);
+        assertEquals(1, response.id);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertTrue(response.status);
+        assertTrue(response.value);
+        assertEquals("3.6.3", response.piVersion);
+        assertEquals("rsa_sha256_pss:913056e002a...103456d32cca0222e5d", response.signature);
     }
 
     @After

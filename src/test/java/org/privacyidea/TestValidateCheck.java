@@ -26,6 +26,8 @@ import org.mockserver.model.HttpResponse;
 import org.mockserver.model.MediaType;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +44,7 @@ public class TestValidateCheck
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder(",ljkdndfd://127.0.0.1:1080", "test").sslVerify(false)
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
                                  .logger(new PILogImplementation()).build();
     }
 
@@ -56,7 +58,11 @@ public class TestValidateCheck
                 "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
                 "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
                 "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
-        setResponseBody(responseBody);
+
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
+                                   .withBody("user=" + username + "&pass=" + otp)).respond(
+                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(responseBody)
+                            .withDelay(TimeUnit.MILLISECONDS, 50));
 
         PIResponse response = privacyIDEA.validateCheck(username, otp);
 
@@ -79,10 +85,13 @@ public class TestValidateCheck
     @Test
     public void testEmptyResponse()
     {
-        setResponseBody("");
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
+                                   .withBody("user=" + username + "&pass=" + otp)).respond(
+                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody("")
+                            .withDelay(TimeUnit.MILLISECONDS, 50));
 
         Map<String, String> header = new HashMap<>();
-        header.put("language", "english");
+        header.put("accept-language", "en");
         PIResponse response = privacyIDEA.validateCheck(username, otp, header);
 
         // An empty response returns null
@@ -97,14 +106,32 @@ public class TestValidateCheck
 
         // No response also returns null - the exception is forwarded to the ILoggerBridge if set
         assertNull(response);
-        //assertTrue(lastError instanceof FileNotFoundException);
     }
 
-    private void setResponseBody(String s)
+    @Test
+    public void testUserNotFound()
     {
-        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
-                                   .withBody("user=" + username + "&pass=" + otp)).respond(
-                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(s)
-                            .withDelay(TimeUnit.MILLISECONDS, 50));
+        String responseBody =
+                "{" + "\"detail\":null," + "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"error\":{" +
+                "\"code\":904," + "\"message\":\"ERR904: The user can not be found in any resolver in this realm!\"}," +
+                "\"status\":false}," + "\"time\":1649752303.65651," + "\"version\":\"privacyIDEA 3.6.3\"," +
+                "\"signature\":\"rsa_sha256_pss:1c64db29cad0dc127d6...5ec143ee52a7804ea1dc8e23ab2fc90ac0ac147c0\"}";
+
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+                                   .withBody("user=TOTP0001AFB9&pass=12"))
+                  .respond(HttpResponse.response().withStatusCode(400).withBody(responseBody));
+
+        String user = "TOTP0001AFB9";
+        String pin = "12";
+
+        PIResponse response = privacyIDEA.validateCheck(user, pin);
+
+        assertEquals(responseBody, response.toString());
+//        assertEquals("ERR904: The user can not be found in any resolver in this realm!", response.message);
+        assertEquals(1, response.id);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertFalse(response.status);
+        assertNotNull(response.error);
+        assertEquals("rsa_sha256_pss:1c64db29cad0dc127d6...5ec143ee52a7804ea1dc8e23ab2fc90ac0ac147c0", response.signature);
     }
 }
