@@ -31,7 +31,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestCRnoServiceAcc
+public class TestPollTransaction
 {
     private ClientAndServer mockServer;
     private PrivacyIDEA privacyIDEA;
@@ -147,12 +147,12 @@ public class TestCRnoServiceAcc
     {
         String val = value ? "true" : "false";
         mockServer.when(HttpRequest.request().withMethod("GET").withPath("/validate/polltransaction")
-                        //?transaction_id=02659936574063359702
-                , Times.exactly(times)).respond(HttpResponse.response().withBody(
-                                                                    "{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" + "    \"result\": {\n" +
-                                                                    "        \"status\": true,\n" + "        \"value\": " + val + "\n" + "    },\n" +
-                                                                    "    \"time\": 1589446811.1909237,\n" + "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                                    "    \"versionnumber\": \"3.2.1\",\n" + "    \"signature\": \"rsa_sha256_pss:\"\n" + "}")
-                                                            .withDelay(TimeUnit.MILLISECONDS, 50));
+                                   .withQueryStringParameter("transaction_id", "02659936574063359702"),
+                        Times.exactly(times)).respond(HttpResponse.response().withBody(
+                                                                          "{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" + "    \"result\": {\n" +
+                                                                          "        \"status\": true,\n" + "        \"value\": " + val + "\n" + "    },\n" +
+                                                                          "    \"time\": 1589446811.1909237,\n" + "    \"version\": \"privacyIDEA 3.2.1\",\n" +
+                                                                          "    \"versionnumber\": \"3.2.1\",\n" + "    \"signature\": \"rsa_sha256_pss:\"\n" + "}")
+                                                                  .withDelay(TimeUnit.MILLISECONDS, 50));
     }
 }
