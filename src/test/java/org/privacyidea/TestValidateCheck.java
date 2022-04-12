@@ -15,8 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +28,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
 
 public class TestValidateCheck
 {
@@ -90,9 +87,7 @@ public class TestValidateCheck
                 HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody("")
                             .withDelay(TimeUnit.MILLISECONDS, 50));
 
-        Map<String, String> header = new HashMap<>();
-        header.put("accept-language", "en");
-        PIResponse response = privacyIDEA.validateCheck(username, otp, header);
+        PIResponse response = privacyIDEA.validateCheck(username, otp);
 
         // An empty response returns null
         assertNull(response);
@@ -127,7 +122,6 @@ public class TestValidateCheck
         PIResponse response = privacyIDEA.validateCheck(user, pin);
 
         assertEquals(responseBody, response.toString());
-//        assertEquals("ERR904: The user can not be found in any resolver in this realm!", response.message);
         assertEquals(1, response.id);
         assertEquals("2.0", response.jsonRPCVersion);
         assertFalse(response.status);

@@ -207,5 +207,11 @@ public class TestWebAuthn
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);
+
+        // short test otpMessage()
+        String otpMessage = piResponse1.otpMessage();
+
+        assertEquals("Please confirm with your WebAuthn token (FT BioPass FIDO2 USB), " +
+                     "Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)", otpMessage);
     }
 }

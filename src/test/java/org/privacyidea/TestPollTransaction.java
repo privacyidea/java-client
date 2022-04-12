@@ -122,6 +122,12 @@ public class TestPollTransaction
 
         PIResponse response = privacyIDEA.validateCheck(username, null, initialResponse.transactionID);
         assertTrue(response.value);
+
+        //push side functions
+        boolean pushAvailable = response.pushAvailable();
+        assertFalse(pushAvailable);
+        String pushMessage = response.pushMessage();
+        assertEquals("", pushMessage);
     }
 
     @After
