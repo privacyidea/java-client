@@ -16,6 +16,7 @@
 package org.privacyidea;
 
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
@@ -127,5 +128,11 @@ public class TestValidateCheck
         assertFalse(response.status);
         assertNotNull(response.error);
         assertEquals("rsa_sha256_pss:1c64db29cad0dc127d6...5ec143ee52a7804ea1dc8e23ab2fc90ac0ac147c0", response.signature);
+    }
+    
+    @After
+    public void tearDown()
+    {
+        mockServer.stop();
     }
 }
