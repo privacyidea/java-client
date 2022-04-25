@@ -51,8 +51,7 @@ public class PIResponse
 
     public boolean pushAvailable()
     {
-        return multichallenge.stream()
-                             .anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
     /**
@@ -152,8 +151,7 @@ public class PIResponse
         }
         if (webAuthnSignRequests.size() == 1)
         {
-            return webAuthnSignRequests.get(0)
-                                       .signRequest();
+            return webAuthnSignRequests.get(0).signRequest();
         }
 
         WebAuthn webAuthn = webAuthnSignRequests.get(0);

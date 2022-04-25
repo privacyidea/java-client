@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
 import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
@@ -148,6 +147,14 @@ public class PrivacyIDEA
     }
 
     /**
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     */
+    public PIResponse validateCheckSerial(String serial, String otp, String transactionId)
+    {
+        return this.validateCheckSerial(serial, otp, transactionId, Collections.emptyMap());
+    }
+
+    /**
      * Send a request to /validate/check with the serial rather than the username to identify the token.
      *
      * @param serial        serial of the token
@@ -185,7 +192,7 @@ public class PrivacyIDEA
      *
      * @param user                 username
      * @param transactionId        transactionId
-     * @param webAuthnSignResponse the WebAuthnSignResponse as returned from the
+     * @param webAuthnSignResponse the WebAuthnSignResponse as returned from the browser
      * @param origin               server name that was used for
      * @param headers              optional headers for the request
      * @return PIResponse or null if error
@@ -193,7 +200,6 @@ public class PrivacyIDEA
     public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse,
                                             String origin, Map<String, String> headers)
     {
-
         Map<String, String> params = new LinkedHashMap<>();
         // Standard validateCheck data
         params.put(USER, user);
@@ -214,11 +220,19 @@ public class PrivacyIDEA
     }
 
     /**
+     * @see PrivacyIDEA#validateCheckU2F(String, String, String, Map)
+     */
+    public PIResponse validateCheckU2F(String user, String transactionId, String signResponse)
+    {
+        return this.validateCheckU2F(user, transactionId, signResponse, Collections.emptyMap());
+    }
+
+    /**
      * Sends a request to /validate/check with the data required to authenticate a U2F token.
      *
      * @param user            username
      * @param transactionId   transactionId
-     * @param u2fSignResponse the U2F Sign Response as returned from the
+     * @param u2fSignResponse the U2F Sign Response as returned from the browser
      * @return PIResponse or null if error
      */
     public PIResponse validateCheckU2F(String user, String transactionId, String u2fSignResponse,
@@ -549,7 +563,6 @@ public class PrivacyIDEA
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
         private String userAgent = "";
-        private List<Integer> pollingIntervals = Collections.singletonList(1);
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
@@ -642,19 +655,6 @@ public class PrivacyIDEA
         }
 
         /**
-         * Set the intervals at which the polling is done when using asyncPollTransaction.
-         * The last number will be repeated if the end of the list is reached.
-         *
-         * @param intervals list of integers that represent seconds
-         * @return Builder
-         */
-        public Builder pollingIntervals(List<Integer> intervals)
-        {
-            this.pollingIntervals = intervals;
-            return this;
-        }
-
-        /**
          * Disable logging completely regardless of any set loggers.
          *
          * @return Builder
@@ -673,7 +673,6 @@ public class PrivacyIDEA
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.serviceAccountRealm = serviceAccountRealm;
-            configuration.pollingIntervals = pollingIntervals;
             configuration.disableLog = disableLog;
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }

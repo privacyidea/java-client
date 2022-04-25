@@ -27,6 +27,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -108,6 +109,7 @@ class Endpoint
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
+            // TODO
             callback.onFailure(null,
                                new IOException("Request could not be created because the url could not be parsed"));
             return;
