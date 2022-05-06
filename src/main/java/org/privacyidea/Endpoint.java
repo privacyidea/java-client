@@ -33,6 +33,7 @@ import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.internal.connection.RealCall;
 
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
@@ -109,13 +110,12 @@ class Endpoint
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
-            // TODO
             callback.onFailure(null,
                                new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
-        privacyIDEA.log("Sending to " + endpoint);
+        privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
                        {
                            if (k.equals("pass") || k.equals("password"))
@@ -166,8 +166,8 @@ class Endpoint
                                if (key != null && value != null)
                                {
                                    String encValue = value;
-                                   // WebAuthn params are excluded from url encoded,
-                                   // they are already in the correct format for the server
+                                   // WebAuthn params are excluded from url encoding,
+                                   // they are already in the correct encoding for the server
                                    if (!WEBAUTHN_PARAMETERS.contains(key))
                                    {
                                        try

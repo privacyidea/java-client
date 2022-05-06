@@ -17,7 +17,6 @@ import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
  */
 public class AsyncRequestCallable implements Callable<String>, Callback
 {
-
     private String path;
     private final String method;
     private final Map<String, String> headers;
@@ -43,7 +42,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     @Override
     public String call() throws Exception
     {
-        // If an auth token is required for the request get that first then do the actual request
+        // If an auth token is required for the request, get that first then do the actual request
         if (this.authTokenRequired)
         {
             if (!privacyIDEA.serviceAccountAvailable())
@@ -62,7 +61,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
             String authToken = privacyIDEA.parser.extractAuthToken(response);
             if (authToken == null)
             {
-                // the parser already logs the error.
+                // The parser already logs the error.
                 return null;
             }
             // Add the auth token to the header

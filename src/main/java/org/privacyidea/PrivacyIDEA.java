@@ -403,7 +403,6 @@ public class PrivacyIDEA
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers,
                                    boolean authTokenRequired, String method)
     {
-
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired,
                                                              method);
         Future<String> future = threadPool.submit(callable);
