@@ -1,5 +1,9 @@
 # Changelog
 
+### v1.0.2 - 06 May 2022
+
+* Added option to pass headers to every privacyIDEA API function
+
 ### v1.0.1 - 25 Mar 2022
 
 * Merge sign request for multiple WebAuthn tokens (#31)
