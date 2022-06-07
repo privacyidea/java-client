@@ -81,6 +81,33 @@ public class TestValidateCheck
     }
 
     @Test
+    public void testLostValues()
+    {
+        String responseBody =
+                "{\n" + "  \"detail\": {\n" +
+                "    \"threadid\": 140536383567616,\n" +
+                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
+                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA None\",\n" +
+                "}";
+
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
+                                   .withBody("user=" + username + "&pass=" + otp)).respond(
+                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(responseBody)
+                            .withDelay(TimeUnit.MILLISECONDS, 50));
+
+        PIResponse response = privacyIDEA.validateCheck(username, otp);
+
+        assertEquals("", response.piVersion);
+        assertEquals("", response.message);
+        assertEquals(0, response.otpLength);
+        assertEquals(0, response.id);
+        assertEquals("", response.jsonRPCVersion);
+        assertEquals("", response.serial);
+        assertEquals("", response.type);
+        assertEquals("", response.signature);
+    }
+
+    @Test
     public void testEmptyResponse()
     {
         mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
