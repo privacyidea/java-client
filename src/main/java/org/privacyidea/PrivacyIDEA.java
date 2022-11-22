@@ -60,7 +60,7 @@ public class PrivacyIDEA
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
     // Thread pool for connections
-    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(100);
+    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
     private final ExecutorService threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
@@ -272,7 +272,7 @@ public class PrivacyIDEA
     {
         Objects.requireNonNull(username, "Username is required!");
 
-        if (!serviceAccountAvailable())
+        if (serviceAccountInaccessible())
         {
             log("No service account configured. Cannot trigger challenges");
             return null;
@@ -309,7 +309,7 @@ public class PrivacyIDEA
      */
     public String getAuthToken()
     {
-        if (!serviceAccountAvailable())
+        if (serviceAccountInaccessible())
         {
             error("Cannot retrieve auth token without service account!");
             return null;
@@ -344,7 +344,7 @@ public class PrivacyIDEA
     public List<TokenInfo> getTokenInfo(String username)
     {
         Objects.requireNonNull(username);
-        if (!serviceAccountAvailable())
+        if (serviceAccountInaccessible())
         {
             error("Cannot retrieve token info without service account!");
             return null;
@@ -365,7 +365,7 @@ public class PrivacyIDEA
      */
     public RolloutInfo tokenRollout(String username, String typeToEnroll)
     {
-        if (!serviceAccountAvailable())
+        if (serviceAccountInaccessible())
         {
             error("Cannot do rollout without service account!");
             return null;
@@ -434,10 +434,10 @@ public class PrivacyIDEA
         this.logExcludedEndpoints = list;
     }
 
-    public boolean serviceAccountAvailable()
+    public boolean serviceAccountInaccessible()
     {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
-               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
+        return configuration.serviceAccountName == null || configuration.serviceAccountName.isEmpty() ||
+               configuration.serviceAccountPass == null || configuration.serviceAccountPass.isEmpty();
     }
 
     PIConfig configuration()
@@ -555,13 +555,13 @@ public class PrivacyIDEA
 
     public static class Builder
     {
-        private String serverURL = "";
+        private final String serverURL;
+        private final String userAgent;
         private String realm = "";
         private boolean doSSLVerify = true;
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
-        private String userAgent = "";
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;

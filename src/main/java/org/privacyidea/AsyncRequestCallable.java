@@ -45,7 +45,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         // If an auth token is required for the request, get that first then do the actual request
         if (this.authTokenRequired)
         {
-            if (!privacyIDEA.serviceAccountAvailable())
+            if (privacyIDEA.serviceAccountInaccessible())
             {
                 privacyIDEA.error("Service account is required to retrieve auth token!");
                 return null;
