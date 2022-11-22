@@ -60,7 +60,7 @@ public class PrivacyIDEA
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
     // Thread pool for connections
-    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(100);
+    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
     private final ExecutorService threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
@@ -555,13 +555,13 @@ public class PrivacyIDEA
 
     public static class Builder
     {
-        private String serverURL = "";
+        private final String serverURL;
+        private final String userAgent;
         private String realm = "";
         private boolean doSSLVerify = true;
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
-        private String userAgent = "";
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
