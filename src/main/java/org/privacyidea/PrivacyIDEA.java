@@ -79,25 +79,25 @@ public class PrivacyIDEA
     /**
      * @see PrivacyIDEA#validateCheck(String, String, String, Map)
      */
-    public PIResponse validateCheck(String username, String otp)
+    public PIResponse validateCheck(String username, String pass)
     {
-        return this.validateCheck(username, otp, null, Collections.emptyMap());
+        return this.validateCheck(username, pass, null, Collections.emptyMap());
     }
 
     /**
      * @see PrivacyIDEA#validateCheck(String, String, String, Map)
      */
-    public PIResponse validateCheck(String username, String otp, Map<String, String> headers)
+    public PIResponse validateCheck(String username, String pass, Map<String, String> headers)
     {
-        return this.validateCheck(username, otp, null, headers);
+        return this.validateCheck(username, pass, null, headers);
     }
 
     /**
      * @see PrivacyIDEA#validateCheck(String, String, String, Map)
      */
-    public PIResponse validateCheck(String username, String otp, String transactionId)
+    public PIResponse validateCheck(String username, String pass, String transactionId)
     {
-        return this.validateCheck(username, otp, transactionId, Collections.emptyMap());
+        return this.validateCheck(username, pass, transactionId, Collections.emptyMap());
     }
 
     /**
@@ -106,75 +106,75 @@ public class PrivacyIDEA
      * (E.g. this can also be used to trigger challenges without a service account)
      *
      * @param username      username
-     * @param otp           the OTP, PIN+OTP or password to use.
+     * @param pass          pass/otp value
      * @param transactionId optional, will be appended if set
      * @param headers       optional headers for the request
      * @return PIResponse object containing the response or null if error
      */
-    public PIResponse validateCheck(String username, String otp, String transactionId, Map<String, String> headers)
+    public PIResponse validateCheck(String username, String pass, String transactionId, Map<String, String> headers)
     {
-        Map<String, String> params = new LinkedHashMap<>();
-
-        params.put(USER, username);
-        params.put(PASS, (otp != null ? otp : ""));
-
-        if (transactionId != null && !transactionId.isEmpty())
-        {
-            params.put(TRANSACTION_ID, transactionId);
-        }
-
-        appendRealm(params);
-
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return this.parser.parsePIResponse(response);
-    }
-
-
-    /**
-     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
-     */
-    public PIResponse validateCheckSerial(String serial, String otp)
-    {
-        return this.validateCheckSerial(serial, otp, null, Collections.emptyMap());
+        return getPIResponse(USER, username, pass, headers, transactionId);
     }
 
     /**
      * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
      */
-    public PIResponse validateCheckSerial(String serial, String otp, Map<String, String> headers)
+    public PIResponse validateCheckSerial(String serial, String pass)
     {
-        return this.validateCheckSerial(serial, otp, null, headers);
+        return this.validateCheckSerial(serial, pass, null, Collections.emptyMap());
     }
 
     /**
      * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
      */
-    public PIResponse validateCheckSerial(String serial, String otp, String transactionId)
+    public PIResponse validateCheckSerial(String serial, String pass, Map<String, String> headers)
     {
-        return this.validateCheckSerial(serial, otp, transactionId, Collections.emptyMap());
+        return this.validateCheckSerial(serial, pass, null, headers);
     }
 
     /**
-     * Send a request to /validate/check with the serial rather than the username to identify the token.
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     */
+    public PIResponse validateCheckSerial(String serial, String pass, String transactionId)
+    {
+        return this.validateCheckSerial(serial, pass, transactionId, Collections.emptyMap());
+    }
+
+    /**
+     * Send a request to /validate/check with the serial rather than the username to identify exact token.
      *
      * @param serial        serial of the token
-     * @param otp           otp value
+     * @param pass          pass/otp value
      * @param transactionId transactionId
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckSerial(String serial, String otp, String transactionId, Map<String, String> headers)
+    public PIResponse validateCheckSerial(String serial, String pass, String transactionId, Map<String, String> headers)
+    {
+        return getPIResponse(SERIAL, serial, pass, headers, transactionId);
+    }
+
+    /**
+     * Used by validateCheck and validateCheckSerial to get the PI Response.
+     *
+     * @param type          distinguish between user and serial to set forwarded input to the right PI-request param
+     * @param input         forwarded username for classic validateCheck or serial to trigger exact token
+     * @param pass          OTP, PIN+OTP or password to use
+     * @param headers       optional headers for the request
+     * @param transactionId optional, will be appended if set
+     * @return              PIResponse object containing the response or null if error
+     */
+    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers,
+                                     String transactionId)
     {
         Map<String, String> params = new LinkedHashMap<>();
-
-        params.put(SERIAL, serial);
-        params.put(PASS, (otp != null ? otp : ""));
+        // Add forwarded user or serial to the params
+        params.put(type, input);
+        params.put(PASS, (pass != null ? pass : ""));
+        appendRealm(params);
         if (transactionId != null && !transactionId.isEmpty())
         {
             params.put(TRANSACTION_ID, transactionId);
         }
-
-        appendRealm(params);
-
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return this.parser.parsePIResponse(response);
     }
