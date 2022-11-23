@@ -32,6 +32,7 @@ import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 public class PIResponse
 {
     public String message = "";
+    public String preferredClientMode = "";
     public List<String> messages = new ArrayList<>();
     public List<Challenge> multichallenge = new ArrayList<>();
     public String transactionID = "";

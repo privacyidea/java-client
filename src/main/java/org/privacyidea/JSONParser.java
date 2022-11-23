@@ -30,6 +30,7 @@ import static org.privacyidea.PIConstants.MESSAGE;
 import static org.privacyidea.PIConstants.MESSAGES;
 import static org.privacyidea.PIConstants.MULTI_CHALLENGE;
 import static org.privacyidea.PIConstants.OTPLEN;
+import static org.privacyidea.PIConstants.PREFERRED_CLIENT_MODE;
 import static org.privacyidea.PIConstants.REALMS;
 import static org.privacyidea.PIConstants.RESULT;
 import static org.privacyidea.PIConstants.SERIAL;
@@ -182,6 +183,7 @@ public class JSONParser
         if (detailElem != null && !detailElem.isJsonNull())
         {
             JsonObject detail = obj.getAsJsonObject(DETAIL);
+            response.preferredClientMode = getString(detail, PREFERRED_CLIENT_MODE);
             response.message = getString(detail, MESSAGE);
             response.serial = getString(detail, SERIAL);
             response.transactionID = getString(detail, TRANSACTION_ID);
