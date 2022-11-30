@@ -80,8 +80,8 @@
 
         <dependency>
             <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-junit-rule</artifactId>
-            <version>5.13.0</version>
+            <artifactId>mockserver-netty-no-dependencies</artifactId>
+            <version>5.14.0</version>
             <scope>test</scope>
         </dependency>
 
