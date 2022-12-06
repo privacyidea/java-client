@@ -103,7 +103,7 @@ public class TestWebAuthn
                                  "            \"userVerification\": \"preferred\"\n" + "          }\n";
 
         String responseBody =
-                "{\n" + "  \"detail\": {\n" + "    \"attributes\": {\n" + "      \"hideResponseInput\": true,\n" +
+                "{\n" + "  \"detail\": {\n" + "    \"preferred_client_mode\": \"webauthn\",\n" + "    \"attributes\": {\n" + "      \"hideResponseInput\": true,\n" +
                 "      \"img\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
                 "      \"webAuthnSignRequest\": {\n" + "        \"allowCredentials\": [\n" + "          {\n" +
                 "            \"id\": \"83De8z_CNqogB6aCyKs6dWIqwpOpzVoNaJ74lgcpuYN7l-95QsD3z-qqPADqsFlPwBXCMqEPssq75kqHCMQHDA\",\n" +
@@ -142,6 +142,7 @@ public class TestWebAuthn
                                           .findFirst();
         assertTrue(opt.isPresent());
         assertEquals(AuthenticationStatus.CHALLENGE, response.authentication);
+        assertEquals("webauthn", response.preferredClientMode);
         Challenge a = opt.get();
         if (a instanceof WebAuthn)
         {
