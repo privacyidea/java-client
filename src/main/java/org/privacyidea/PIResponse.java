@@ -37,6 +37,7 @@ public class PIResponse
     public List<Challenge> multichallenge = new ArrayList<>();
     public String transactionID = "";
     public String serial = "";
+    public String image = "";
     public int id = 0;
     public String jsonRPCVersion = "";
     public boolean status = false;

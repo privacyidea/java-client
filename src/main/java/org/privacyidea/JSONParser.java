@@ -23,6 +23,7 @@ import static org.privacyidea.PIConstants.CREDENTIALID;
 import static org.privacyidea.PIConstants.DETAIL;
 import static org.privacyidea.PIConstants.ERROR;
 import static org.privacyidea.PIConstants.ID;
+import static org.privacyidea.PIConstants.IMAGE;
 import static org.privacyidea.PIConstants.INFO;
 import static org.privacyidea.PIConstants.JSONRPC;
 import static org.privacyidea.PIConstants.MAXFAIL;
@@ -185,6 +186,7 @@ public class JSONParser
             JsonObject detail = obj.getAsJsonObject(DETAIL);
             response.preferredClientMode = getString(detail, PREFERRED_CLIENT_MODE);
             response.message = getString(detail, MESSAGE);
+            response.image = getString(detail, IMAGE);
             response.serial = getString(detail, SERIAL);
             response.transactionID = getString(detail, TRANSACTION_ID);
             response.type = getString(detail, TYPE);
@@ -211,22 +213,23 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
+                    String image = getString(challenge, IMAGE);
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getSignRequestFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new WebAuthn(serial, message, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getSignRequestFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new U2F(serial, message, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, image, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(new Challenge(serial, message, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, image, transactionid, type));
                     }
                 }
             }
@@ -356,6 +359,7 @@ public class JSONParser
         info.revoked = getBoolean(obj, "revoked");
         info.rolloutState = getString(obj, "rollout_state");
         info.serial = getString(obj, SERIAL);
+        info.image = getString(obj, IMAGE);
         info.syncWindow = getInt(obj, "sync_window");
         info.tokenType = getString(obj, "tokentype");
         info.userEditable = getBoolean(obj, "user_editable");

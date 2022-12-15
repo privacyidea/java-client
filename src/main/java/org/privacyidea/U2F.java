@@ -19,9 +19,9 @@ public class U2F extends Challenge
 {
     private final String signRequest;
 
-    public U2F(String serial, String message, String transaction_id, String signRequest)
+    public U2F(String serial, String message, String image, String transaction_id, String signRequest)
     {
-        super(serial, message, transaction_id, PIConstants.TOKEN_TYPE_U2F);
+        super(serial, message, image, transaction_id, PIConstants.TOKEN_TYPE_U2F);
         this.signRequest = signRequest;
     }
 

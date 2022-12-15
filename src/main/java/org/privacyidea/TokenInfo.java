@@ -40,6 +40,7 @@ public class TokenInfo
     boolean revoked = false;
     String rolloutState = "";
     String serial = "";
+    String image = "";
     int syncWindow = 0;
     String tokenType = "";
     boolean userEditable = false;
