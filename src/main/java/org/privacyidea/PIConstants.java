@@ -64,6 +64,7 @@ public class PIConstants
     public static final String TOKEN = "token";
     public static final String PREFERRED_CLIENT_MODE = "preferred_client_mode";
     public static final String MESSAGE = "message";
+    public static final String IMAGE = "image";
     public static final String MESSAGES = "messages";
     public static final String MULTI_CHALLENGE = "multi_challenge";
     public static final String ATTRIBUTES = "attributes";
