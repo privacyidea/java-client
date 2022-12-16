@@ -44,6 +44,7 @@ import static org.privacyidea.PIConstants.PASSWORD;
 import static org.privacyidea.PIConstants.POST;
 import static org.privacyidea.PIConstants.REALM;
 import static org.privacyidea.PIConstants.SERIAL;
+import static org.privacyidea.PIConstants.IMAGE;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
 import static org.privacyidea.PIConstants.USER;

@@ -38,6 +38,7 @@ public class TestGetTokenInfo
     private final String realm = "realm";
     private final String serviceAccount = "admin";
     private final String servicePassword = "admin";
+    private final String serviceRealm = "realm";
 
     @Before
     public void setup()
@@ -45,7 +46,7 @@ public class TestGetTokenInfo
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .serviceAccount(serviceAccount, servicePassword).realm(realm).sslVerify(false)
+                                 .serviceAccount(serviceAccount, servicePassword).serviceRealm(serviceRealm).disableLog().sslVerify(false)
                                  .logger(new PILogImplementation()).build();
     }
 
@@ -66,7 +67,7 @@ public class TestGetTokenInfo
                         "\"signature\":\"rsa_sha256_pss:58c4eed1...5247c47e3e\"}";
 
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(
-                          "username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + realm))
+                          "username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -116,6 +117,8 @@ public class TestGetTokenInfo
         assertEquals("5", tokenInfo.userID);
         assertEquals("defrealm", tokenInfo.userRealm);
         assertEquals("Test", tokenInfo.username);
+
+        assertEquals(authToken, privacyIDEA.getAuthToken());
     }
 
     @Test
@@ -144,6 +147,8 @@ public class TestGetTokenInfo
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 
         assertNull(tokenInfoList);
+
+        assertNull(privacyIDEA.getAuthToken());
     }
 
     @After

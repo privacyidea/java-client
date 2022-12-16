@@ -23,13 +23,15 @@ public class Challenge
     private final List<String> attributes = new ArrayList<>();
     private final String serial;
     private final String message;
+    private final String image;
     private final String transaction_id;
     private final String type;
 
-    public Challenge(String serial, String message, String transaction_id, String type)
+    public Challenge(String serial, String message, String image, String transaction_id, String type)
     {
         this.serial = serial;
         this.message = message;
+        this.image = image;
         this.transaction_id = transaction_id;
         this.type = type;
     }
@@ -48,6 +50,8 @@ public class Challenge
     {
         return message;
     }
+
+    public String getImage() { return image; }
 
     public String getTransactionID()
     {

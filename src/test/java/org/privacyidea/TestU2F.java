@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 
 public class TestU2F
 {
@@ -78,6 +79,11 @@ public class TestU2F
                               "\"versionnumber\":\"3.6.3\"," +
                               "\"signature\":\"rsa_sha256_pss:3e51d814...dccd5694b8c15943e37e1\"}";
 
+        String u2fSignRequest = "{" + "\"appId\":\"https://ttype.u2f\"," +
+                                "\"challenge\":\"TZKiB0VFFMFsnlz00lF5iCqtQduDJf56AeJAY_BT4NU\"," +
+                                "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQJYu4G5qB9l7ScjRRxA-M35cTH-uHWyMEpxs4WBzbkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
+                                "\"version\":\"U2F_V2\"" + "}";
+
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
                           "user=Test&pass=test"))
                   .respond(HttpResponse.response().withBody(responseBody));
@@ -94,6 +100,21 @@ public class TestU2F
         assertEquals("rsa_sha256_pss:3e51d814...dccd5694b8c15943e37e1", response.signature);
         assertTrue(response.status);
         assertFalse(response.value);
+
+        Optional<Challenge> opt = response.multiChallenge().stream()
+                                          .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
+                                          .findFirst();
+        Challenge a = opt.get();
+        if (a instanceof U2F)
+        {
+            U2F b = (U2F) a;
+            String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
+            assertEquals(trimmedRequest, b.signRequest());
+        }
+        else
+        {
+            fail();
+        }
     }
 
     @Test

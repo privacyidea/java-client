@@ -37,6 +37,7 @@ public class PIResponse
     public List<Challenge> multichallenge = new ArrayList<>();
     public String transactionID = "";
     public String serial = "";
+    public String image = "";
     public int id = 0;
     public String jsonRPCVersion = "";
     public boolean status = false;
@@ -168,27 +169,6 @@ public class PIResponse
         {
             return "";
         }
-    }
-
-    /**
-     * Get all U2F challenges from the multi_challenge.
-     *
-     * @return List of U2F objects or empty list
-     */
-    public List<U2F> u2fSignRequests()
-    {
-        List<U2F> ret = new ArrayList<>();
-        multichallenge.stream()
-                      .filter(c -> TOKEN_TYPE_U2F.equals(c.getType()))
-                      .collect(Collectors.toList())
-                      .forEach(c ->
-                               {
-                                   if (c instanceof U2F)
-                                   {
-                                       ret.add((U2F) c);
-                                   }
-                               });
-        return ret;
     }
 
     @Override
