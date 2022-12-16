@@ -87,6 +87,7 @@ public class TestPollTransaction
         assertEquals("Bitte geben Sie einen OTP-Wert ein: ", hotpChallenge.getMessage());
         assertEquals("02659936574063359702", hotpChallenge.getTransactionID());
         assertEquals("hotp", hotpChallenge.getType());
+        assertEquals("", hotpChallenge.getImage());
         assertTrue(hotpChallenge.getAttributes().isEmpty());
 
         Challenge pushChallenge = challenges.stream().filter(c -> c.getSerial().equals("PIPU0001F75E")).findFirst()

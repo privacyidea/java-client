@@ -176,7 +176,7 @@ public class PIResponse
      *
      * @return List of U2F objects or empty list
      */
-    public List<U2F> u2fSignRequests()
+    /*public List<U2F> u2fSignRequests()
     {
         List<U2F> ret = new ArrayList<>();
         multichallenge.stream()
@@ -190,7 +190,7 @@ public class PIResponse
                                    }
                                });
         return ret;
-    }
+    }*/
 
     @Override
     public String toString()

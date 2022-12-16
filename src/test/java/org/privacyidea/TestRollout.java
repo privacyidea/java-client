@@ -128,6 +128,37 @@ public class TestRollout
         assertNull(rolloutInfo);
     }
 
+    @Test
+    public void testRolloutViaValidateCheck()
+    {
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
+                                 .logger(new PILogImplementation()).build();
+
+        String img = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
+
+        String response = "{\"detail\":{" + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
+                          "\"image\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
+                          "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
+                          "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
+                          "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
+                          "\"type\":\"totp\"}]," + "\"serial\":\"TOTP00021198\"," + "\"threadid\":140050885818112," +
+                          "\"transaction_id\":\"16734787285577957577\"," +
+                          "\"transaction_ids\":[\"16734787285577957577\"]," + "\"type\":\"totp\"}," + "\"id\":1," +
+                          "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
+                          "\"time\":1649666174.5351279," + "\"version\":\"privacyIDEA3.6.3\"," +
+                          "\"versionnumber\":\"3.6.3\"," +
+                          "\"signature\":\"rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b\"}";
+
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+                                   .withBody("user=testuser&pass="))
+                  .respond(HttpResponse.response().withBody(response));
+
+        String username = "testuser";
+        PIResponse responseValidateCheck = privacyIDEA.validateCheck(username, "");
+
+        assertEquals(img, responseValidateCheck.image);
+    }
+
     @After
     public void teardown()
     {
