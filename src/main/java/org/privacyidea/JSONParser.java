@@ -214,8 +214,6 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
-
-                    // Check if the challenge has contains an image
                     String image = getItemFromAttributes(IMG, challenge).replaceAll("\"", "");
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
