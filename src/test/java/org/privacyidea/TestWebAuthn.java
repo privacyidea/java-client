@@ -149,6 +149,7 @@ public class TestWebAuthn
             WebAuthn b = (WebAuthn) a;
             String trimmedRequest = webauthnrequest.replaceAll("\n", "").replaceAll(" ", "");
             assertEquals(trimmedRequest, b.signRequest());
+            assertEquals("static/img/FIDO-U2F-Security-Key-444x444.png", b.getImage());
         }
         else
         {

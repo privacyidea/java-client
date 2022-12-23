@@ -51,7 +51,7 @@ public class Challenge
         return message;
     }
 
-    public String getImage() { return image; }
+    public String getImage() { return image.replaceAll("\"", ""); }
 
     public String getTransactionID()
     {
