@@ -15,6 +15,8 @@
  */
 package org.privacyidea;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
@@ -63,6 +65,42 @@ public class TestValidateCheck
                             .withDelay(TimeUnit.MILLISECONDS, 50));
 
         PIResponse response = privacyIDEA.validateCheck(username, otp);
+
+        assertEquals(1, response.id);
+        assertEquals("matching 1 tokens", response.message);
+        assertEquals(6, response.otpLength);
+        assertEquals("PISP0001C673", response.serial);
+        assertEquals("totp", response.type);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertEquals("3.2.1", response.piVersion);
+        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
+        // Trim all whitespaces, newlines
+        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.rawMessage.replaceAll("[\n\r]", ""));
+        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString().replaceAll("[\n\r]", ""));
+        // result
+        assertTrue(response.status);
+        assertTrue(response.value);
+    }
+
+    @Test
+    public void testOTPAddHeader()
+    {
+        String responseBody =
+                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
+                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
+                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
+                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
+                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
+                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
+
+        mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
+                                   .withBody("user=" + username + "&pass=" + otp)).respond(
+                HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(responseBody)
+                            .withDelay(TimeUnit.MILLISECONDS, 50));
+
+        Map<String, String> header = new HashMap<>();
+        header.put("accept-language", "en");
+        PIResponse response = privacyIDEA.validateCheck(username, otp, header);
 
         assertEquals(1, response.id);
         assertEquals("matching 1 tokens", response.message);
