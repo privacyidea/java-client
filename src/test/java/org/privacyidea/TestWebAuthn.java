@@ -57,7 +57,9 @@ public class TestWebAuthn
         String webauthnSignResponse = "{" + "\"credentialid\":\"X9FrwMfmzj...saw21\"," +
                                       "\"authenticatordata\":\"xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA\"," +
                                       "\"clientdata\":\"eyJjaGFsbG...dfhs\"," +
-                                      "\"signaturedata\":\"MEUCIQDNrG...43hc\"}";
+                                      "\"signaturedata\":\"MEUCIQDNrG...43hc\"," +
+                                      "\"assertionclientextensions\":\"alsjdlfkjsadjeiw\"," +
+                                      "\"userhandle\":\"jalsdkjflsjfuhuweuvccco2\"\n" + "}";
 
         String responseBody =
                 "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
@@ -68,7 +70,7 @@ public class TestWebAuthn
                 "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
 
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
-                          "user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA"))
+                          "user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA&userhandle=jalsdkjflsjfuhuweuvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
                   .respond(HttpResponse.response().withBody(responseBody));
 
         PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse,
@@ -149,6 +151,7 @@ public class TestWebAuthn
             WebAuthn b = (WebAuthn) a;
             String trimmedRequest = webauthnrequest.replaceAll("\n", "").replaceAll(" ", "");
             assertEquals(trimmedRequest, b.signRequest());
+            assertEquals("static/img/FIDO-U2F-Security-Key-444x444.png", b.getImage());
         }
         else
         {

@@ -24,6 +24,7 @@ import static org.privacyidea.PIConstants.DETAIL;
 import static org.privacyidea.PIConstants.ERROR;
 import static org.privacyidea.PIConstants.ID;
 import static org.privacyidea.PIConstants.IMAGE;
+import static org.privacyidea.PIConstants.IMG;
 import static org.privacyidea.PIConstants.INFO;
 import static org.privacyidea.PIConstants.JSONRPC;
 import static org.privacyidea.PIConstants.MAXFAIL;
@@ -213,18 +214,18 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
-                    String image = getString(challenge, IMAGE);
+                    String image = getItemFromAttributes(IMG, challenge).replaceAll("\"", "");
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
-                        String webAuthnSignRequest = getSignRequestFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
+                        String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
                         response.multichallenge.add(new WebAuthn(serial, message, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
-                        String u2fSignRequest = getSignRequestFromAttributes(U2F_SIGN_REQUEST, challenge);
+                        String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
                         response.multichallenge.add(new U2F(serial, message, image, transactionid, u2fSignRequest));
                     }
                     else
@@ -257,14 +258,14 @@ public class JSONParser
         return signRequest.toString();
     }
 
-    private String getSignRequestFromAttributes(String requestType, JsonObject jsonObject)
+    private String getItemFromAttributes(String item, JsonObject jsonObject)
     {
         String ret = "";
         JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
         if (attributeElement != null && !attributeElement.isJsonNull())
         {
             JsonElement requestElement = attributeElement.getAsJsonObject()
-                                                         .get(requestType);
+                                                         .get(item);
             if (requestElement != null && !requestElement.isJsonNull())
             {
                 ret = requestElement.toString();

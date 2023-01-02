@@ -104,12 +104,19 @@ public class TestU2F
         Optional<Challenge> opt = response.multiChallenge().stream()
                                           .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
                                           .findFirst();
-        Challenge a = opt.get();
-        if (a instanceof U2F)
+        if (opt.isPresent())
         {
-            U2F b = (U2F) a;
-            String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
-            assertEquals(trimmedRequest, b.signRequest());
+            Challenge a = opt.get();
+            if (a instanceof U2F)
+            {
+                U2F b = (U2F) a;
+                String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
+                assertEquals(trimmedRequest, b.signRequest());
+            }
+            else
+            {
+                fail();
+            }
         }
         else
         {
@@ -143,6 +150,43 @@ public class TestU2F
         Map<String, String> header = new HashMap<>();
         header.put("accept-language", "en");
         PIResponse response = privacyIDEA.validateCheckU2F(username, "16786665691788289392", u2fSignResponse, header);
+
+        assertEquals(1, response.id);
+        assertEquals("matching 1 tokens", response.message);
+        assertEquals(6, response.otpLength);
+        assertEquals("PISP0001C673", response.serial);
+        assertEquals("totp", response.type);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertEquals("3.2.1", response.piVersion);
+        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
+        assertTrue(response.status);
+        assertTrue(response.value);
+    }
+
+    @Test
+    public void testSuccessWithoutHeader()
+    {
+        String username = "Test";
+
+        String responseBody =
+                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
+                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
+                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
+                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
+                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
+                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
+
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
+                          "user=Test&transaction_id=16786665691788289392&pass=" +
+                          "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
+                          "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
+                  .respond(HttpResponse.response().withBody(responseBody));
+
+        String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
+                                 "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
+                                 "\"signatureData\":\"AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg\"}";
+
+        PIResponse response = privacyIDEA.validateCheckU2F(username, "16786665691788289392", u2fSignResponse);
 
         assertEquals(1, response.id);
         assertEquals("matching 1 tokens", response.message);
