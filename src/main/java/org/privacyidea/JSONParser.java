@@ -188,11 +188,11 @@ public class JSONParser
 
             // Translate some preferred client mode names
             String modeFromResponse = getString(detail, PREFERRED_CLIENT_MODE);
-            if (Objects.equals(modeFromResponse, "poll"))
+            if ("poll".equals(modeFromResponse))
             {
                 response.preferredClientMode = "push";
             }
-            else if (Objects.equals(modeFromResponse, "interactive"))
+            else if ("interactive".equals(modeFromResponse))
             {
                 response.preferredClientMode = "otp";
             }
