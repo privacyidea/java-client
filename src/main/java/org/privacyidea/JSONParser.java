@@ -214,23 +214,23 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
-                    String image = getItemFromAttributes(IMG, challenge).replaceAll("\"", "");
+                    String img = getItemFromAttributes(IMG, challenge).replaceAll("\"", "");
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new WebAuthn(serial, message, image, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, img, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new U2F(serial, message, image, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, img, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(new Challenge(serial, message, image, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, img, transactionid, type));
                     }
                 }
             }
