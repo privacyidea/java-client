@@ -64,7 +64,7 @@ public class TestPollTransaction
                                     "        \"transaction_id\": \"02659936574063359702\",\n" + "        \"type\": \"hotp\"\n" +
                                     "      },\n" + "      {\n" + "        \"attributes\": null,\n" +
                                     "        \"message\": \"Please confirm the authentication on your mobile device!\",\n" +
-                                    "        \"serial\": \"PIPU0001F75E\",\n" +
+                                    "        \"serial\": \"PIPU0001F75E\",\n" + "        \"image\": \"dataimage\",\n" +
                                     "        \"transaction_id\": \"02659936574063359702\",\n" + "        \"type\": \"push\"\n" +
                                     "      }\n" + "    ],\n" + "    \"serial\": \"PIPU0001F75E\",\n" +
                                     "    \"threadid\": 140040525666048,\n" + "    \"transaction_id\": \"02659936574063359702\",\n" +
@@ -79,7 +79,7 @@ public class TestPollTransaction
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
 
         // Check the triggered challenges - the other things are already tested in org.privacyidea.TestOTP
-        List<Challenge> challenges = initialResponse.multiChallenge();
+        List<Challenge> challenges = initialResponse.multichallenge;
 
         Challenge hotpChallenge = challenges.stream().filter(c -> c.getSerial().equals("OATH00020121")).findFirst()
                                             .orElse(null);
@@ -99,6 +99,19 @@ public class TestPollTransaction
         assertEquals("02659936574063359702", pushChallenge.getTransactionID());
         assertEquals("push", pushChallenge.getType());
         assertTrue(pushChallenge.getAttributes().isEmpty());
+
+        String imagePush = "";
+        for (Challenge c : challenges)
+        {
+            if ("push".equals(c.getType()))
+            {
+                if (!c.getImage().isEmpty())
+                {
+                    imagePush = c.getImage();
+                }
+            }
+        }
+        assertEquals("dataimage", imagePush);
 
         List<String> triggeredTypes = initialResponse.triggeredTokenTypes();
         assertTrue(triggeredTypes.contains("push"));

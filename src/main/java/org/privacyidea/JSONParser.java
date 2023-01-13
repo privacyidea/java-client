@@ -12,20 +12,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
 import static org.privacyidea.PIConstants.ATTRIBUTES;
 import static org.privacyidea.PIConstants.AUTHENTICATION;
 import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
 import static org.privacyidea.PIConstants.CLIENTDATA;
+import static org.privacyidea.PIConstants.CLIENT_MODE;
 import static org.privacyidea.PIConstants.CODE;
 import static org.privacyidea.PIConstants.CREDENTIALID;
 import static org.privacyidea.PIConstants.DETAIL;
 import static org.privacyidea.PIConstants.ERROR;
 import static org.privacyidea.PIConstants.ID;
 import static org.privacyidea.PIConstants.IMAGE;
-import static org.privacyidea.PIConstants.IMG;
 import static org.privacyidea.PIConstants.INFO;
 import static org.privacyidea.PIConstants.JSONRPC;
 import static org.privacyidea.PIConstants.MAXFAIL;
@@ -229,23 +228,24 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
-                    String image = getItemFromAttributes(IMG, challenge).replaceAll("\"", "");
+                    String clientmode = getString(challenge, CLIENT_MODE);
+                    String image = getString (challenge, IMAGE);
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new WebAuthn(serial, message, image, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new U2F(serial, message, image, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(new Challenge(serial, message, image, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, clientmode, image, transactionid, type));
                     }
                 }
             }

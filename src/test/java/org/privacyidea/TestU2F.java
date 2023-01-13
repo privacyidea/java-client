@@ -27,11 +27,9 @@ import org.mockserver.model.HttpResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 
 public class TestU2F
 {
@@ -101,7 +99,7 @@ public class TestU2F
         assertTrue(response.status);
         assertFalse(response.value);
 
-        Optional<Challenge> opt = response.multiChallenge().stream()
+        Optional<Challenge> opt = response.multichallenge.stream()
                                           .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
                                           .findFirst();
         if (opt.isPresent())

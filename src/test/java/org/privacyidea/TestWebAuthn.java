@@ -120,12 +120,13 @@ public class TestWebAuthn
                 "      \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"\n" + "    ],\n" +
                 "    \"multi_challenge\": [\n" + "      {\n" + "        \"attributes\": {\n" +
                 "          \"hideResponseInput\": true,\n" +
-                "          \"img\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
                 "          \"webAuthnSignRequest\": " + webauthnrequest + "        },\n" +
-                "        \"message\": \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\",\n" +
-                "        \"serial\": \"WAN00025CE7\",\n" + "        \"transaction_id\": \"16786665691788289392\",\n" +
-                "        \"type\": \"webauthn\"\n" + "      }\n" + "    ],\n" + "    \"serial\": \"WAN00025CE7\",\n" +
-                "    \"threadid\": 140040275289856,\n" + "    \"transaction_id\": \"16786665691788289392\",\n" +
+                "          \"image\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
+                "          \"client_mode\": \"webauthn\",\n" +
+                "          \"message\": \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\",\n" +
+                "          \"serial\": \"WAN00025CE7\",\n" + "        \"transaction_id\": \"16786665691788289392\",\n" +
+                "          \"type\": \"webauthn\"\n" + "      }\n" + "    ],\n" + "    \"serial\": \"WAN00025CE7\",\n" +
+                "    \"threadid\": 140040275289856,\n"  + "    \"transaction_id\": \"16786665691788289392\",\n" +
                 "    \"transaction_ids\": [\n" + "      \"16786665691788289392\"\n" + "    ],\n" +
                 "    \"type\": \"webauthn\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
                 "  \"result\": {\n" + "    \"authentication\": \"CHALLENGE\",\n" + "    \"status\": true,\n" +
@@ -139,7 +140,7 @@ public class TestWebAuthn
 
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
-        Optional<Challenge> opt = response.multiChallenge().stream()
+        Optional<Challenge> opt = response.multichallenge.stream()
                                           .filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
                                           .findFirst();
         assertTrue(opt.isPresent());
@@ -152,6 +153,7 @@ public class TestWebAuthn
             String trimmedRequest = webauthnrequest.replaceAll("\n", "").replaceAll(" ", "");
             assertEquals(trimmedRequest, b.signRequest());
             assertEquals("static/img/FIDO-U2F-Security-Key-444x444.png", b.getImage());
+            assertEquals("webauthn", b.getClientMode());
         }
         else
         {

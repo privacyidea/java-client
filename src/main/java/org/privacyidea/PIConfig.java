@@ -15,9 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.ArrayList;
-import java.util.List;
-
 class PIConfig
 {
     String serverURL = "";
