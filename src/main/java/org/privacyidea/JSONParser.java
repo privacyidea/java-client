@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
 import static org.privacyidea.PIConstants.ATTRIBUTES;
@@ -85,7 +86,7 @@ public class JSONParser
         }
         catch (JsonSyntaxException e)
         {
-            privacyIDEA.error(e);
+            privacyIDEA.error(e.getMessage());
             return json;
         }
 
@@ -185,7 +186,21 @@ public class JSONParser
         if (detailElem != null && !detailElem.isJsonNull())
         {
             JsonObject detail = obj.getAsJsonObject(DETAIL);
-            response.preferredClientMode = getString(detail, PREFERRED_CLIENT_MODE);
+
+            // Translate some preferred client mode names
+            String modeFromResponse = getString(detail, PREFERRED_CLIENT_MODE);
+            if ("poll".equals(modeFromResponse))
+            {
+                response.preferredClientMode = "push";
+            }
+            else if ("interactive".equals(modeFromResponse))
+            {
+                response.preferredClientMode = "otp";
+            }
+            else
+            {
+                response.preferredClientMode = modeFromResponse;
+            }
             response.message = getString(detail, MESSAGE);
             response.image = getString(detail, IMAGE);
             response.serial = getString(detail, SERIAL);

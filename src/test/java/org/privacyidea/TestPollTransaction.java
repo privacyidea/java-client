@@ -54,7 +54,7 @@ public class TestPollTransaction
         mockServer.when(HttpRequest.request().withMethod("POST").withPath("/validate/check")
                                    .withBody("user=" + username + "&pass=")).respond(
                 HttpResponse.response().withContentType(MediaType.APPLICATION_JSON).withBody(
-                                    "{\n" + "  \"detail\": {\n" + "    \"attributes\": null,\n" +
+                                    "{\n" + "  \"detail\": {\n" + "    \"preferred_client_mode\": \"poll\",\n" + "    \"attributes\": null,\n" +
                                     "    \"message\": \"Bitte geben Sie einen OTP-Wert ein: , Please confirm the authentication on your mobile device!\",\n" +
                                     "    \"messages\": [\n" + "      \"Bitte geben Sie einen OTP-Wert ein: \",\n" +
                                     "      \"Please confirm the authentication on your mobile device!\"\n" + "    ],\n" +
@@ -89,6 +89,8 @@ public class TestPollTransaction
         assertEquals("hotp", hotpChallenge.getType());
         assertEquals("", hotpChallenge.getImage());
         assertTrue(hotpChallenge.getAttributes().isEmpty());
+
+        assertEquals("push", initialResponse.preferredClientMode);
 
         Challenge pushChallenge = challenges.stream().filter(c -> c.getSerial().equals("PIPU0001F75E")).findFirst()
                                             .orElse(null);

@@ -48,7 +48,7 @@ public class TestTriggerChallenge
     @Test
     public void testTriggerChallengeSuccess()
     {
-        String response = "{\"detail\":{" + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
+        String response = "{\"detail\":{" + "\"preferred_client_mode\":\"interactive\"," + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
                           "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
@@ -91,6 +91,7 @@ public class TestTriggerChallenge
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
 
+        assertEquals("otp", responseTriggerChallenge.preferredClientMode);
         assertEquals(1, responseTriggerChallenge.id);
         assertEquals("BittegebenSieeinenOTP-Wertein:", responseTriggerChallenge.message);
         assertEquals("2.0", responseTriggerChallenge.jsonRPCVersion);
