@@ -134,7 +134,7 @@ public class TestRollout
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
                                  .logger(new PILogImplementation()).build();
 
-        String img = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
+        String image = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
 
         String response = "{\"detail\":{" + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"image\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
@@ -156,7 +156,7 @@ public class TestRollout
         String username = "testuser";
         PIResponse responseValidateCheck = privacyIDEA.validateCheck(username, "");
 
-        assertEquals(img, responseValidateCheck.image);
+        assertEquals(image, responseValidateCheck.image);
     }
 
     @After

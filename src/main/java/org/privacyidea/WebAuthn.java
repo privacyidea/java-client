@@ -22,9 +22,9 @@ public class WebAuthn extends Challenge
 {
     private final String signRequest;
 
-    public WebAuthn(String serial, String message, String image, String transaction_id, String signRequest)
+    public WebAuthn(String serial, String message, String client_mode, String image, String transaction_id, String signRequest)
     {
-        super(serial, message, image, transaction_id, PIConstants.TOKEN_TYPE_WEBAUTHN);
+        super(serial, message, client_mode, image, transaction_id, PIConstants.TOKEN_TYPE_WEBAUTHN);
         this.signRequest = signRequest;
     }
 

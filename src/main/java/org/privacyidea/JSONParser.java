@@ -25,6 +25,7 @@ import static org.privacyidea.PIConstants.DETAIL;
 import static org.privacyidea.PIConstants.ERROR;
 import static org.privacyidea.PIConstants.ID;
 import static org.privacyidea.PIConstants.IMAGE;
+import static org.privacyidea.PIConstants.CLIENT_MODE;
 import static org.privacyidea.PIConstants.INFO;
 import static org.privacyidea.PIConstants.JSONRPC;
 import static org.privacyidea.PIConstants.MAXFAIL;
@@ -228,6 +229,7 @@ public class JSONParser
                                                         .getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
+                    String clientmode = getString(challenge, CLIENT_MODE);
                     String image = getString (challenge, IMAGE);
                     String transactionid = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
@@ -235,16 +237,16 @@ public class JSONParser
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new WebAuthn(serial, message, image, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new U2F(serial, message, image, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(new Challenge(serial, message, image, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, clientmode, image, transactionid, type));
                     }
                 }
             }
