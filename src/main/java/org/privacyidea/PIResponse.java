@@ -108,14 +108,6 @@ public class PIResponse
     }
 
     /**
-     * @return a list of challenges that were triggered or an empty list if none were triggered
-     */
-    public List<Challenge> multiChallenge()
-    {
-        return multichallenge;
-    }
-
-    /**
      * Get all WebAuthn challenges from the multi_challenge.
      *
      * @return List of WebAuthn objects or empty list

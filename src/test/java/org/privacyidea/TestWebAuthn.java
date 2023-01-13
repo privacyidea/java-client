@@ -139,7 +139,7 @@ public class TestWebAuthn
 
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
-        Optional<Challenge> opt = response.multiChallenge().stream()
+        Optional<Challenge> opt = response.multichallenge.stream()
                                           .filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
                                           .findFirst();
         assertTrue(opt.isPresent());

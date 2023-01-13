@@ -79,7 +79,7 @@ public class TestPollTransaction
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
 
         // Check the triggered challenges - the other things are already tested in org.privacyidea.TestOTP
-        List<Challenge> challenges = initialResponse.multiChallenge();
+        List<Challenge> challenges = initialResponse.multichallenge;
 
         Challenge hotpChallenge = challenges.stream().filter(c -> c.getSerial().equals("OATH00020121")).findFirst()
                                             .orElse(null);
