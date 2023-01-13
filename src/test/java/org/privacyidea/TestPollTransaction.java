@@ -16,6 +16,7 @@
 package org.privacyidea;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
@@ -64,7 +65,7 @@ public class TestPollTransaction
                                     "        \"transaction_id\": \"02659936574063359702\",\n" + "        \"type\": \"hotp\"\n" +
                                     "      },\n" + "      {\n" + "        \"attributes\": null,\n" +
                                     "        \"message\": \"Please confirm the authentication on your mobile device!\",\n" +
-                                    "        \"serial\": \"PIPU0001F75E\",\n" +
+                                    "        \"serial\": \"PIPU0001F75E\",\n" + "        \"image\": \"dataimage\",\n" +
                                     "        \"transaction_id\": \"02659936574063359702\",\n" + "        \"type\": \"push\"\n" +
                                     "      }\n" + "    ],\n" + "    \"serial\": \"PIPU0001F75E\",\n" +
                                     "    \"threadid\": 140040525666048,\n" + "    \"transaction_id\": \"02659936574063359702\",\n" +
@@ -99,6 +100,19 @@ public class TestPollTransaction
         assertEquals("02659936574063359702", pushChallenge.getTransactionID());
         assertEquals("push", pushChallenge.getType());
         assertTrue(pushChallenge.getAttributes().isEmpty());
+
+        String imagePush = "";
+        for (Challenge c : challenges)
+        {
+            if (Objects.equals(c.getType(), "push"))
+            {
+                if (!c.getImage().isEmpty())
+                {
+                    imagePush = c.getImage();
+                }
+            }
+        }
+        assertEquals("dataimage", imagePush);
 
         List<String> triggeredTypes = initialResponse.triggeredTokenTypes();
         assertTrue(triggeredTypes.contains("push"));

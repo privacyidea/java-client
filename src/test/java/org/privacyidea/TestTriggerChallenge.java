@@ -15,6 +15,8 @@
  */
 package org.privacyidea;
 
+import java.util.List;
+import java.util.Objects;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +54,8 @@ public class TestTriggerChallenge
                           "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
                           "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"type\":\"totp\"}]," + "\"serial\":\"TOTP00021198\"," + "\"threadid\":140050885818112," +
+                          "\"image\":\"dataimage\"," + "\"type\":\"totp\"}]," +
+                          "\"serial\":\"TOTP00021198\"," + "\"threadid\":140050885818112," +
                           "\"transaction_id\":\"16734787285577957577\"," +
                           "\"transaction_ids\":[\"16734787285577957577\"]," + "\"type\":\"totp\"}," + "\"id\":1," +
                           "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
@@ -103,6 +106,20 @@ public class TestTriggerChallenge
         // result
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
+
+        List<Challenge> challenges = responseTriggerChallenge.multichallenge;
+        String imageTOTP = "";
+        for (Challenge c : challenges)
+        {
+            if (Objects.equals(c.getType(), "totp"))
+            {
+                if (!c.getImage().isEmpty())
+                {
+                    imageTOTP = c.getImage();
+                }
+            }
+        }
+        assertEquals("dataimage", imageTOTP);
     }
 
     @Test
