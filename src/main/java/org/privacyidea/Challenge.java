@@ -23,9 +23,9 @@ public class Challenge
     private final List<String> attributes = new ArrayList<>();
     private final String serial;
     private final String message;
-    private final String image;
     private final String transaction_id;
     private final String type;
+    private final String image;
 
     public Challenge(String serial, String message, String image, String transaction_id, String type)
     {
