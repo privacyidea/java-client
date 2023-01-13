@@ -26,14 +26,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
-import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.internal.connection.RealCall;
 
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;

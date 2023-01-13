@@ -15,9 +15,6 @@
  */
 package org.privacyidea;
 
-import java.util.Collections;
-import java.util.Map;
-
 public class WebAuthn extends Challenge
 {
     private final String signRequest;
