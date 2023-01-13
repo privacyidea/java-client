@@ -120,8 +120,8 @@ public class TestWebAuthn
                 "      \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"\n" + "    ],\n" +
                 "    \"multi_challenge\": [\n" + "      {\n" + "        \"attributes\": {\n" +
                 "          \"hideResponseInput\": true,\n" +
-                "          \"img\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
                 "          \"webAuthnSignRequest\": " + webauthnrequest + "        },\n" +
+                "          \"image\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
                 "        \"message\": \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\",\n" +
                 "        \"serial\": \"WAN00025CE7\",\n" + "        \"transaction_id\": \"16786665691788289392\",\n" +
                 "        \"type\": \"webauthn\"\n" + "      }\n" + "    ],\n" + "    \"serial\": \"WAN00025CE7\",\n" +
