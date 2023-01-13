@@ -111,7 +111,7 @@ public class TestTriggerChallenge
         String imageTOTP = "";
         for (Challenge c : challenges)
         {
-            if (Objects.equals(c.getType(), "totp"))
+            if ("totp".equals(c.getType()))
             {
                 if (!c.getImage().isEmpty())
                 {

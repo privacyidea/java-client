@@ -104,7 +104,7 @@ public class TestPollTransaction
         String imagePush = "";
         for (Challenge c : challenges)
         {
-            if (Objects.equals(c.getType(), "push"))
+            if ("push".equals(c.getType()))
             {
                 if (!c.getImage().isEmpty())
                 {
