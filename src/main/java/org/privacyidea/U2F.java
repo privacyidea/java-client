@@ -1,12 +1,11 @@
 /*
- * Copyright 2021 NetKnights GmbH - lukas.matusiewicz@netknights.it
- *
+ * Copyright 2023 NetKnights GmbH - lukas.matusiewicz@netknights.it
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +18,8 @@ public class U2F extends Challenge
 {
     private final String signRequest;
 
-    public U2F(String serial, String message, String client_mode, String image, String transaction_id, String signRequest)
+    public U2F(String serial, String message, String client_mode, String image, String transaction_id,
+               String signRequest)
     {
         super(serial, message, client_mode, image, transaction_id, PIConstants.TOKEN_TYPE_U2F);
         this.signRequest = signRequest;

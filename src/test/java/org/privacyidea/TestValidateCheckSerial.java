@@ -1,12 +1,11 @@
 /*
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- *
+ * Copyright 2023 NetKnights GmbH - lukas.matusiewicz@netknights.it
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,8 +34,10 @@ public class TestValidateCheckSerial
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
     }
 
     @Test
@@ -49,9 +50,12 @@ public class TestValidateCheckSerial
                               "\"versionnumber\":\"3.6.3\"," +
                               "\"signature\":\"rsa_sha256_pss:913056e002a...103456d32cca0222e5d\"}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
                                    .withBody("serial=TOTP0001AFB9&pass=123456"))
-                  .respond(HttpResponse.response().withBody(responseBody));
+                  .respond(HttpResponse.response()
+                                       .withBody(responseBody));
 
         String serial = "TOTP0001AFB9";
         String pinPlusOTP = "123456";
@@ -81,9 +85,12 @@ public class TestValidateCheckSerial
                               "\"versionnumber\":\"3.6.3\"," +
                               "\"signature\":\"rsa_sha256_pss:913056e002a...103456d32cca0222e5d\"}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
                                    .withBody("serial=TOTP0001AFB9&pass=123456&transaction_id=12093809214"))
-                  .respond(HttpResponse.response().withBody(responseBody));
+                  .respond(HttpResponse.response()
+                                       .withBody(responseBody));
 
         String serial = "TOTP0001AFB9";
         String pinPlusOTP = "123456";

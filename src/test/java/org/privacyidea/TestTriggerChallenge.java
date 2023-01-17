@@ -1,12 +1,13 @@
 /*
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- *
+ * Copyright 2023 NetKnights GmbH - nils.behlen@netknights.it
+ * lukas.matusiewicz@netknights.it
+ * - Modified
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +29,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-
 public class TestTriggerChallenge
 {
     private ClientAndServer mockServer;
@@ -41,21 +41,24 @@ public class TestTriggerChallenge
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .serviceAccount(serviceAccount, servicePass).logger(new PILogImplementation())
-                                 .realm("realm").build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .serviceAccount(serviceAccount, servicePass)
+                                 .logger(new PILogImplementation())
+                                 .realm("realm")
+                                 .build();
     }
 
     @Test
     public void testTriggerChallengeSuccess()
     {
-        String response = "{\"detail\":{" + "\"preferred_client_mode\":\"interactive\"," + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
+        String response = "{\"detail\":{" + "\"preferred_client_mode\":\"interactive\"," + "\"attributes\":null," +
+                          "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
                           "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
                           "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"image\":\"dataimage\"," + "\"type\":\"totp\"}]," +
-                          "\"serial\":\"TOTP00021198\"," + "\"threadid\":140050885818112," +
-                          "\"transaction_id\":\"16734787285577957577\"," +
+                          "\"image\":\"dataimage\"," + "\"type\":\"totp\"}]," + "\"serial\":\"TOTP00021198\"," +
+                          "\"threadid\":140050885818112," + "\"transaction_id\":\"16734787285577957577\"," +
                           "\"transaction_ids\":[\"16734787285577957577\"]," + "\"type\":\"totp\"}," + "\"id\":1," +
                           "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
                           "\"time\":1649666174.5351279," + "\"version\":\"privacyIDEA3.6.3\"," +
@@ -64,7 +67,10 @@ public class TestTriggerChallenge
 
         String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -86,9 +92,12 @@ public class TestTriggerChallenge
                                                  "    \"versionnumber\": \"3.2.1\",\n" +
                                                  "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE).withMethod("POST")
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
+                                   .withMethod("POST")
                                    .withBody("user=testuser&realm=realm"))
-                  .respond(HttpResponse.response().withBody(response));
+                  .respond(HttpResponse.response()
+                                       .withBody(response));
 
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
@@ -101,7 +110,8 @@ public class TestTriggerChallenge
         assertEquals("rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b", responseTriggerChallenge.signature);
         // Trim all whitespaces, newlines
         assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.toString().replaceAll("[\n\r]", ""));
+        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.toString()
+                                                                                .replaceAll("[\n\r]", ""));
         // result
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
@@ -112,7 +122,8 @@ public class TestTriggerChallenge
         {
             if ("totp".equals(c.getType()))
             {
-                if (!c.getImage().isEmpty())
+                if (!c.getImage()
+                      .isEmpty())
                 {
                     imageTOTP = c.getImage();
                 }
@@ -124,8 +135,10 @@ public class TestTriggerChallenge
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
 
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges("Test");
 
@@ -135,9 +148,12 @@ public class TestTriggerChallenge
     @Test
     public void testWrongServerURL()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://12ds7:1nvcbn080", "test").sslVerify(false)
-                                 .serviceAccount(serviceAccount, servicePass).logger(new PILogImplementation())
-                                 .realm("realm").build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://12ds7:1nvcbn080", "test")
+                                 .sslVerify(false)
+                                 .serviceAccount(serviceAccount, servicePass)
+                                 .logger(new PILogImplementation())
+                                 .realm("realm")
+                                 .build();
 
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges("Test");
 
@@ -147,9 +163,12 @@ public class TestTriggerChallenge
     @Test
     public void testNoUsername()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .serviceAccount(serviceAccount, servicePass).logger(new PILogImplementation())
-                                 .realm("realm").build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .serviceAccount(serviceAccount, servicePass)
+                                 .logger(new PILogImplementation())
+                                 .realm("realm")
+                                 .build();
 
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges("");
 

@@ -1,12 +1,13 @@
 /*
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- *
+ * Copyright 2023 NetKnights GmbH - nils.behlen@netknights.it
+ * lukas.matusiewicz@netknights.it
+ * - Modified
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +36,6 @@ public class TestGetTokenInfo
     private PrivacyIDEA privacyIDEA;
     private final String username = "Test";
     private final String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU";
-    private final String realm = "realm";
     private final String serviceAccount = "admin";
     private final String servicePassword = "admin";
     private final String serviceRealm = "realm";
@@ -46,8 +46,12 @@ public class TestGetTokenInfo
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .serviceAccount(serviceAccount, servicePassword).serviceRealm(serviceRealm).disableLog().sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+                                 .serviceAccount(serviceAccount, servicePassword)
+                                 .serviceRealm(serviceRealm)
+                                 .disableLog()
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
     }
 
     @Test
@@ -66,8 +70,11 @@ public class TestGetTokenInfo
                         "\"version\":\"privacyIDEA3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
                         "\"signature\":\"rsa_sha256_pss:58c4eed1...5247c47e3e\"}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(
-                          "username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" +
+                                             serviceRealm))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -89,9 +96,13 @@ public class TestGetTokenInfo
                                                  "    \"versionnumber\": \"3.2.1\",\n" +
                                                  "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
 
-        mockServer.when(HttpRequest.request().withMethod("GET").withQueryStringParameter("user", username)
-                                   .withPath(PIConstants.ENDPOINT_TOKEN).withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response().withBody(result));
+        mockServer.when(HttpRequest.request()
+                                   .withMethod("GET")
+                                   .withQueryStringParameter("user", username)
+                                   .withPath(PIConstants.ENDPOINT_TOKEN)
+                                   .withHeader("Authorization", authToken))
+                  .respond(HttpResponse.response()
+                                       .withBody(result));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNotNull(tokenInfoList);
@@ -130,9 +141,13 @@ public class TestGetTokenInfo
                 "\"version\":\"privacyIDEA3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
                 "\"signature\":\"rsa_sha256_pss:5295e005a48b0a915a1e37f80\"}";
 
-        mockServer.when(HttpRequest.request().withMethod("GET").withQueryStringParameter("user", "Test")
-                                   .withPath(PIConstants.ENDPOINT_TOKEN).withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response().withBody(resultNoTokens));
+        mockServer.when(HttpRequest.request()
+                                   .withMethod("GET")
+                                   .withQueryStringParameter("user", "Test")
+                                   .withPath(PIConstants.ENDPOINT_TOKEN)
+                                   .withHeader("Authorization", authToken))
+                  .respond(HttpResponse.response()
+                                       .withBody(resultNoTokens));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNull(tokenInfoList);
@@ -141,8 +156,10 @@ public class TestGetTokenInfo
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 

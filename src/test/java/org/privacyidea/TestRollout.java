@@ -1,12 +1,13 @@
 /*
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- *
+ * Copyright 2023 NetKnights GmbH - nils.behlen@netknights.it
+ * lukas.matusiewicz@netknights.it
+ * - Modified
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,8 +39,11 @@ public class TestRollout
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .serviceAccount("admin", "admin").logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .serviceAccount("admin", "admin")
+                                 .logger(new PILogImplementation())
+                                 .build();
     }
 
     @Test
@@ -49,7 +53,10 @@ public class TestRollout
 
         String img = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -72,9 +79,12 @@ public class TestRollout
                                                  "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
 
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_TOKEN_INIT).withMethod("POST")
-                                   .withHeader(Header.header("Authorization", authToken))).respond(
-                HttpResponse.response().withBody("{\n" + "    \"detail\": {\n" + "        \"googleurl\": {\n" +
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_TOKEN_INIT)
+                                   .withMethod("POST")
+                                   .withHeader(Header.header("Authorization", authToken)))
+                  .respond(HttpResponse.response()
+                                       .withBody("{\n" + "    \"detail\": {\n" + "        \"googleurl\": {\n" +
                                                  "            \"description\": \"URL for google Authenticator\",\n" +
                                                  "            \"img\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
                                                  "            \"value\": \"otpauth://hotp/OATH0003A0AA?secret=4DK5JEEQMWY3VES7EWB4M36TAW4YC2YH&counter=1&digits=6&issuer=privacyIDEA\"\n" +
@@ -120,8 +130,10 @@ public class TestRollout
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
 
         RolloutInfo rolloutInfo = privacyIDEA.tokenRollout("games", "hotp");
 
@@ -131,8 +143,10 @@ public class TestRollout
     @Test
     public void testRolloutViaValidateCheck()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
 
         String image = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
 
@@ -149,9 +163,12 @@ public class TestRollout
                           "\"versionnumber\":\"3.6.3\"," +
                           "\"signature\":\"rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b\"}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST")
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
                                    .withBody("user=testuser&pass="))
-                  .respond(HttpResponse.response().withBody(response));
+                  .respond(HttpResponse.response()
+                                       .withBody(response));
 
         String username = "testuser";
         PIResponse responseValidateCheck = privacyIDEA.validateCheck(username, "");

@@ -1,6 +1,4 @@
 target/
 .idea/
-sdk-java.iml
 dependency-reduced-pom.xml
 *.iml
-/src/test/java/org/privacyidea/TestBuildHelper.java
