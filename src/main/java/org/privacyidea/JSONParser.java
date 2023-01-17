@@ -77,6 +77,7 @@ public class JSONParser
 
         JsonObject obj;
         Gson gson = new GsonBuilder().setPrettyPrinting()
+                                     .setLenient()
                                      .create();
         try
         {
