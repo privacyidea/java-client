@@ -1,5 +1,10 @@
 # Changelog
 
+### v1.2.0 - 17 Jan 2023
+
+* Added implementation of a new feature: Token enrollment via challenge (#47)
+* Added implementation of the preferred client mode (#42, #49)
+
 ### v1.0.2 - 06 May 2022
 
 * Added option to pass headers to every privacyIDEA API function
