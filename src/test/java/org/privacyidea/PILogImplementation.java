@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * - Modified
  * <p>

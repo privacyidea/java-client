@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2023 NetKnights GmbH - lukas.matusiewicz@netknights.it
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
