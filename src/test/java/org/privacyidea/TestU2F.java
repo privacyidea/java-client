@@ -1,12 +1,11 @@
-/*
- * Copyright 2021 NetKnights GmbH - nils.behlen@netknights.it
- *
+/**
+ * Copyright 2023 NetKnights GmbH - lukas.matusiewicz@netknights.it
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * You may obtain a copy of the License here:
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">License</a>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,8 +40,10 @@ public class TestU2F
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false)
-                                 .logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .sslVerify(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
     }
 
     @After
@@ -56,7 +57,8 @@ public class TestU2F
     {
         String responseBody = "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," +
                               "\"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\"," + "\"u2fSignRequest\":{" +
-                              "\"appId\":\"http//ttype.u2f\"," + "\"challenge\":\"TZKiB0VFFMF...tQduDJf56AeJAY_BT4NU\"," +
+                              "\"appId\":\"http//ttype.u2f\"," +
+                              "\"challenge\":\"TZKiB0VFFMF...tQduDJf56AeJAY_BT4NU\"," +
                               "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQ...qzZW1lC-jDdFd2pKDUsNnA\"," +
                               "\"version\":\"U2F_V2\"}}," +
                               "\"message\":\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"," +
@@ -82,9 +84,12 @@ public class TestU2F
                                 "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQJYu4G5qB9l7ScjRRxA-M35cTH-uHWyMEpxs4WBzbkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
                                 "\"version\":\"U2F_V2\"" + "}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
-                          "user=Test&pass=test"))
-                  .respond(HttpResponse.response().withBody(responseBody));
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
+                                   .withBody("user=Test&pass=test"))
+                  .respond(HttpResponse.response()
+                                       .withBody(responseBody));
 
         PIResponse response = privacyIDEA.validateCheck("Test", "test");
 
@@ -100,15 +105,17 @@ public class TestU2F
         assertFalse(response.value);
 
         Optional<Challenge> opt = response.multichallenge.stream()
-                                          .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
-                                          .findFirst();
+                                                         .filter(challenge -> TOKEN_TYPE_U2F.equals(
+                                                                 challenge.getType()))
+                                                         .findFirst();
         if (opt.isPresent())
         {
             Challenge a = opt.get();
             if (a instanceof U2F)
             {
                 U2F b = (U2F) a;
-                String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
+                String trimmedRequest = u2fSignRequest.replaceAll("\n", "")
+                                                      .replaceAll(" ", "");
                 assertEquals(trimmedRequest, b.signRequest());
             }
             else
@@ -135,11 +142,14 @@ public class TestU2F
                 "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
                 "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
-                          "user=Test&transaction_id=16786665691788289392&pass=" +
-                          "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
-                          "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response().withBody(responseBody));
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
+                                   .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
+                                             "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
+                                             "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
+                  .respond(HttpResponse.response()
+                                       .withBody(responseBody));
 
         String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
                                  "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
@@ -174,11 +184,14 @@ public class TestU2F
                 "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
                 "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
 
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody(
-                          "user=Test&transaction_id=16786665691788289392&pass=" +
-                          "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
-                          "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response().withBody(responseBody));
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
+                                   .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
+                                             "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
+                                             "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
+                  .respond(HttpResponse.response()
+                                       .withBody(responseBody));
 
         String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
                                  "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
