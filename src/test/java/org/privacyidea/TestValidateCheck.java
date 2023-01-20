@@ -215,8 +215,7 @@ public class TestValidateCheck
         assertEquals("2.0", response.jsonRPCVersion);
         assertFalse(response.status);
         assertNotNull(response.error);
-        assertEquals("rsa_sha256_pss:1c64db29cad0dc127d6...5ec143ee52a7804ea1dc8e23ab2fc90ac0ac147c0",
-                     response.signature);
+        assertEquals("rsa_sha256_pss:1c64db29cad0dc127d6...5ec143ee52a7804ea1dc8e23ab2fc90ac0ac147c0", response.signature);
     }
 
     @After

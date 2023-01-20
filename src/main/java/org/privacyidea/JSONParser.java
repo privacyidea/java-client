@@ -255,19 +255,16 @@ public class JSONParser
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(
-                                new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(
-                                new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(
-                                new Challenge(serial, message, clientmode, image, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, clientmode, image, transactionid, type));
                     }
                 }
             }

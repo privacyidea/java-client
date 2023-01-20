@@ -73,13 +73,11 @@ public class TestWebAuthn
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody(
-                                           "user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA&userhandle=jalsdkjflsjfuhuweuvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
+                                   .withBody("user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA&userhandle=jalsdkjflsjfuhuweuvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
                   .respond(HttpResponse.response()
                                        .withBody(responseBody));
 
-        PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse,
-                                                                "test.it");
+        PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse, "test.it");
 
         assertNotNull(response);
         assertEquals("matching 1 tokens", response.message);
@@ -155,8 +153,7 @@ public class TestWebAuthn
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
         Optional<Challenge> opt = response.multichallenge.stream()
-                                                         .filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(
-                                                                 challenge.getType()))
+                                                         .filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
                                                          .findFirst();
         assertTrue(opt.isPresent());
         assertEquals(AuthenticationStatus.CHALLENGE, response.authentication);

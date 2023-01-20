@@ -105,8 +105,7 @@ public class TestU2F
         assertFalse(response.value);
 
         Optional<Challenge> opt = response.multichallenge.stream()
-                                                         .filter(challenge -> TOKEN_TYPE_U2F.equals(
-                                                                 challenge.getType()))
+                                                         .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
                                                          .findFirst();
         if (opt.isPresent())
         {

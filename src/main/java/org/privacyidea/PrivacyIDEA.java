@@ -65,8 +65,7 @@ public class PrivacyIDEA
     private final ExecutorService threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
-    private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
-                                                              PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
+    private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH, PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
 
     private PrivacyIDEA(PIConfig configuration, IPILogger logger, IPISimpleLogger simpleLog)
     {
@@ -296,9 +295,7 @@ public class PrivacyIDEA
     {
         Objects.requireNonNull(transactionId, "TransactionID is required!");
 
-        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION,
-                                          Collections.singletonMap(TRANSACTION_ID, transactionId),
-                                          Collections.emptyMap(), false, GET);
+        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionId), Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
         return piresponse.value;
     }
@@ -351,8 +348,7 @@ public class PrivacyIDEA
             return null;
         }
 
-        String response = runRequestAsync(ENDPOINT_TOKEN, Collections.singletonMap(USER, username),
-                                          new LinkedHashMap<>(), true, GET);
+        String response = runRequestAsync(ENDPOINT_TOKEN, Collections.singletonMap(USER, username), new LinkedHashMap<>(), true, GET);
         return parser.parseTokenInfoList(response);
     }
 
@@ -404,8 +400,7 @@ public class PrivacyIDEA
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers,
                                    boolean authTokenRequired, String method)
     {
-        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired,
-                                                             method);
+        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
         String response = null;
         try

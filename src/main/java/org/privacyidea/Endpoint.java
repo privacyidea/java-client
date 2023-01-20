@@ -108,8 +108,7 @@ class Endpoint
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
-            callback.onFailure(null,
-                               new IOException("Request could not be created because the url could not be parsed"));
+            callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();

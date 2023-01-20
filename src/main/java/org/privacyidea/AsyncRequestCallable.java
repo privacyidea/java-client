@@ -69,8 +69,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
             latch = new CountDownLatch(1);
             String tmpPath = path;
             path = ENDPOINT_AUTH;
-            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(),
-                                      PIConstants.POST, this);
+            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
             latch.await();
             // Extract the auth token from the response
             String response = callbackResult[0];

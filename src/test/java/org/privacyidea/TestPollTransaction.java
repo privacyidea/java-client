@@ -205,8 +205,7 @@ public class TestPollTransaction
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withPath("/validate/polltransaction")
-                                   .withQueryStringParameter("transaction_id", "02659936574063359702"),
-                        Times.exactly(times))
+                                   .withQueryStringParameter("transaction_id", "02659936574063359702"), Times.exactly(times))
                   .respond(HttpResponse.response()
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
                                                  "    \"result\": {\n" + "        \"status\": true,\n" +
