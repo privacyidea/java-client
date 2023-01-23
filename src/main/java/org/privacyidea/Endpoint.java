@@ -144,8 +144,7 @@ class Endpoint
                            });
         }
 
-        String url = urlBuilder.build()
-                               .toString();
+        String url = urlBuilder.build().toString();
         //privacyIDEA.log("URL: " + url);
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
@@ -186,7 +185,6 @@ class Endpoint
 
         Request request = requestBuilder.build();
         //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-        client.newCall(request)
-              .enqueue(callback);
+        client.newCall(request).enqueue(callback);
     }
 }
