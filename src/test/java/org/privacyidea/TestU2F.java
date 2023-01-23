@@ -88,8 +88,7 @@ public class TestU2F
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=Test&pass=test"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         PIResponse response = privacyIDEA.validateCheck("Test", "test");
 
@@ -113,8 +112,7 @@ public class TestU2F
             if (a instanceof U2F)
             {
                 U2F b = (U2F) a;
-                String trimmedRequest = u2fSignRequest.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+                String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
                 assertEquals(trimmedRequest, b.signRequest());
             }
             else
@@ -147,8 +145,7 @@ public class TestU2F
                                    .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
                                              "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
                                              "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
                                  "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
@@ -189,8 +186,7 @@ public class TestU2F
                                    .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
                                              "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
                                              "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
                                  "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +

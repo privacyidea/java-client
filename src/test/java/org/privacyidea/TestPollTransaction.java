@@ -100,8 +100,7 @@ public class TestPollTransaction
         List<Challenge> challenges = initialResponse.multichallenge;
 
         Challenge hotpChallenge = challenges.stream()
-                                            .filter(c -> c.getSerial()
-                                                          .equals("OATH00020121"))
+                                            .filter(c -> c.getSerial().equals("OATH00020121"))
                                             .findFirst()
                                             .orElse(null);
         assertNotNull(hotpChallenge);
@@ -109,30 +108,26 @@ public class TestPollTransaction
         assertEquals("02659936574063359702", hotpChallenge.getTransactionID());
         assertEquals("hotp", hotpChallenge.getType());
         assertEquals("", hotpChallenge.getImage());
-        assertTrue(hotpChallenge.getAttributes()
-                                .isEmpty());
+        assertTrue(hotpChallenge.getAttributes().isEmpty());
 
         assertEquals("push", initialResponse.preferredClientMode);
 
         Challenge pushChallenge = challenges.stream()
-                                            .filter(c -> c.getSerial()
-                                                          .equals("PIPU0001F75E"))
+                                            .filter(c -> c.getSerial().equals("PIPU0001F75E"))
                                             .findFirst()
                                             .orElse(null);
         assertNotNull(pushChallenge);
         assertEquals("Please confirm the authentication on your mobile device!", pushChallenge.getMessage());
         assertEquals("02659936574063359702", pushChallenge.getTransactionID());
         assertEquals("push", pushChallenge.getType());
-        assertTrue(pushChallenge.getAttributes()
-                                .isEmpty());
+        assertTrue(pushChallenge.getAttributes().isEmpty());
 
         String imagePush = "";
         for (Challenge c : challenges)
         {
             if ("push".equals(c.getType()))
             {
-                if (!c.getImage()
-                      .isEmpty())
+                if (!c.getImage().isEmpty())
                 {
                     imagePush = c.getImage();
                 }

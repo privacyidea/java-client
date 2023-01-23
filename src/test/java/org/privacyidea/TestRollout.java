@@ -53,10 +53,7 @@ public class TestRollout
 
         String img = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
 
-        mockServer.when(HttpRequest.request()
-                                   .withPath(PIConstants.ENDPOINT_AUTH)
-                                   .withMethod("POST")
-                                   .withBody(""))
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -167,8 +164,7 @@ public class TestRollout
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=testuser&pass="))
-                  .respond(HttpResponse.response()
-                                       .withBody(response));
+                  .respond(HttpResponse.response().withBody(response));
 
         String username = "testuser";
         PIResponse responseValidateCheck = privacyIDEA.validateCheck(username, "");

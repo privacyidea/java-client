@@ -74,8 +74,7 @@ public class TestWebAuthn
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA&userhandle=jalsdkjflsjfuhuweuvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse, "test.it");
 
@@ -145,10 +144,9 @@ public class TestWebAuthn
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody("user=" + username + "&pass=" + pass))
-                  .respond(HttpResponse.response()
-                                       // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody(responseBody));
+                                   .withBody("user=" + username + "&pass=" + pass)).respond(HttpResponse.response()
+                                                                                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
+                                                                                                        .withBody(responseBody));
 
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
@@ -162,8 +160,7 @@ public class TestWebAuthn
         if (a instanceof WebAuthn)
         {
             WebAuthn b = (WebAuthn) a;
-            String trimmedRequest = webauthnrequest.replaceAll("\n", "")
-                                                   .replaceAll(" ", "");
+            String trimmedRequest = webauthnrequest.replaceAll("\n", "").replaceAll(" ", "");
             assertEquals(trimmedRequest, b.signRequest());
             assertEquals("static/img/FIDO-U2F-Security-Key-444x444.png", b.getImage());
             assertEquals("webauthn", b.getClientMode());
@@ -222,8 +219,7 @@ public class TestWebAuthn
 
         JSONParser jsonParser = new JSONParser(privacyIDEA);
         PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
-        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);
@@ -310,8 +306,7 @@ public class TestWebAuthn
 
         JSONParser jsonParser = new JSONParser(privacyIDEA);
         PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
-        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);

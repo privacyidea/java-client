@@ -54,8 +54,7 @@ public class TestValidateCheckSerial
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("serial=TOTP0001AFB9&pass=123456"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         String serial = "TOTP0001AFB9";
         String pinPlusOTP = "123456";
@@ -89,8 +88,7 @@ public class TestValidateCheckSerial
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("serial=TOTP0001AFB9&pass=123456&transaction_id=12093809214"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(responseBody));
 
         String serial = "TOTP0001AFB9";
         String pinPlusOTP = "123456";

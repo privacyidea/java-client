@@ -67,10 +67,7 @@ public class TestTriggerChallenge
 
         String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU";
 
-        mockServer.when(HttpRequest.request()
-                                   .withPath(PIConstants.ENDPOINT_AUTH)
-                                   .withMethod("POST")
-                                   .withBody(""))
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
@@ -96,8 +93,7 @@ public class TestTriggerChallenge
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
                                    .withBody("user=testuser&realm=realm"))
-                  .respond(HttpResponse.response()
-                                       .withBody(response));
+                  .respond(HttpResponse.response().withBody(response));
 
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
@@ -110,8 +106,7 @@ public class TestTriggerChallenge
         assertEquals("rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b", responseTriggerChallenge.signature);
         // Trim all whitespaces, newlines
         assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.toString()
-                                                                                .replaceAll("[\n\r]", ""));
+        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.toString().replaceAll("[\n\r]", ""));
         // result
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
@@ -122,8 +117,7 @@ public class TestTriggerChallenge
         {
             if ("totp".equals(c.getType()))
             {
-                if (!c.getImage()
-                      .isEmpty())
+                if (!c.getImage().isEmpty())
                 {
                     imageTOTP = c.getImage();
                 }

@@ -83,8 +83,7 @@ public class TestValidateCheck
         assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
         // Trim all whitespaces, newlines
         assertEquals(responseBody.replaceAll("[\n\r]", ""), response.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString()
-                                                                    .replaceAll("[\n\r]", ""));
+        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString().replaceAll("[\n\r]", ""));
         // result
         assertTrue(response.status);
         assertTrue(response.value);
@@ -124,8 +123,7 @@ public class TestValidateCheck
         assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
         // Trim all whitespaces, newlines
         assertEquals(responseBody.replaceAll("[\n\r]", ""), response.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString()
-                                                                    .replaceAll("[\n\r]", ""));
+        assertEquals(responseBody.replaceAll("[\n\r]", ""), response.toString().replaceAll("[\n\r]", ""));
         // result
         assertTrue(response.status);
         assertTrue(response.value);
@@ -201,9 +199,7 @@ public class TestValidateCheck
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=TOTP0001AFB9&pass=12"))
-                  .respond(HttpResponse.response()
-                                       .withStatusCode(400)
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withStatusCode(400).withBody(responseBody));
 
         String user = "TOTP0001AFB9";
         String pin = "12";

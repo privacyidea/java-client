@@ -74,35 +74,44 @@ public class TestGetTokenInfo
                                    .withPath(PIConstants.ENDPOINT_AUTH)
                                    .withMethod("POST")
                                    .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" +
-                                             serviceRealm))
-                  .respond(HttpResponse.response()
-                                       // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": {\n" + "            \"log_level\": 20,\n" +
-                                                 "            \"menus\": [\n" + "                \"components\",\n" +
-                                                 "                \"machines\"\n" + "            ],\n" +
-                                                 "            \"realm\": \"\",\n" + "            \"rights\": [\n" +
-                                                 "                \"policydelete\",\n" +
-                                                 "                \"resync\"\n" + "            ],\n" +
-                                                 "            \"role\": \"admin\",\n" + "            \"token\": \"" +
-                                                 authToken + "\",\n" + "            \"username\": \"admin\",\n" +
-                                                 "            \"logout_time\": 120,\n" +
-                                                 "            \"default_tokentype\": \"hotp\",\n" +
-                                                 "            \"user_details\": false,\n" +
-                                                 "            \"subscription_status\": 0\n" + "        }\n" +
-                                                 "    },\n" + "    \"time\": 1589446794.8502703,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "    \"versionnumber\": \"3.2.1\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
+                                             serviceRealm)).respond(HttpResponse.response()
+                                                                                // This response is simplified because it is very long and contains info that is not (yet) processed anyway
+                                                                                .withBody("{\n" + "    \"id\": 1,\n" +
+                                                                                          "    \"jsonrpc\": \"2.0\",\n" +
+                                                                                          "    \"result\": {\n" +
+                                                                                          "        \"status\": true,\n" +
+                                                                                          "        \"value\": {\n" +
+                                                                                          "            \"log_level\": 20,\n" +
+                                                                                          "            \"menus\": [\n" +
+                                                                                          "                \"components\",\n" +
+                                                                                          "                \"machines\"\n" +
+                                                                                          "            ],\n" +
+                                                                                          "            \"realm\": \"\",\n" +
+                                                                                          "            \"rights\": [\n" +
+                                                                                          "                \"policydelete\",\n" +
+                                                                                          "                \"resync\"\n" +
+                                                                                          "            ],\n" +
+                                                                                          "            \"role\": \"admin\",\n" +
+                                                                                          "            \"token\": \"" +
+                                                                                          authToken + "\",\n" +
+                                                                                          "            \"username\": \"admin\",\n" +
+                                                                                          "            \"logout_time\": 120,\n" +
+                                                                                          "            \"default_tokentype\": \"hotp\",\n" +
+                                                                                          "            \"user_details\": false,\n" +
+                                                                                          "            \"subscription_status\": 0\n" +
+                                                                                          "        }\n" + "    },\n" +
+                                                                                          "    \"time\": 1589446794.8502703,\n" +
+                                                                                          "    \"version\": \"privacyIDEA 3.2.1\",\n" +
+                                                                                          "    \"versionnumber\": \"3.2.1\",\n" +
+                                                                                          "    \"signature\": \"rsa_sha256_pss:\"\n" +
+                                                                                          "}"));
 
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withQueryStringParameter("user", username)
                                    .withPath(PIConstants.ENDPOINT_TOKEN)
                                    .withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response()
-                                       .withBody(result));
+                  .respond(HttpResponse.response().withBody(result));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNotNull(tokenInfoList);
@@ -146,8 +155,7 @@ public class TestGetTokenInfo
                                    .withQueryStringParameter("user", "Test")
                                    .withPath(PIConstants.ENDPOINT_TOKEN)
                                    .withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response()
-                                       .withBody(resultNoTokens));
+                  .respond(HttpResponse.response().withBody(resultNoTokens));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNull(tokenInfoList);
