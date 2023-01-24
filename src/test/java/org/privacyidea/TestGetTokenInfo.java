@@ -57,61 +57,19 @@ public class TestGetTokenInfo
     @Test
     public void testSuccess()
     {
-        String result = "{\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":{" +
-                        "\"count\":1," + "\"current\":1," + "\"tokens\":[{" + "\"active\":true," + "\"count\":2," +
-                        "\"count_window\":10," + "\"description\":\"\"," + "\"failcount\":0," + "\"id\":347," +
-                        "\"info\":{" + "\"count_auth\":\"1\"," + "\"count_auth_success\":\"1\"," +
-                        "\"hashlib\":\"sha1\"," + "\"last_auth\":\"2022-03-2912:18:59.639421+02:00\"," +
-                        "\"tokenkind\":\"software\"}," + "\"locked\":false," + "\"maxfail\":10," + "\"otplen\":6," +
-                        "\"realms\":[\"defrealm\"]," + "\"resolver\":\"deflocal\"," + "\"revoked\":false," +
-                        "\"rollout_state\":\"\"," + "\"serial\":\"OATH00123564\"," + "\"sync_window\":1000," +
-                        "\"tokentype\":\"hotp\"," + "\"user_editable\":false," + "\"user_id\":\"5\"," +
-                        "\"user_realm\":\"defrealm\"," + "\"username\":\"Test\"}]}}," + "\"time\":1648549489.57896," +
-                        "\"version\":\"privacyIDEA3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
-                        "\"signature\":\"rsa_sha256_pss:58c4eed1...5247c47e3e\"}";
-
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_AUTH)
                                    .withMethod("POST")
-                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" +
-                                             serviceRealm)).respond(HttpResponse.response()
-                                                                                // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                                                                .withBody("{\n" + "    \"id\": 1,\n" +
-                                                                                          "    \"jsonrpc\": \"2.0\",\n" +
-                                                                                          "    \"result\": {\n" +
-                                                                                          "        \"status\": true,\n" +
-                                                                                          "        \"value\": {\n" +
-                                                                                          "            \"log_level\": 20,\n" +
-                                                                                          "            \"menus\": [\n" +
-                                                                                          "                \"components\",\n" +
-                                                                                          "                \"machines\"\n" +
-                                                                                          "            ],\n" +
-                                                                                          "            \"realm\": \"\",\n" +
-                                                                                          "            \"rights\": [\n" +
-                                                                                          "                \"policydelete\",\n" +
-                                                                                          "                \"resync\"\n" +
-                                                                                          "            ],\n" +
-                                                                                          "            \"role\": \"admin\",\n" +
-                                                                                          "            \"token\": \"" +
-                                                                                          authToken + "\",\n" +
-                                                                                          "            \"username\": \"admin\",\n" +
-                                                                                          "            \"logout_time\": 120,\n" +
-                                                                                          "            \"default_tokentype\": \"hotp\",\n" +
-                                                                                          "            \"user_details\": false,\n" +
-                                                                                          "            \"subscription_status\": 0\n" +
-                                                                                          "        }\n" + "    },\n" +
-                                                                                          "    \"time\": 1589446794.8502703,\n" +
-                                                                                          "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                                                          "    \"versionnumber\": \"3.2.1\",\n" +
-                                                                                          "    \"signature\": \"rsa_sha256_pss:\"\n" +
-                                                                                          "}"));
+                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
+                  .respond(HttpResponse.response()
+                                       // This response is simplified because it is very long and contains info that is not (yet) processed anyway
+                                       .withBody(Utils.postAuthSuccessResponse()));
 
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withQueryStringParameter("user", username)
                                    .withPath(PIConstants.ENDPOINT_TOKEN)
-                                   .withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response().withBody(result));
+                                   .withHeader("Authorization", authToken)).respond(HttpResponse.response().withBody(Utils.getTokenResponse()));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNotNull(tokenInfoList);
@@ -144,18 +102,12 @@ public class TestGetTokenInfo
     @Test
     public void testForNoToken()
     {
-        String resultNoTokens =
-                "{\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":{" +
-                "\"count\":0," + "\"current\":1," + "\"tokens\":[]}}," + "\"time\":1648548984.9165428," +
-                "\"version\":\"privacyIDEA3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
-                "\"signature\":\"rsa_sha256_pss:5295e005a48b0a915a1e37f80\"}";
-
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withQueryStringParameter("user", "Test")
                                    .withPath(PIConstants.ENDPOINT_TOKEN)
                                    .withHeader("Authorization", authToken))
-                  .respond(HttpResponse.response().withBody(resultNoTokens));
+                  .respond(HttpResponse.response().withBody(Utils.getTokenNoTokenResponse()));
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
         assertNull(tokenInfoList);
@@ -164,10 +116,7 @@ public class TestGetTokenInfo
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
-                                 .logger(new PILogImplementation())
-                                 .build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false).logger(new PILogImplementation()).build();
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 

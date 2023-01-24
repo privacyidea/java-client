@@ -49,31 +49,14 @@ public class TestRollout
     @Test
     public void testSuccess()
     {
-        String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NoBVmAurqcaaMmwM-AsD1S6chGIM";
+        String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU";
 
         String img = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
 
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": {\n" + "            \"log_level\": 20,\n" +
-                                                 "            \"menus\": [\n" + "                \"components\",\n" +
-                                                 "                \"machines\"\n" + "            ],\n" +
-                                                 "            \"realm\": \"\",\n" + "            \"rights\": [\n" +
-                                                 "                \"policydelete\",\n" +
-                                                 "                \"resync\"\n" + "            ],\n" +
-                                                 "            \"role\": \"admin\",\n" + "            \"token\": \"" +
-                                                 authToken + "\",\n" + "            \"username\": \"admin\",\n" +
-                                                 "            \"logout_time\": 120,\n" +
-                                                 "            \"default_tokentype\": \"hotp\",\n" +
-                                                 "            \"user_details\": false,\n" +
-                                                 "            \"subscription_status\": 0\n" + "        }\n" +
-                                                 "    },\n" + "    \"time\": 1589446794.8502703,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "    \"versionnumber\": \"3.2.1\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
+                                       .withBody(Utils.postAuthSuccessResponse()));
 
 
         mockServer.when(HttpRequest.request()
@@ -81,29 +64,7 @@ public class TestRollout
                                    .withMethod("POST")
                                    .withHeader(Header.header("Authorization", authToken)))
                   .respond(HttpResponse.response()
-                                       .withBody("{\n" + "    \"detail\": {\n" + "        \"googleurl\": {\n" +
-                                                 "            \"description\": \"URL for google Authenticator\",\n" +
-                                                 "            \"img\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
-                                                 "            \"value\": \"otpauth://hotp/OATH0003A0AA?secret=4DK5JEEQMWY3VES7EWB4M36TAW4YC2YH&counter=1&digits=6&issuer=privacyIDEA\"\n" +
-                                                 "        },\n" + "        \"oathurl\": {\n" +
-                                                 "            \"description\": \"URL for OATH token\",\n" +
-                                                 "            \"img\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
-                                                 "            \"value\": \"oathtoken:///addToken?name=OATH0003A0AA&lockdown=true&key=e0d5d4909065b1ba925f2583c66fd305b9816b07\"\n" +
-                                                 "        },\n" + "        \"otpkey\": {\n" +
-                                                 "            \"description\": \"OTP seed\",\n" +
-                                                 "            \"img\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
-                                                 "            \"value\": \"seed://e0d5d4909065b1ba925f2583c66fd305b9816b07\",\n" +
-                                                 "            \"value_b32\": \"4DK5JEEQMWY3VES7EWB4M36TAW4YC2YH\"\n" +
-                                                 "        },\n" + "        \"rollout_state\": \"\",\n" +
-                                                 "        \"serial\": \"OATH0003A0AA\",\n" +
-                                                 "        \"threadid\": 140470638720768\n" + "    },\n" +
-                                                 "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": true\n" + "    },\n" +
-                                                 "    \"time\": 1592834605.532012,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.3.3\",\n" +
-                                                 "    \"versionnumber\": \"3.3.3\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
+                                       .withBody(Utils.rolloutSuccess()));
 
         RolloutInfo rolloutInfo = privacyIDEA.tokenRollout("games", "hotp");
 
@@ -146,27 +107,14 @@ public class TestRollout
                                  .build();
 
         String image = "data:image/png;base64,iVBdgfgsdfgRK5CYII=";
-
-        String response = "{\"detail\":{" + "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
-                          "\"image\": \"data:image/png;base64,iVBdgfgsdfgRK5CYII=\",\n" +
-                          "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
-                          "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
-                          "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"type\":\"totp\"}]," + "\"serial\":\"TOTP00021198\"," + "\"threadid\":140050885818112," +
-                          "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"transaction_ids\":[\"16734787285577957577\"]," + "\"type\":\"totp\"}," + "\"id\":1," +
-                          "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                          "\"time\":1649666174.5351279," + "\"version\":\"privacyIDEA3.6.3\"," +
-                          "\"versionnumber\":\"3.6.3\"," +
-                          "\"signature\":\"rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b\"}";
+        String username = "testuser";
 
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody("user=testuser&pass="))
-                  .respond(HttpResponse.response().withBody(response));
+                                   .withBody("user=" + username + "&pass="))
+                  .respond(HttpResponse.response().withBody(Utils.rolloutViaChallenge()));
 
-        String username = "testuser";
         PIResponse responseValidateCheck = privacyIDEA.validateCheck(username, "");
 
         assertEquals(image, responseValidateCheck.image);

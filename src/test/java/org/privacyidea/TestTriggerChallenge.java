@@ -52,48 +52,16 @@ public class TestTriggerChallenge
     @Test
     public void testTriggerChallengeSuccess()
     {
-        String response = "{\"detail\":{" + "\"preferred_client_mode\":\"interactive\"," + "\"attributes\":null," +
-                          "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
-                          "\"messages\":[\"BittegebenSieeinenOTP-Wertein:\"]," + "\"multi_challenge\":[{" +
-                          "\"attributes\":null," + "\"message\":\"BittegebenSieeinenOTP-Wertein:\"," +
-                          "\"serial\":\"TOTP00021198\"," + "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"image\":\"dataimage\"," + "\"type\":\"totp\"}]," + "\"serial\":\"TOTP00021198\"," +
-                          "\"threadid\":140050885818112," + "\"transaction_id\":\"16734787285577957577\"," +
-                          "\"transaction_ids\":[\"16734787285577957577\"]," + "\"type\":\"totp\"}," + "\"id\":1," +
-                          "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                          "\"time\":1649666174.5351279," + "\"version\":\"privacyIDEA3.6.3\"," +
-                          "\"versionnumber\":\"3.6.3\"," +
-                          "\"signature\":\"rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b\"}";
-
-        String authToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicmVhbG0iOiIiLCJub25jZSI6IjVjOTc4NWM5OWU";
-
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": {\n" + "            \"log_level\": 20,\n" +
-                                                 "            \"menus\": [\n" + "                \"components\",\n" +
-                                                 "                \"machines\"\n" + "            ],\n" +
-                                                 "            \"realm\": \"\",\n" + "            \"rights\": [\n" +
-                                                 "                \"policydelete\",\n" +
-                                                 "                \"resync\"\n" + "            ],\n" +
-                                                 "            \"role\": \"admin\",\n" + "            \"token\": \"" +
-                                                 authToken + "\",\n" + "            \"username\": \"admin\",\n" +
-                                                 "            \"logout_time\": 120,\n" +
-                                                 "            \"default_tokentype\": \"hotp\",\n" +
-                                                 "            \"user_details\": false,\n" +
-                                                 "            \"subscription_status\": 0\n" + "        }\n" +
-                                                 "    },\n" + "    \"time\": 1589446794.8502703,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "    \"versionnumber\": \"3.2.1\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
+                                       .withBody(Utils.postAuthSuccessResponse()));
 
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
                                    .withBody("user=testuser&realm=realm"))
-                  .respond(HttpResponse.response().withBody(response));
+                  .respond(HttpResponse.response().withBody(Utils.triggerChallengeSuccess()));
 
         String username = "testuser";
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
@@ -105,8 +73,8 @@ public class TestTriggerChallenge
         assertEquals("3.6.3", responseTriggerChallenge.piVersion);
         assertEquals("rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b", responseTriggerChallenge.signature);
         // Trim all whitespaces, newlines
-        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(response.replaceAll("[\n\r]", ""), responseTriggerChallenge.toString().replaceAll("[\n\r]", ""));
+        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), responseTriggerChallenge.rawMessage.replaceAll("[\n\r]", ""));
+        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), responseTriggerChallenge.toString().replaceAll("[\n\r]", ""));
         // result
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
