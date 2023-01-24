@@ -43,8 +43,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     final String[] callbackResult = {null};
     private CountDownLatch latch;
 
-    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
-                                Map<String, String> headers, boolean authTokenRequired, String method)
+    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method)
     {
         this.privacyIDEA = privacyIDEA;
         this.endpoint = endpoint;
