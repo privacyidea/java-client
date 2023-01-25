@@ -43,72 +43,56 @@ public class TestValidateCheckSerial
     @Test
     public void testNoChallengeResponsePINPlusOTP()
     {
-        String responseBody = "{\"detail\":{" + "\"message\":\"matching1tokens\"," + "\"otplen\":6," +
-                              "\"serial\":\"TOTP0001AFB9\"," + "\"threadid\":140050919388928," + "\"type\":\"totp\"}," +
-                              "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," +
-                              "\"value\":true}," + "\"time\":1649684011.250808," + "\"version\":\"privacyIDEA3.6.3\"," +
-                              "\"versionnumber\":\"3.6.3\"," +
-                              "\"signature\":\"rsa_sha256_pss:913056e002a...103456d32cca0222e5d\"}";
-
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody("serial=TOTP0001AFB9&pass=123456"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                                   .withBody("serial=PISP0001C673&pass=123456"))
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
 
-        String serial = "TOTP0001AFB9";
+        String serial = "PISP0001C673";
         String pinPlusOTP = "123456";
 
         PIResponse response = privacyIDEA.validateCheckSerial(serial, pinPlusOTP);
 
-        assertEquals(responseBody, response.toString());
-        assertEquals("matching1tokens", response.message);
+        assertEquals(Utils.matchingOneToken(), response.toString());
+        assertEquals("matching 1 tokens", response.message);
         assertEquals(6, response.otpLength);
-        assertEquals("TOTP0001AFB9", response.serial);
+        assertEquals("PISP0001C673", response.serial);
         assertEquals("totp", response.type);
         assertEquals(1, response.id);
         assertEquals("2.0", response.jsonRPCVersion);
         assertTrue(response.status);
         assertTrue(response.value);
-        assertEquals("3.6.3", response.piVersion);
-        assertEquals("rsa_sha256_pss:913056e002a...103456d32cca0222e5d", response.signature);
+        assertEquals("3.2.1", response.piVersion);
+        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
     }
 
     @Test
     public void testNoChallengeResponseTransactionID()
     {
-        String responseBody = "{\"detail\":{" + "\"message\":\"matching1tokens\"," + "\"otplen\":6," +
-                              "\"serial\":\"TOTP0001AFB9\"," + "\"threadid\":140050919388928," + "\"type\":\"totp\"}," +
-                              "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," +
-                              "\"value\":true}," + "\"time\":1649684011.250808," + "\"version\":\"privacyIDEA3.6.3\"," +
-                              "\"versionnumber\":\"3.6.3\"," +
-                              "\"signature\":\"rsa_sha256_pss:913056e002a...103456d32cca0222e5d\"}";
-
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody("serial=TOTP0001AFB9&pass=123456&transaction_id=12093809214"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                                   .withBody("serial=PISP0001C673&pass=123456&transaction_id=12093809214"))
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
 
-        String serial = "TOTP0001AFB9";
+        String serial = "PISP0001C673";
         String pinPlusOTP = "123456";
         String transactionID = "12093809214";
 
         PIResponse response = privacyIDEA.validateCheckSerial(serial, pinPlusOTP, transactionID);
 
-        assertEquals(responseBody, response.toString());
-        assertEquals("matching1tokens", response.message);
+        assertEquals(Utils.matchingOneToken(), response.toString());
+        assertEquals("matching 1 tokens", response.message);
         assertEquals(6, response.otpLength);
-        assertEquals("TOTP0001AFB9", response.serial);
+        assertEquals("PISP0001C673", response.serial);
         assertEquals("totp", response.type);
         assertEquals(1, response.id);
         assertEquals("2.0", response.jsonRPCVersion);
         assertTrue(response.status);
         assertTrue(response.value);
-        assertEquals("3.6.3", response.piVersion);
-        assertEquals("rsa_sha256_pss:913056e002a...103456d32cca0222e5d", response.signature);
+        assertEquals("3.2.1", response.piVersion);
+        assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
     }
 
     @After

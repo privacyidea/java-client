@@ -70,7 +70,6 @@ import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
 
 public class JSONParser
 {
-
     private final PrivacyIDEA privacyIDEA;
 
     public JSONParser(PrivacyIDEA privacyIDEA)
@@ -92,13 +91,10 @@ public class JSONParser
         }
 
         JsonObject obj;
-        Gson gson = new GsonBuilder().setPrettyPrinting()
-                                     .setLenient()
-                                     .create();
+        Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -125,10 +121,7 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT)
-                              .getAsJsonObject(VALUE)
-                              .getAsJsonPrimitive(TOKEN)
-                              .getAsString();
+                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
                 }
                 catch (Exception e)
                 {
@@ -162,8 +155,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -182,8 +174,7 @@ public class JSONParser
             String r = getString(result, AUTHENTICATION);
             for (AuthenticationStatus en : AuthenticationStatus.values())
             {
-                if (en.toString()
-                      .equals(r))
+                if (en.toString().equals(r))
                 {
                     response.authentication = en;
                 }
@@ -243,8 +234,7 @@ public class JSONParser
             {
                 for (int i = 0; i < arrChallenges.size(); i++)
                 {
-                    JsonObject challenge = arrChallenges.get(i)
-                                                        .getAsJsonObject();
+                    JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
                     String clientmode = getString(challenge, CLIENT_MODE);
@@ -255,19 +245,16 @@ public class JSONParser
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(
-                                new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
+                        response.multichallenge.add(new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
                     }
                     else if (TOKEN_TYPE_U2F.equals(type))
                     {
                         String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(
-                                new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
+                        response.multichallenge.add(new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(
-                                new Challenge(serial, message, clientmode, image, transactionid, type));
+                        response.multichallenge.add(new Challenge(serial, message, clientmode, image, transactionid, type));
                     }
                 }
             }
@@ -280,13 +267,11 @@ public class JSONParser
         List<JsonArray> extracted = new ArrayList<>();
         for (String signRequest : arr)
         {
-            JsonObject obj = JsonParser.parseString(signRequest)
-                                       .getAsJsonObject();
+            JsonObject obj = JsonParser.parseString(signRequest).getAsJsonObject();
             extracted.add(obj.getAsJsonArray("allowCredentials"));
         }
 
-        JsonObject signRequest = JsonParser.parseString(webAuthn.signRequest())
-                                           .getAsJsonObject();
+        JsonObject signRequest = JsonParser.parseString(webAuthn.signRequest()).getAsJsonObject();
         JsonArray allowCredentials = new JsonArray();
         extracted.forEach(allowCredentials::addAll);
 
@@ -301,8 +286,7 @@ public class JSONParser
         JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
         if (attributeElement != null && !attributeElement.isJsonNull())
         {
-            JsonElement requestElement = attributeElement.getAsJsonObject()
-                                                         .get(item);
+            JsonElement requestElement = attributeElement.getAsJsonObject().get(item);
             if (requestElement != null && !requestElement.isJsonNull())
             {
                 ret = requestElement.toString();
@@ -328,8 +312,7 @@ public class JSONParser
         JsonObject object;
         try
         {
-            object = JsonParser.parseString(serverResponse)
-                               .getAsJsonObject();
+            object = JsonParser.parseString(serverResponse).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -375,8 +358,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -408,15 +390,13 @@ public class JSONParser
         JsonObject joInfo = obj.getAsJsonObject(INFO);
         if (joInfo != null)
         {
-            joInfo.entrySet()
-                  .forEach(entry ->
-                           {
-                               if (entry.getKey() != null && entry.getValue() != null)
-                               {
-                                   info.info.put(entry.getKey(), entry.getValue()
-                                                                      .getAsString());
-                               }
-                           });
+            joInfo.entrySet().forEach(entry ->
+                                      {
+                                          if (entry.getKey() != null && entry.getValue() != null)
+                                          {
+                                              info.info.put(entry.getKey(), entry.getValue().getAsString());
+                                          }
+                                      });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
@@ -455,8 +435,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(serverResponse)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(serverResponse).getAsJsonObject();
 
             JsonObject result = obj.getAsJsonObject(RESULT);
             JsonElement errElem = result.get(ERROR);
@@ -521,8 +500,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {
@@ -562,8 +540,7 @@ public class JSONParser
         JsonObject obj;
         try
         {
-            obj = JsonParser.parseString(json)
-                            .getAsJsonObject();
+            obj = JsonParser.parseString(json).getAsJsonObject();
         }
         catch (JsonSyntaxException e)
         {

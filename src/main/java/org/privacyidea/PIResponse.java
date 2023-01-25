@@ -81,12 +81,7 @@ public class PIResponse
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(multichallenge.stream()
-                                .filter(predicate)
-                                .map(Challenge::getMessage)
-                                .distinct()
-                                .reduce("", (a, s) -> a + s + ", ")
-                                .trim());
+        sb.append(multichallenge.stream().filter(predicate).map(Challenge::getMessage).distinct().reduce("", (a, s) -> a + s + ", ").trim());
 
         if (sb.length() > 0)
         {
@@ -101,10 +96,7 @@ public class PIResponse
      */
     public List<String> triggeredTokenTypes()
     {
-        return multichallenge.stream()
-                             .map(Challenge::getType)
-                             .distinct()
-                             .collect(Collectors.toList());
+        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     /**
@@ -115,16 +107,13 @@ public class PIResponse
     public List<WebAuthn> webAuthnSignRequests()
     {
         List<WebAuthn> ret = new ArrayList<>();
-        multichallenge.stream()
-                      .filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType()))
-                      .collect(Collectors.toList())
-                      .forEach(c ->
-                               {
-                                   if (c instanceof WebAuthn)
-                                   {
-                                       ret.add((WebAuthn) c);
-                                   }
-                               });
+        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
+                                                                                                                          {
+                                                                                                                              if (c instanceof WebAuthn)
+                                                                                                                              {
+                                                                                                                                  ret.add((WebAuthn) c);
+                                                                                                                              }
+                                                                                                                          });
         return ret;
     }
 
@@ -149,9 +138,7 @@ public class PIResponse
         }
 
         WebAuthn webAuthn = webAuthnSignRequests.get(0);
-        List<String> stringSignRequests = webAuthnSignRequests.stream()
-                                                              .map(WebAuthn::signRequest)
-                                                              .collect(Collectors.toList());
+        List<String> stringSignRequests = webAuthnSignRequests.stream().map(WebAuthn::signRequest).collect(Collectors.toList());
 
         try
         {
@@ -162,7 +149,7 @@ public class PIResponse
             return "";
         }
     }
-    
+
     /**
      * Get all U2F challenges from the multi_challenge.
      *
@@ -171,16 +158,13 @@ public class PIResponse
     public List<U2F> u2fSignRequests()
     {
         List<U2F> ret = new ArrayList<>();
-        multichallenge.stream()
-                      .filter(c -> TOKEN_TYPE_U2F.equals(c.getType()))
-                      .collect(Collectors.toList())
-                      .forEach(c ->
-                               {
-                                   if (c instanceof U2F)
-                                   {
-                                       ret.add((U2F) c);
-                                   }
-                               });
+        multichallenge.stream().filter(c -> TOKEN_TYPE_U2F.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
+                                                                                                                     {
+                                                                                                                         if (c instanceof U2F)
+                                                                                                                         {
+                                                                                                                             ret.add((U2F) c);
+                                                                                                                         }
+                                                                                                                     });
         return ret;
     }
 

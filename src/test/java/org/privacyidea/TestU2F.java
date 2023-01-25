@@ -55,30 +55,6 @@ public class TestU2F
     @Test
     public void testTriggerU2F()
     {
-        String responseBody = "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," +
-                              "\"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\"," + "\"u2fSignRequest\":{" +
-                              "\"appId\":\"http//ttype.u2f\"," +
-                              "\"challenge\":\"TZKiB0VFFMF...tQduDJf56AeJAY_BT4NU\"," +
-                              "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQ...qzZW1lC-jDdFd2pKDUsNnA\"," +
-                              "\"version\":\"U2F_V2\"}}," +
-                              "\"message\":\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"," +
-                              "\"messages\":[\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"]," +
-                              "\"multi_challenge\":[{" + "\"attributes\":{" + "\"hideResponseInput\":true," +
-                              "\"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\"," + "\"u2fSignRequest\":{" +
-                              "\"appId\":\"https://ttype.u2f\"," +
-                              "\"challenge\":\"TZKiB0VFFMFsnlz00lF5iCqtQduDJf56AeJAY_BT4NU\"," +
-                              "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQJYu4G5qB9l7ScjRRxA-M35cTH-uHWyMEpxs4WBzbkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
-                              "\"version\":\"U2F_V2\"}}," +
-                              "\"message\":\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"," +
-                              "\"serial\":\"U2F00014651\"," + "\"transaction_id\":\"12399202888279169736\"," +
-                              "\"type\":\"u2f\"}]," + "\"serial\":\"U2F00014651\"," + "\"threadid\":140050978137856," +
-                              "\"transaction_id\":\"12399202888279169736\"," +
-                              "\"transaction_ids\":[\"12399202888279169736\"]," + "\"type\":\"u2f\"}," + "\"id\":1," +
-                              "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                              "\"time\":1649769348.7552881," + "\"version\":\"privacyIDEA 3.6.3\"," +
-                              "\"versionnumber\":\"3.6.3\"," +
-                              "\"signature\":\"rsa_sha256_pss:3e51d814...dccd5694b8c15943e37e1\"}";
-
         String u2fSignRequest = "{" + "\"appId\":\"https://ttype.u2f\"," +
                                 "\"challenge\":\"TZKiB0VFFMFsnlz00lF5iCqtQduDJf56AeJAY_BT4NU\"," +
                                 "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQJYu4G5qB9l7ScjRRxA-M35cTH-uHWyMEpxs4WBzbkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
@@ -88,8 +64,7 @@ public class TestU2F
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=Test&pass=test"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(Utils.triggerU2FSuccess()));
 
         PIResponse response = privacyIDEA.validateCheck("Test", "test");
 
@@ -105,8 +80,7 @@ public class TestU2F
         assertFalse(response.value);
 
         Optional<Challenge> opt = response.multichallenge.stream()
-                                                         .filter(challenge -> TOKEN_TYPE_U2F.equals(
-                                                                 challenge.getType()))
+                                                         .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
                                                          .findFirst();
         if (opt.isPresent())
         {
@@ -114,8 +88,7 @@ public class TestU2F
             if (a instanceof U2F)
             {
                 U2F b = (U2F) a;
-                String trimmedRequest = u2fSignRequest.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+                String trimmedRequest = u2fSignRequest.replaceAll("\n", "").replaceAll(" ", "");
                 assertEquals(trimmedRequest, b.signRequest());
             }
             else
@@ -134,13 +107,9 @@ public class TestU2F
     {
         String username = "Test";
 
-        String responseBody =
-                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
-                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
-                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
-                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
-                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
+        String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
+                                 "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
+                                 "\"signatureData\":\"AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg\"}";
 
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
@@ -148,12 +117,7 @@ public class TestU2F
                                    .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
                                              "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
                                              "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
-
-        String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
-                                 "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
-                                 "\"signatureData\":\"AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg\"}";
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
 
         Map<String, String> header = new HashMap<>();
         header.put("accept-language", "en");
@@ -176,22 +140,13 @@ public class TestU2F
     {
         String username = "Test";
 
-        String responseBody =
-                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
-                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
-                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
-                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
-                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
-
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
                                    .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
                                              "&clientdata=eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ" +
                                              "&signaturedata=AQAAAxAwRQIgZwEObruoCRRo738F9up1tdV2M0H1MdP5pkO5Eg"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
 
         String u2fSignResponse = "{\"clientData\":\"eyJjaGFsbGVuZ2UiOiJpY2UBc3NlcnRpb24ifQ\"," + "\"errorCode\":0," +
                                  "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +

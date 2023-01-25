@@ -43,8 +43,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     final String[] callbackResult = {null};
     private CountDownLatch latch;
 
-    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
-                                Map<String, String> headers, boolean authTokenRequired, String method)
+    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method)
     {
         this.privacyIDEA = privacyIDEA;
         this.endpoint = endpoint;
@@ -69,8 +68,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
             latch = new CountDownLatch(1);
             String tmpPath = path;
             path = ENDPOINT_AUTH;
-            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(),
-                                      PIConstants.POST, this);
+            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
             latch.await();
             // Extract the auth token from the response
             String response = callbackResult[0];
@@ -105,10 +103,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     {
         if (response.body() != null)
         {
-            String s = response.body()
-                               .string();
-            if (!privacyIDEA.logExcludedEndpoints()
-                            .contains(path) && !ENDPOINT_AUTH.equals(path))
+            String s = response.body().string();
+            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
             {
                 privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
             }

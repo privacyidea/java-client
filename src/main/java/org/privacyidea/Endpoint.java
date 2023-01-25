@@ -108,8 +108,7 @@ class Endpoint
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this method.
-            callback.onFailure(null,
-                               new IOException("Request could not be created because the url could not be parsed"));
+            callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
@@ -145,8 +144,7 @@ class Endpoint
                            });
         }
 
-        String url = urlBuilder.build()
-                               .toString();
+        String url = urlBuilder.build().toString();
         //privacyIDEA.log("URL: " + url);
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
@@ -187,7 +185,6 @@ class Endpoint
 
         Request request = requestBuilder.build();
         //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
-        client.newCall(request)
-              .enqueue(callback);
+        client.newCall(request).enqueue(callback);
     }
 }

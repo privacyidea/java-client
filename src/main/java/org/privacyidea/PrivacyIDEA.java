@@ -164,8 +164,7 @@ public class PrivacyIDEA
      * @param transactionId optional, will be appended if set
      * @return PIResponse object containing the response or null if error
      */
-    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers,
-                                     String transactionId)
+    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionId)
     {
         Map<String, String> params = new LinkedHashMap<>();
         // Add forwarded user or serial to the params
@@ -198,8 +197,7 @@ public class PrivacyIDEA
      * @param headers              optional headers for the request
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse,
-                                            String origin, Map<String, String> headers)
+    public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse, String origin, Map<String, String> headers)
     {
         Map<String, String> params = new LinkedHashMap<>();
         // Standard validateCheck data
@@ -236,8 +234,7 @@ public class PrivacyIDEA
      * @param u2fSignResponse the U2F Sign Response as returned from the browser
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckU2F(String user, String transactionId, String u2fSignResponse,
-                                       Map<String, String> headers)
+    public PIResponse validateCheckU2F(String user, String transactionId, String u2fSignResponse, Map<String, String> headers)
     {
         Map<String, String> params = new LinkedHashMap<>();
         // Standard validateCheck data
@@ -296,9 +293,8 @@ public class PrivacyIDEA
     {
         Objects.requireNonNull(transactionId, "TransactionID is required!");
 
-        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION,
-                                          Collections.singletonMap(TRANSACTION_ID, transactionId),
-                                          Collections.emptyMap(), false, GET);
+        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionId), Collections.emptyMap(),
+                                          false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
         return piresponse.value;
     }
@@ -351,8 +347,7 @@ public class PrivacyIDEA
             return null;
         }
 
-        String response = runRequestAsync(ENDPOINT_TOKEN, Collections.singletonMap(USER, username),
-                                          new LinkedHashMap<>(), true, GET);
+        String response = runRequestAsync(ENDPOINT_TOKEN, Collections.singletonMap(USER, username), new LinkedHashMap<>(), true, GET);
         return parser.parseTokenInfoList(response);
     }
 
@@ -401,11 +396,9 @@ public class PrivacyIDEA
      * @param method            http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers,
-                                   boolean authTokenRequired, String method)
+    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method)
     {
-        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired,
-                                                             method);
+        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
         String response = null;
         try
@@ -437,8 +430,8 @@ public class PrivacyIDEA
 
     public boolean serviceAccountAvailable()
     {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
-               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() && configuration.serviceAccountPass != null &&
+               !configuration.serviceAccountPass.isEmpty();
     }
 
     PIConfig configuration()

@@ -61,37 +61,7 @@ public class TestPollTransaction
                                    .withBody("user=" + username + "&pass="))
                   .respond(HttpResponse.response()
                                        .withContentType(MediaType.APPLICATION_JSON)
-                                       .withBody("{\n" + "  \"detail\": {\n" +
-                                                 "    \"preferred_client_mode\": \"poll\",\n" +
-                                                 "    \"attributes\": null,\n" +
-                                                 "    \"message\": \"Bitte geben Sie einen OTP-Wert ein: , Please confirm the authentication on your mobile device!\",\n" +
-                                                 "    \"messages\": [\n" +
-                                                 "      \"Bitte geben Sie einen OTP-Wert ein: \",\n" +
-                                                 "      \"Please confirm the authentication on your mobile device!\"\n" +
-                                                 "    ],\n" + "    \"multi_challenge\": [\n" + "      {\n" +
-                                                 "        \"attributes\": null,\n" +
-                                                 "        \"message\": \"Bitte geben Sie einen OTP-Wert ein: \",\n" +
-                                                 "        \"serial\": \"OATH00020121\",\n" +
-                                                 "        \"transaction_id\": \"02659936574063359702\",\n" +
-                                                 "        \"type\": \"hotp\"\n" + "      },\n" + "      {\n" +
-                                                 "        \"attributes\": null,\n" +
-                                                 "        \"message\": \"Please confirm the authentication on your mobile device!\",\n" +
-                                                 "        \"serial\": \"PIPU0001F75E\",\n" +
-                                                 "        \"image\": \"dataimage\",\n" +
-                                                 "        \"transaction_id\": \"02659936574063359702\",\n" +
-                                                 "        \"type\": \"push\"\n" + "      }\n" + "    ],\n" +
-                                                 "    \"serial\": \"PIPU0001F75E\",\n" +
-                                                 "    \"threadid\": 140040525666048,\n" +
-                                                 "    \"transaction_id\": \"02659936574063359702\",\n" +
-                                                 "    \"transaction_ids\": [\n" + "      \"02659936574063359702\",\n" +
-                                                 "      \"02659936574063359702\"\n" + "    ],\n" +
-                                                 "    \"type\": \"push\"\n" + "  },\n" + "  \"id\": 1,\n" +
-                                                 "  \"jsonrpc\": \"2.0\",\n" + "  \"result\": {\n" +
-                                                 "    \"status\": true,\n" + "    \"value\": false\n" + "  },\n" +
-                                                 "  \"time\": 1589360175.594304,\n" +
-                                                 "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "  \"versionnumber\": \"3.2.1\",\n" +
-                                                 "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAA\"\n" + "}")
+                                       .withBody(Utils.pollGetChallenges())
                                        .withDelay(TimeUnit.MILLISECONDS, 50));
 
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
@@ -100,8 +70,7 @@ public class TestPollTransaction
         List<Challenge> challenges = initialResponse.multichallenge;
 
         Challenge hotpChallenge = challenges.stream()
-                                            .filter(c -> c.getSerial()
-                                                          .equals("OATH00020121"))
+                                            .filter(c -> c.getSerial().equals("OATH00020121"))
                                             .findFirst()
                                             .orElse(null);
         assertNotNull(hotpChallenge);
@@ -109,30 +78,26 @@ public class TestPollTransaction
         assertEquals("02659936574063359702", hotpChallenge.getTransactionID());
         assertEquals("hotp", hotpChallenge.getType());
         assertEquals("", hotpChallenge.getImage());
-        assertTrue(hotpChallenge.getAttributes()
-                                .isEmpty());
+        assertTrue(hotpChallenge.getAttributes().isEmpty());
 
         assertEquals("push", initialResponse.preferredClientMode);
 
         Challenge pushChallenge = challenges.stream()
-                                            .filter(c -> c.getSerial()
-                                                          .equals("PIPU0001F75E"))
+                                            .filter(c -> c.getSerial().equals("PIPU0001F75E"))
                                             .findFirst()
                                             .orElse(null);
         assertNotNull(pushChallenge);
         assertEquals("Please confirm the authentication on your mobile device!", pushChallenge.getMessage());
         assertEquals("02659936574063359702", pushChallenge.getTransactionID());
         assertEquals("push", pushChallenge.getType());
-        assertTrue(pushChallenge.getAttributes()
-                                .isEmpty());
+        assertTrue(pushChallenge.getAttributes().isEmpty());
 
         String imagePush = "";
         for (Challenge c : challenges)
         {
             if ("push".equals(c.getType()))
             {
-                if (!c.getImage()
-                      .isEmpty())
+                if (!c.getImage().isEmpty())
                 {
                     imagePush = c.getImage();
                 }
@@ -173,12 +138,6 @@ public class TestPollTransaction
         assertEquals("", pushMessage);
     }
 
-    @After
-    public void tearDown()
-    {
-        mockServer.stop();
-    }
-
     private void setFinalizationResponse(String transactionID)
     {
         mockServer.when(HttpRequest.request()
@@ -186,17 +145,7 @@ public class TestPollTransaction
                                    .withPath("/validate/check")
                                    .withBody("user=" + username + "&pass=&transaction_id=" + transactionID))
                   .respond(HttpResponse.response()
-                                       .withBody("{\n" + "    \"detail\": {\n" +
-                                                 "        \"message\": \"Found matching challenge\",\n" +
-                                                 "        \"serial\": \"PIPU0001F75E\",\n" +
-                                                 "        \"threadid\": 140586038396672\n" + "    },\n" +
-                                                 "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": true\n" + "    },\n" +
-                                                 "    \"time\": 1589446811.2747126,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "    \"versionnumber\": \"3.2.1\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}"));
+                                       .withBody(Utils.foundMatchingChallenge()));
     }
 
     private void setPollTransactionResponse(boolean value, int times)
@@ -205,8 +154,7 @@ public class TestPollTransaction
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withPath("/validate/polltransaction")
-                                   .withQueryStringParameter("transaction_id", "02659936574063359702"),
-                        Times.exactly(times))
+                                   .withQueryStringParameter("transaction_id", "02659936574063359702"), Times.exactly(times))
                   .respond(HttpResponse.response()
                                        .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
                                                  "    \"result\": {\n" + "        \"status\": true,\n" +
@@ -216,5 +164,12 @@ public class TestPollTransaction
                                                  "    \"versionnumber\": \"3.2.1\",\n" +
                                                  "    \"signature\": \"rsa_sha256_pss:\"\n" + "}")
                                        .withDelay(TimeUnit.MILLISECONDS, 50));
+    }
+
+
+    @After
+    public void tearDown()
+    {
+        mockServer.stop();
     }
 }

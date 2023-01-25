@@ -40,10 +40,7 @@ public class TestWebAuthn
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
-                                 .logger(new PILogImplementation())
-                                 .build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false).logger(new PILogImplementation()).build();
     }
 
     @After
@@ -55,31 +52,20 @@ public class TestWebAuthn
     @Test
     public void testSuccess()
     {
-        String webauthnSignResponse = "{" + "\"credentialid\":\"X9FrwMfmzj...saw21\"," +
-                                      "\"authenticatordata\":\"xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA\"," +
-                                      "\"clientdata\":\"eyJjaGFsbG...dfhs\"," +
-                                      "\"signaturedata\":\"MEUCIQDNrG...43hc\"," +
-                                      "\"assertionclientextensions\":\"alsjdlfkjsadjeiw\"," +
-                                      "\"userhandle\":\"jalsdkjflsjfuhuweuvccco2\"\n" + "}";
-
-        String responseBody =
-                "{\n" + "  \"detail\": {\n" + "    \"message\": \"matching 1 tokens\",\n" + "    \"otplen\": 6,\n" +
-                "    \"serial\": \"PISP0001C673\",\n" + "    \"threadid\": 140536383567616,\n" +
-                "    \"type\": \"totp\"\n" + "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" +
-                "  \"result\": {\n" + "    \"status\": true,\n" + "    \"value\": true\n" + "  },\n" +
-                "  \"time\": 1589276995.4397042,\n" + "  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                "  \"versionnumber\": \"3.2.1\",\n" + "  \"signature\": \"rsa_sha256_pss:AAAAAAAAAAA\"\n" + "}";
+        String webauthnSignResponse =
+                "{" + "\"credentialid\":\"X9FrwMfmzj...saw21\"," + "\"authenticatordata\":\"xGzvgAAACA\"," +
+                "\"clientdata\":\"eyJjaGFsbG...dfhs\"," + "\"signaturedata\":\"MEUCIQDNrG...43hc\"," +
+                "\"assertionclientextensions\":\"alsjdlfkjsadjeiw\"," + "\"userhandle\":\"jalsdkjflsjvccco2\"\n" + "}";
 
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
                                    .withMethod("POST")
-                                   .withBody(
-                                           "user=Test&transaction_id=16786665691788289392&pass=&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc&authenticatordata=xGzvgq0bVGR3WR0A...ZJdA7cBAAAACA&userhandle=jalsdkjflsjfuhuweuvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
-                  .respond(HttpResponse.response()
-                                       .withBody(responseBody));
+                                   .withBody("user=Test&transaction_id=16786665691788289392&pass=" +
+                                             "&credentialid=X9FrwMfmzj...saw21&clientdata=eyJjaGFsbG...dfhs&signaturedata=MEUCIQDNrG...43hc" +
+                                             "&authenticatordata=xGzvgAAACA&userhandle=jalsdkjflsjvccco2&assertionclientextensions=alsjdlfkjsadjeiw"))
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
 
-        PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse,
-                                                                "test.it");
+        PIResponse response = privacyIDEA.validateCheckWebAuthn("Test", "16786665691788289392", webauthnSignResponse, "test.it");
 
         assertNotNull(response);
         assertEquals("matching 1 tokens", response.message);
@@ -97,67 +83,18 @@ public class TestWebAuthn
     @Test
     public void testTriggerWebAuthn()
     {
-        String webauthnrequest = "{\n" + "            \"allowCredentials\": [\n" + "              {\n" +
-                                 "                \"id\": \"83De8z_CNqogB6aCyKs6dWIqwpOpzVoNaJ74lgcpuYN7l-95QsD3z-qqPADqsFlPwBXCMqEPssq75kqHCMQHDA\",\n" +
-                                 "                \"transports\": [\n" + "                  \"internal\",\n" +
-                                 "                  \"nfc\",\n" + "                  \"ble\",\n" +
-                                 "                  \"usb\"\n" + "                ],\n" +
-                                 "                \"type\": \"public-key\"\n" + "              }\n" +
-                                 "            ],\n" +
-                                 "            \"challenge\": \"dHzSmZnAhxEq0szRWMY4EGg8qgjeBhJDjAPYKWfd2IE\",\n" +
-                                 "            \"rpId\": \"office.netknights.it\",\n" +
-                                 "            \"timeout\": 60000,\n" +
-                                 "            \"userVerification\": \"preferred\"\n" + "          }\n";
-
-        String responseBody = "{\n" + "  \"detail\": {\n" + "    \"preferred_client_mode\": \"webauthn\",\n" +
-                              "    \"attributes\": {\n" + "      \"hideResponseInput\": true,\n" +
-                              "      \"img\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
-                              "      \"webAuthnSignRequest\": {\n" + "        \"allowCredentials\": [\n" +
-                              "          {\n" +
-                              "            \"id\": \"83De8z_CNqogB6aCyKs6dWIqwpOpzVoNaJ74lgcpuYN7l-95QsD3z-qqPADqsFlPwBXCMqEPssq75kqHCMQHDA\",\n" +
-                              "            \"transports\": [\n" + "              \"internal\",\n" +
-                              "              \"nfc\",\n" + "              \"ble\",\n" + "              \"usb\"\n" +
-                              "            ],\n" + "            \"type\": \"public-key\"\n" + "          }\n" +
-                              "        ],\n" +
-                              "        \"challenge\": \"dHzSmZnAhxEq0szRWMY4EGg8qgjeBhJDjAPYKWfd2IE\",\n" +
-                              "        \"rpId\": \"office.netknights.it\",\n" + "        \"timeout\": 60000,\n" +
-                              "        \"userVerification\": \"preferred\"\n" + "      }\n" + "    },\n" +
-                              "    \"message\": \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\",\n" +
-                              "    \"messages\": [\n" +
-                              "      \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"\n" +
-                              "    ],\n" + "    \"multi_challenge\": [\n" + "      {\n" +
-                              "        \"attributes\": {\n" + "          \"hideResponseInput\": true,\n" +
-                              "          \"webAuthnSignRequest\": " + webauthnrequest + "        },\n" +
-                              "          \"image\": \"static/img/FIDO-U2F-Security-Key-444x444.png\",\n" +
-                              "          \"client_mode\": \"webauthn\",\n" +
-                              "          \"message\": \"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\",\n" +
-                              "          \"serial\": \"WAN00025CE7\",\n" +
-                              "        \"transaction_id\": \"16786665691788289392\",\n" +
-                              "          \"type\": \"webauthn\"\n" + "      }\n" + "    ],\n" +
-                              "    \"serial\": \"WAN00025CE7\",\n" + "    \"threadid\": 140040275289856,\n" +
-                              "    \"transaction_id\": \"16786665691788289392\",\n" + "    \"transaction_ids\": [\n" +
-                              "      \"16786665691788289392\"\n" + "    ],\n" + "    \"type\": \"webauthn\"\n" +
-                              "  },\n" + "  \"id\": 1,\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"result\": {\n" +
-                              "    \"authentication\": \"CHALLENGE\",\n" + "    \"status\": true,\n" +
-                              "    \"value\": false\n" + "  },\n" + "  \"time\": 1611916339.8448942\n" + "}\n" + "";
-
         String username = "Test";
         String pass = "Test";
 
-        mockServer.when(HttpRequest.request()
-                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
-                                   .withMethod("POST")
-                                   .withBody("user=" + username + "&pass=" + pass))
+        mockServer.when(
+                          HttpRequest.request().withPath(PIConstants.ENDPOINT_VALIDATE_CHECK).withMethod("POST").withBody("user=" + username + "&pass=" + pass))
                   .respond(HttpResponse.response()
                                        // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody(responseBody));
+                                       .withBody(Utils.triggerWebauthn()));
 
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
-        Optional<Challenge> opt = response.multichallenge.stream()
-                                                         .filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(
-                                                                 challenge.getType()))
-                                                         .findFirst();
+        Optional<Challenge> opt = response.multichallenge.stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
         assertTrue(opt.isPresent());
         assertEquals(AuthenticationStatus.CHALLENGE, response.authentication);
         assertEquals("webauthn", response.preferredClientMode);
@@ -165,8 +102,7 @@ public class TestWebAuthn
         if (a instanceof WebAuthn)
         {
             WebAuthn b = (WebAuthn) a;
-            String trimmedRequest = webauthnrequest.replaceAll("\n", "")
-                                                   .replaceAll(" ", "");
+            String trimmedRequest = Utils.webauthnSignRequest().replaceAll("\n", "").replaceAll(" ", "");
             assertEquals(trimmedRequest, b.signRequest());
             assertEquals("static/img/FIDO-U2F-Security-Key-444x444.png", b.getImage());
             assertEquals("webauthn", b.getClientMode());
@@ -180,53 +116,9 @@ public class TestWebAuthn
     @Test
     public void testMergedSignRequestSuccess()
     {
-        String expectedMergedResponse = "{" + "\"allowCredentials\":[{" +
-                                        "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                                        "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," +
-                                        "\"type\":\"public-key\"}," + "{" +
-                                        "\"id\":\"kJCeTZ-AtzwuuF-BkzBNO_0...wYxgitd4uoowT43EGm_x3mNhT1i-w\"," +
-                                        "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," +
-                                        "\"type\":\"public-key\"}]," +
-                                        "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                                        "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," +
-                                        "\"userVerification\":\"preferred\"}";
-
-        String respMultipleWebauthn =
-                "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"kJCeTZ-AtzwuuF-BkzBNO_0...KwYxgitd4uoowT43EGm_x3mNhT1i-w\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB), Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"," +
-                "\"messages\":[\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\",\"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"]," +
-                "\"multi_challenge\":[{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\"," +
-                "\"serial\":\"WAN0003ABB5\"," + "\"transaction_id\":\"00699705595414705468\"," +
-                "\"type\":\"webauthn\"}," + "{\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"kJCeTZ-AtzwuuF-BkzBNO_0...wYxgitd4uoowT43EGm_x3mNhT1i-w\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"," +
-                "\"serial\":\"WAN00042278\"," + "\"transaction_id\":\"00699705595414705468\"," +
-                "\"type\":\"webauthn\"}]," + "\"serial\":\"WAN00042278\"," + "\"threadid\":140050952959744," +
-                "\"transaction_id\":\"00699705595414705468\"," +
-                "\"transaction_ids\":[\"00699705595414705468\",\"00699705595414705468\"]," + "\"type\":\"webauthn\"}," +
-                "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                "\"time\":1649754970.915023," + "\"version\":\"privacyIDEA 3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
-                "\"signature\":\"rsa_sha256_pss:74fac28b3163d4ac3f76...9237bb6c32c0d03de39\"}";
-
         JSONParser jsonParser = new JSONParser(privacyIDEA);
-        PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
-        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+        PIResponse piResponse1 = jsonParser.parsePIResponse(Utils.multipleWebauthnResponse());
+        String trimmedRequest = Utils.expectedMergedResponse().replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);
@@ -241,80 +133,19 @@ public class TestWebAuthn
     @Test
     public void testMergedSignRequestEmpty()
     {
-        String respMultipleWebauthn =
-                "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB), Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"," +
-                "\"messages\":[\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\",\"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"]," +
-                "\"multi_challenge\":[{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\"," +
-                "\"serial\":\"WAN0003ABB5\"," + "\"transaction_id\":\"00699705595414705468\"," +
-                "\"type\":\"webauthn\"}," + "{\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"kJCeTZ-AtzwuuF-BkzBNO_0...wYxgitd4uoowT43EGm_x3mNhT1i-w\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"," +
-                "\"serial\":\"WAN00042278\"," + "\"transaction_id\":\"00699705595414705468\"," +
-                "\"type\":\"webauthn\"}]," + "\"serial\":\"WAN00042278\"," + "\"threadid\":140050952959744," +
-                "\"transaction_id\":\"00699705595414705468\"," +
-                "\"transaction_ids\":[\"00699705595414705468\",\"00699705595414705468\"]," + "\"type\":\"webauthn\"}," +
-                "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                "\"time\":1649754970.915023," + "\"version\":\"privacyIDEA 3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
-                "\"signature\":\"rsa_sha256_pss:74fac28b3163d4ac3f76...9237bb6c32c0d03de39\"}";
-
         JSONParser jsonParser = new JSONParser(privacyIDEA);
-        PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
-        String merged1 = piResponse1.mergedSignRequest();
+        PIResponse piResponse1 = jsonParser.parsePIResponse(Utils.mergedSignRequestEmpty());
+        String empty1 = piResponse1.mergedSignRequest();
 
-        assertEquals("", merged1);
+        assertEquals("", empty1);
     }
 
     @Test
     public void testMergedSignRequestIncompleteSignRequest()
     {
-        String expectedMergedResponse = "{" + "\"allowCredentials\":[{" +
-                                        "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                                        "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," +
-                                        "\"type\":\"public-key\"}]," +
-                                        "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                                        "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," +
-                                        "\"userVerification\":\"preferred\"}";
-
-        String respMultipleWebauthn =
-                "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB), Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"," +
-                "\"messages\":[\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\",\"Please confirm with your WebAuthn token (Yubico U2F EE Serial 61730834)\"]," +
-                "\"multi_challenge\":[{" + "\"attributes\":{" + "\"hideResponseInput\":true," + "\"img\":\"\"," +
-                "\"webAuthnSignRequest\":{" + "\"allowCredentials\":[{" +
-                "\"id\":\"EF0bpUwV8YRCzZgZp335GmPbKGU9g1...k2kvqHIPVG3HyBPEEdhLwQFgL2j16K2wEkD2\"," +
-                "\"transports\":[\"ble\",\"nfc\",\"usb\",\"internal\"]," + "\"type\":\"public-key\"}]," +
-                "\"challenge\":\"9pxFSjhXo3MwRLCd0HiLaGcjVFLxjXGqlhX52xrIo-k\"," +
-                "\"rpId\":\"office.netknights.it\"," + "\"timeout\":60000," + "\"userVerification\":\"preferred\"}}," +
-                "\"message\":\"Please confirm with your WebAuthn token (FT BioPass FIDO2 USB)\"," +
-                "\"serial\":\"WAN0003ABB5\"," + "\"transaction_id\":\"00699705595414705468\"," +
-                "\"type\":\"webauthn\"}]," + "\"serial\":\"WAN00042278\"," + "\"threadid\":140050952959744," +
-                "\"transaction_id\":\"00699705595414705468\"," +
-                "\"transaction_ids\":[\"00699705595414705468\",\"00699705595414705468\"]," + "\"type\":\"webauthn\"}," +
-                "\"id\":1," + "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-                "\"time\":1649754970.915023," + "\"version\":\"privacyIDEA 3.6.3\"," + "\"versionnumber\":\"3.6.3\"," +
-                "\"signature\":\"rsa_sha256_pss:74fac28b3163d4ac3f76...9237bb6c32c0d03de39\"}";
-
         JSONParser jsonParser = new JSONParser(privacyIDEA);
-        PIResponse piResponse1 = jsonParser.parsePIResponse(respMultipleWebauthn);
-        String trimmedRequest = expectedMergedResponse.replaceAll("\n", "")
-                                                      .replaceAll(" ", "");
+        PIResponse piResponse1 = jsonParser.parsePIResponse(Utils.mergedSignRequestIncomplete());
+        String trimmedRequest = Utils.expectedMergedResponseIncomplete().replaceAll("\n", "").replaceAll(" ", "");
         String merged1 = piResponse1.mergedSignRequest();
 
         assertEquals(trimmedRequest, merged1);
