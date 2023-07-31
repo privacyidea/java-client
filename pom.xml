@@ -7,11 +7,9 @@
     <artifactId>privacyidea-java-client</artifactId>
     <version>1.2.0</version>
     <packaging>jar</packaging>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <build>
         <finalName>privacyidea-java-client</finalName>
         <plugins>
@@ -36,8 +34,11 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
+                                    <!-- Add the artifacts that should be included in the jar here -->
                                     <include>com.google.code.gson</include>
                                     <include>com.squareup.okhttp3</include>
+                                    <include>org.jetbrains.kotlin</include>
+                                    <include>com.squareup.okio</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
@@ -75,7 +76,6 @@
             </plugin>
         </plugins>
     </build>
-
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -87,6 +87,16 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>4.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>1.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <version>3.4.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
