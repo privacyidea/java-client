@@ -16,6 +16,8 @@
  */
 package org.privacyidea;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,7 +28,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -54,15 +55,15 @@ import static org.privacyidea.PIConstants.USERNAME;
  * This is the main class. It implements the common endpoints such as /validate/check as methods for easy usage.
  * To create an instance of this class, use the nested PrivacyIDEA.Builder class.
  */
-public class PrivacyIDEA
+public class PrivacyIDEA implements Closeable
 {
     private final PIConfig configuration;
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
     // Thread pool for connections
-    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
-    private final ExecutorService threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
+    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
+    private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -75,6 +76,7 @@ public class PrivacyIDEA
         this.configuration = configuration;
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
+        this.threadPool.allowCoreThreadTimeOut(true);
     }
 
     /**
@@ -533,6 +535,12 @@ public class PrivacyIDEA
                 System.out.println(e.getLocalizedMessage());
             }
         }
+    }
+
+    @Override
+    public void close() throws IOException
+    {
+        this.threadPool.shutdown();
     }
 
     /**

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -43,7 +44,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     final String[] callbackResult = {null};
     private CountDownLatch latch;
 
-    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method)
+    public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
+                                Map<String, String> headers, boolean authTokenRequired, String method)
     {
         this.privacyIDEA = privacyIDEA;
         this.endpoint = endpoint;
@@ -69,7 +71,11 @@ public class AsyncRequestCallable implements Callable<String>, Callback
             String tmpPath = path;
             path = ENDPOINT_AUTH;
             endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
-            latch.await();
+            if (!latch.await(30, TimeUnit.SECONDS))
+            {
+                privacyIDEA.error("Latch timed out...");
+                return "";
+            }
             // Extract the auth token from the response
             String response = callbackResult[0];
             String authToken = privacyIDEA.parser.extractAuthToken(response);
@@ -87,7 +93,11 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         // Do the actual request
         latch = new CountDownLatch(1);
         endpoint.sendRequestAsync(path, params, headers, method, this);
-        latch.await();
+        if (!latch.await(30, TimeUnit.SECONDS))
+        {
+            privacyIDEA.error("Latch timed out...");
+            return "";
+        }
         return callbackResult[0];
     }
 
