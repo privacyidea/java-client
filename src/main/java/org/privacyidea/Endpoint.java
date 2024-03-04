@@ -122,9 +122,7 @@ class Endpoint
                        {
                            if (k.equals("pass") || k.equals("password"))
                            {
-                               StringBuilder tmp = new StringBuilder();
-                               tmp.append("*".repeat(v.length()));
-                               v = tmp.toString();
+                               v = "*".repeat(v.length());
                            }
 
                            privacyIDEA.log(k + "=" + v);
