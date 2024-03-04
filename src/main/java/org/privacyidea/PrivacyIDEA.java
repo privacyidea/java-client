@@ -567,6 +567,7 @@ public class PrivacyIDEA implements Closeable
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
+        private int httpTimeoutMs = 30000;
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
@@ -666,6 +667,17 @@ public class PrivacyIDEA implements Closeable
             return this;
         }
 
+        /**
+         * Set the timeout for http requests in milliseconds.
+         * @param httpTimeoutMs timeout in milliseconds
+         * @return Builder
+         */
+        public Builder httpTimeoutMs(int httpTimeoutMs)
+        {
+            this.httpTimeoutMs = httpTimeoutMs;
+            return this;
+        }
+
         public PrivacyIDEA build()
         {
             PIConfig configuration = new PIConfig(serverURL, userAgent);
@@ -675,6 +687,7 @@ public class PrivacyIDEA implements Closeable
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.serviceAccountRealm = serviceAccountRealm;
             configuration.disableLog = disableLog;
+            configuration.httpTimeoutMs = httpTimeoutMs;
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }
     }
