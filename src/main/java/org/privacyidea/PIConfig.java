@@ -26,6 +26,7 @@ class PIConfig
     String serviceAccountRealm = "";
     boolean disableLog = false;
     String userAgent;
+    int httpTimeoutMs = 30000;
 
     public PIConfig(String serverURL, String userAgent)
     {

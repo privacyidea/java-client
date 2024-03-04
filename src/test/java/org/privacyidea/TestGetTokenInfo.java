@@ -49,6 +49,7 @@ public class TestGetTokenInfo
                                  .serviceAccount(serviceAccount, servicePassword)
                                  .serviceRealm(serviceRealm)
                                  .disableLog()
+                                 .httpTimeoutMs(15000)
                                  .sslVerify(false)
                                  .logger(new PILogImplementation())
                                  .build();

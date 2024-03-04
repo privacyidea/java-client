@@ -73,6 +73,10 @@ class Endpoint
         this.piconfig = privacyIDEA.configuration();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.connectTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .writeTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .readTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS);
+
         if (!this.piconfig.doSSLVerify)
         {
             // Trust all certs and verify every host
@@ -108,7 +112,7 @@ class Endpoint
         if (httpUrl == null)
         {
             privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
-            // Invoke the callback to terminate the thread that called this method.
+            // Invoke the callback to terminate the thread that called this function.
             callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
@@ -118,12 +122,7 @@ class Endpoint
                        {
                            if (k.equals("pass") || k.equals("password"))
                            {
-                               StringBuilder tmp = new StringBuilder();
-                               for (int i = 0; i < v.length(); i++)
-                               {
-                                   tmp.append("*");
-                               }
-                               v = tmp.toString();
+                               v = "*".repeat(v.length());
                            }
 
                            privacyIDEA.log(k + "=" + v);
@@ -133,15 +132,8 @@ class Endpoint
         {
             params.forEach((key, value) ->
                            {
-                               try
-                               {
-                                   String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-                                   urlBuilder.addQueryParameter(key, encValue);
-                               }
-                               catch (UnsupportedEncodingException e)
-                               {
-                                   e.printStackTrace();
-                               }
+                               String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
+                               urlBuilder.addQueryParameter(key, encValue);
                            });
         }
 
@@ -168,14 +160,7 @@ class Endpoint
                                    // they are already in the correct encoding for the server
                                    if (!WEBAUTHN_PARAMETERS.contains(key))
                                    {
-                                       try
-                                       {
-                                           encValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-                                       }
-                                       catch (UnsupportedEncodingException e)
-                                       {
-                                           privacyIDEA.error(e);
-                                       }
+                                       encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
                                    }
                                    formBodyBuilder.add(key, encValue);
                                }
