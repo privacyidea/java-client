@@ -1,5 +1,14 @@
 # Changelog
 
+### v1.2.2 - 5 Mar 2024
+
+* Fixed a problem with the threadpool where thread would not time out and accumulate over time
+* Added the option to set http timeouts
+
+### v1.2.1 - 9 Aug 2023
+
+* Added Kotlin dependencies for okhttp
+
 ### v1.2.0 - 17 Jan 2023
 
 * Added implementation of a new feature: Token enrollment via challenge (#47)
