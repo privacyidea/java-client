@@ -41,6 +41,7 @@ import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
 import static org.privacyidea.PIConstants.GENKEY;
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_ORIGIN;
+import static org.privacyidea.PIConstants.OTPKEY;
 import static org.privacyidea.PIConstants.PASS;
 import static org.privacyidea.PIConstants.PASSWORD;
 import static org.privacyidea.PIConstants.POST;
@@ -373,6 +374,33 @@ public class PrivacyIDEA implements Closeable
         params.put(USER, username);
         params.put(TYPE, typeToEnroll);
         params.put(GENKEY, "1"); // Let the server generate the secret
+
+        String response = runRequestAsync(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
+
+        return parser.parseRolloutInfo(response);
+    }
+
+    /**
+     * Init a new token of the specified type for the specified user.
+     * This requires a service account to be set. Currently, only HOTP and TOTP type token are supported.
+     *
+     * @param username     username
+     * @param typeToEnroll token type to enroll
+     * @param otpKey       secret to import
+     * @return RolloutInfo which contains all info for the token or null if error
+     */
+    public RolloutInfo tokenInit(String username, String typeToEnroll, String otpKey)
+    {
+        if (!serviceAccountAvailable())
+        {
+            error("Cannot do rollout without service account!");
+            return null;
+        }
+
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(USER, username);
+        params.put(TYPE, typeToEnroll);
+        params.put(OTPKEY, otpKey); // Import the secret
 
         String response = runRequestAsync(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
 

@@ -59,6 +59,7 @@ public class PIConstants
     public static final String REALM = "realm";
     public static final String REALMS = "realms";
     public static final String GENKEY = "genkey";
+    public static final String OTPKEY = "otpkey";
     public static final String RESULT = "result";
     public static final String VALUE = "value";
     public static final String TOKENS = "tokens";
