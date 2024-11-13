@@ -40,7 +40,7 @@ public class TestWebAuthn
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
 
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false).logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").verifySSL(false).logger(new PILogImplementation()).build();
     }
 
     @After
@@ -94,7 +94,7 @@ public class TestWebAuthn
 
         PIResponse response = privacyIDEA.validateCheck(username, pass);
 
-        Optional<Challenge> opt = response.multichallenge.stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
+        Optional<Challenge> opt = response.multiChallenge.stream().filter(challenge -> TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())).findFirst();
         assertTrue(opt.isPresent());
         assertEquals(AuthenticationStatus.CHALLENGE, response.authentication);
         assertEquals("webauthn", response.preferredClientMode);
