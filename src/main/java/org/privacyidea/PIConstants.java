@@ -42,9 +42,6 @@ public class PIConstants
 
     // TOKEN TYPES
     public static final String TOKEN_TYPE_PUSH = "push";
-    public static final String TOKEN_TYPE_OTP = "otp";
-    public static final String TOKEN_TYPE_TOTP = "totp";
-    public static final String TOKEN_TYPE_HOTP = "hotp";
     public static final String TOKEN_TYPE_WEBAUTHN = "webauthn";
     public static final String TOKEN_TYPE_U2F = "u2f";
 
@@ -83,15 +80,6 @@ public class PIConstants
     public static final String ID = "id";
     public static final String MAXFAIL = "maxfail";
     public static final String INFO = "info";
-    public static final String LOCKED = "locked";
-    public static final String FAILCOUNT = "failcount";
-    public static final String DESCRIPTION = "description";
-    public static final String COUNT = "count";
-    public static final String COUNT_WINDOW = "count_window";
-    public static final String ACTIVE = "active";
-    public static final String RESOLVER = "resolver";
-    public static final String REVOKED = "revoked";
-    public static final String SYNC_WINDOW = "sync_window";
 
     // WebAuthn and U2F params
     public static final String WEBAUTHN_SIGN_REQUEST = "webAuthnSignRequest";
@@ -105,8 +93,8 @@ public class PIConstants
 
 
     // These will be excluded from url encoding
-    public static final List<String> WEBAUTHN_PARAMETERS = Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE,
-                                                                         ASSERTIONCLIENTEXTENSIONS);
-    public static final List<String> U2F_PARAMETERS = Arrays.asList(CLIENTDATA, SIGNATUREDATA);
-
+    public static final List<String>
+            WEBAUTHN_PARAMETERS =
+            Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE,
+                          ASSERTIONCLIENTEXTENSIONS);
 }
