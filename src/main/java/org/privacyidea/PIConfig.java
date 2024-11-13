@@ -18,19 +18,109 @@ package org.privacyidea;
 
 class PIConfig
 {
-    String serverURL;
-    String realm = "";
-    boolean doSSLVerify = true;
-    String serviceAccountName = "";
-    String serviceAccountPass = "";
-    String serviceAccountRealm = "";
-    boolean disableLog = false;
-    String userAgent;
-    int httpTimeoutMs = 30000;
+    private final String serverURL;
+    private final String userAgent;
+    private String realm = "";
+    private boolean verifySSL = true;
+    private String serviceAccountName = "";
+    private String serviceAccountPass = "";
+    private String serviceAccountRealm = "";
+    private boolean disableLog = false;
+    private final boolean forwardClientIP = false;
+    private int httpTimeoutMs = 30000;
 
     public PIConfig(String serverURL, String userAgent)
     {
         this.serverURL = serverURL;
         this.userAgent = userAgent;
+    }
+
+    // SETTERS
+
+    public void setRealm(String realm)
+    {
+        this.realm = realm;
+    }
+
+    public void setVerifySSL(boolean verifySSL)
+    {
+        this.verifySSL = verifySSL;
+    }
+
+    public void setServiceAccountName(String serviceAccountName)
+    {
+        this.serviceAccountName = serviceAccountName;
+    }
+
+    public void setServiceAccountPass(String serviceAccountPass)
+    {
+        this.serviceAccountPass = serviceAccountPass;
+    }
+
+    public void setServiceAccountRealm(String serviceAccountRealm)
+    {
+        this.serviceAccountRealm = serviceAccountRealm;
+    }
+
+    public void setDisableLog(boolean disableLog)
+    {
+        this.disableLog = disableLog;
+    }
+
+    public void setHttpTimeoutMs(int httpTimeoutMs)
+    {
+        this.httpTimeoutMs = httpTimeoutMs;
+    }
+
+    // GETTERS
+
+    public String getServerURL()
+    {
+        return serverURL;
+    }
+
+    public String getUserAgent()
+    {
+        return userAgent;
+    }
+
+    public String getRealm()
+    {
+        return realm;
+    }
+
+    public boolean getVerifySSL()
+    {
+        return verifySSL;
+    }
+
+    public String getServiceAccountName()
+    {
+        return serviceAccountName;
+    }
+
+    public String getServiceAccountPass()
+    {
+        return serviceAccountPass;
+    }
+
+    public String getServiceAccountRealm()
+    {
+        return serviceAccountRealm;
+    }
+
+    public boolean getDisableLog()
+    {
+        return disableLog;
+    }
+
+    public boolean getForwardClientIP()
+    {
+        return forwardClientIP;
+    }
+
+    public int getHttpTimeoutMs()
+    {
+        return httpTimeoutMs;
     }
 }
