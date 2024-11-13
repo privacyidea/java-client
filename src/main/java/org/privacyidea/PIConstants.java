@@ -81,7 +81,7 @@ public class PIConstants
     public static final String MAXFAIL = "maxfail";
     public static final String INFO = "info";
 
-    // WebAuthn and U2F params
+    // WebAuthn params
     public static final String WEBAUTHN_SIGN_REQUEST = "webAuthnSignRequest";
     public static final String CREDENTIALID = "credentialid";
     public static final String CLIENTDATA = "clientdata";
@@ -89,7 +89,6 @@ public class PIConstants
     public static final String AUTHENTICATORDATA = "authenticatordata";
     public static final String USERHANDLE = "userhandle";
     public static final String ASSERTIONCLIENTEXTENSIONS = "assertionclientextensions";
-    public static final String U2F_SIGN_REQUEST = "u2fSignRequest";
 
 
     // These will be excluded from url encoding

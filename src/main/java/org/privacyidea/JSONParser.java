@@ -479,33 +479,6 @@ public class JSONParser
         return params;
     }
 
-    /**
-     * Parse the json string that is returned from the browser after signing the U2FSignRequest into a map.
-     * The map contains the parameters with the corresponding keys ready to be sent to the server.
-     *
-     * @param json json string from the browser
-     * @return map
-     */
-    Map<String, String> parseU2FSignResponse(String json)
-    {
-        Map<String, String> params = new LinkedHashMap<>();
-        JsonObject obj;
-        try
-        {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        }
-        catch (JsonSyntaxException e)
-        {
-            privacyIDEA.error("U2F sign response has the wrong format: " + e.getLocalizedMessage());
-            return null;
-        }
-
-        params.put(CLIENTDATA, getString(obj, "clientData"));
-        params.put(SIGNATUREDATA, getString(obj, "signatureData"));
-
-        return params;
-    }
-
     private boolean getBoolean(JsonObject obj, String name)
     {
         JsonPrimitive primitive = getPrimitiveOrNull(obj, name);

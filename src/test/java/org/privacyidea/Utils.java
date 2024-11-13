@@ -180,33 +180,6 @@ public class Utils
                "\"signature\":\"rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b\"}";
     }
 
-    public static String triggerU2FSuccess()
-    {
-        return "{" + "\"detail\":{" + "\"attributes\":{" + "\"hideResponseInput\":true," +
-               "\"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\"," + "\"u2fSignRequest\":{" +
-               "\"appId\":\"http//ttype.u2f\"," +
-               "\"challenge\":\"TZKiB0VFFMF...tQduDJf56AeJAY_BT4NU\"," +
-               "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQ...qzZW1lC-jDdFd2pKDUsNnA\"," +
-               "\"version\":\"U2F_V2\"}}," +
-               "\"message\":\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"," +
-               "\"messages\":[\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"]," +
-               "\"multi_challenge\":[{" + "\"attributes\":{" + "\"hideResponseInput\":true," +
-               "\"img\":\"static/img/FIDO-U2F-Security-Key-444x444.png\"," + "\"u2fSignRequest\":{" +
-               "\"appId\":\"https://ttype.u2f\"," +
-               "\"challenge\":\"TZKiB0VFFMFsnlz00lF5iCqtQduDJf56AeJAY_BT4NU\"," +
-               "\"keyHandle\":\"UUHmZ4BUFCrt7q88MhlQJYu4G5qB9l7ScjRRxA-M35cTH-uHWyMEpxs4WBzbkjlZqzZW1lC-jDdFd2pKDUsNnA\"," +
-               "\"version\":\"U2F_V2\"}}," +
-               "\"message\":\"Please confirm with your U2F token (Yubico U2F EE Serial 61730834)\"," +
-               "\"serial\":\"U2F00014651\"," + "\"transaction_id\":\"12399202888279169736\"," +
-               "\"type\":\"u2f\"}]," + "\"serial\":\"U2F00014651\"," + "\"threadid\":140050978137856," +
-               "\"transaction_id\":\"12399202888279169736\"," +
-               "\"transaction_ids\":[\"12399202888279169736\"]," + "\"type\":\"u2f\"}," + "\"id\":1," +
-               "\"jsonrpc\":\"2.0\"," + "\"result\":{" + "\"status\":true," + "\"value\":false}," +
-               "\"time\":1649769348.7552881," + "\"version\":\"privacyIDEA 3.6.3\"," +
-               "\"versionnumber\":\"3.6.3\"," +
-               "\"signature\":\"rsa_sha256_pss:3e51d814...dccd5694b8c15943e37e1\"}";
-    }
-
     public static String lostValues()
     {
         return "{\n" + "  \"detail\": {\n" + "    \"threadid\": 140536383567616,\n" + "  \"result\": {\n" +
