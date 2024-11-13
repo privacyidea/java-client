@@ -17,49 +17,54 @@
 package org.privacyidea;
 
 import com.google.gson.JsonSyntaxException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.*;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
  */
 public class PIResponse
 {
-    public String message = "";
-    public String preferredClientMode = "";
-    public List<String> messages = new ArrayList<>();
-    public List<Challenge> multichallenge = new ArrayList<>();
-    public String transactionID = "";
-    public String serial = "";
-    public String image = "";
-    public int id = 0;
-    public String jsonRPCVersion = "";
-    public boolean status = false;
-    public boolean value = false;
-    public AuthenticationStatus authentication = AuthenticationStatus.NONE;
-    public String piVersion = ""; // e.g. 3.2.1
-    public String rawMessage = "";
-    public String signature = "";
-    public String type = ""; // Type of token that was matching the request
-    public int otpLength = 0;
+    String message = "";
+    String preferredClientMode = "";
+    List<String> messages = new ArrayList<>();
+    List<Challenge> multiChallenge = new ArrayList<>();
+    String transactionID = "";
+    String serial = "";
+    String image = "";
+    int id = 0;
+    String jsonRPCVersion = "";
+    boolean status = false;
+    boolean value = false;
+    AuthenticationStatus authentication = AuthenticationStatus.NONE;
+    String piVersion = ""; // e.g. 3.2.1
+    String rawMessage = "";
+    String signature = "";
+    String type = ""; // Type of token that was matching the request
+    int otpLength = 0;
+    PIError error = null;
 
-    public PIError error = null;
 
+
+    /**
+     * Check if a PUSH token was triggered.
+     *
+     * @return True if a PUSH token was triggered.
+     */
     public boolean pushAvailable()
     {
-        return multichallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return multiChallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
     /**
-     * Get the messages of all triggered push challenges reduced to a string to show on the push UI.
+     * Get the messages of all triggered PUSH challenges.
      *
-     * @return messages of all push challenges combined
+     * @return Combined messages of all PUSH challenges.
      */
     public String pushMessage()
     {
@@ -67,36 +72,38 @@ public class PIResponse
     }
 
     /**
-     * Get the messages of all token that require an input field (HOTP, TOTP, SMS, Email...) reduced to a single string
-     * to show with the input field.
+     * Get the messages of all token that require an input field (HOTP, TOTP, SMS, Email...) reduced to a single string.
      *
-     * @return message string
+     * @return Message string.
      */
     public String otpMessage()
     {
-        // Any challenge that is not WebAuthn, U2F or Push is considered OTP
         return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_PUSH.equals(c.getType())));
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(multichallenge.stream().filter(predicate).map(Challenge::getMessage).distinct().reduce("", (a, s) -> a + s + ", ").trim());
+        sb.append(multiChallenge.stream()
+                                .filter(predicate)
+                                .map(Challenge::getMessage)
+                                .distinct()
+                                .reduce("", (a, s) -> a + s + ", ")
+                                .trim());
 
         if (sb.length() > 0)
         {
             sb.deleteCharAt(sb.length() - 1);
         }
-
         return sb.toString();
     }
 
     /**
-     * @return list of token types that were triggered or an empty list
+     * @return List of token types that were triggered or an empty list.
      */
     public List<String> triggeredTokenTypes()
     {
-        return multichallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
+        return multiChallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
     }
 
     /**
@@ -107,13 +114,16 @@ public class PIResponse
     public List<WebAuthn> webAuthnSignRequests()
     {
         List<WebAuthn> ret = new ArrayList<>();
-        multichallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
-                                                                                                                          {
-                                                                                                                              if (c instanceof WebAuthn)
-                                                                                                                              {
-                                                                                                                                  ret.add((WebAuthn) c);
-                                                                                                                              }
-                                                                                                                          });
+        multiChallenge.stream()
+                      .filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType()))
+                      .collect(Collectors.toList())
+                      .forEach(c ->
+                                   {
+                                   if (c instanceof WebAuthn)
+                                   {
+                                       ret.add((WebAuthn) c);
+                                   }
+                                   });
         return ret;
     }
 
@@ -123,49 +133,31 @@ public class PIResponse
      * <p>
      * Can return an empty string if an error occurred or if no WebAuthn challenges have been triggered.
      *
-     * @return merged SignRequest or empty string.
+     * @return Merged SignRequest or empty string.
      */
     public String mergedSignRequest()
     {
-        List<WebAuthn> webAuthnSignRequests = webAuthnSignRequests();
-        if (webAuthnSignRequests.isEmpty())
+        List<WebAuthn> webauthnSignRequests = webAuthnSignRequests();
+        if (webauthnSignRequests.isEmpty())
         {
             return "";
         }
-        if (webAuthnSignRequests.size() == 1)
+        if (webauthnSignRequests.size() == 1)
         {
-            return webAuthnSignRequests.get(0).signRequest();
+            return webauthnSignRequests.get(0).signRequest();
         }
 
-        WebAuthn webAuthn = webAuthnSignRequests.get(0);
-        List<String> stringSignRequests = webAuthnSignRequests.stream().map(WebAuthn::signRequest).collect(Collectors.toList());
+        WebAuthn webauthn = webauthnSignRequests.get(0);
+        List<String> stringSignRequests = webauthnSignRequests.stream().map(WebAuthn::signRequest).collect(Collectors.toList());
 
         try
         {
-            return JSONParser.mergeWebAuthnSignRequest(webAuthn, stringSignRequests);
+            return JSONParser.mergeWebAuthnSignRequest(webauthn, stringSignRequests);
         }
         catch (JsonSyntaxException e)
         {
             return "";
         }
-    }
-
-    /**
-     * Get all U2F challenges from the multi_challenge.
-     *
-     * @return List of U2F objects or empty list
-     */
-    public List<U2F> u2fSignRequests()
-    {
-        List<U2F> ret = new ArrayList<>();
-        multichallenge.stream().filter(c -> TOKEN_TYPE_U2F.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
-                                                                                                                     {
-                                                                                                                         if (c instanceof U2F)
-                                                                                                                         {
-                                                                                                                             ret.add((U2F) c);
-                                                                                                                         }
-                                                                                                                     });
-        return ret;
     }
 
     @Override
