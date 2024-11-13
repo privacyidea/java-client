@@ -20,14 +20,14 @@ public class WebAuthn extends Challenge
 {
     private final String signRequest;
 
-    public WebAuthn(String serial, String message, String client_mode, String image, String transaction_id, String signRequest)
+    public WebAuthn(String serial, String message, String clientMode, String image, String transactionID, String signRequest)
     {
-        super(serial, message, client_mode, image, transaction_id, PIConstants.TOKEN_TYPE_WEBAUTHN);
+        super(serial, message, clientMode, image, transactionID, PIConstants.TOKEN_TYPE_WEBAUTHN);
         this.signRequest = signRequest;
     }
 
     /**
-     * Returns the WebAuthnSignRequest in JSON format as a string, ready to use with pi-webauthn.js.
+     * Returns the WebAuthn sign request in JSON format as a string, ready to use with pi-webauthn.js.
      * If this returns an empty string, it *might* indicate that the PIN of this token should be changed.
      *
      * @return sign request or empty string
