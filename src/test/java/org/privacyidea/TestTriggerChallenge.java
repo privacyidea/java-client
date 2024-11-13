@@ -42,7 +42,7 @@ public class TestTriggerChallenge
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
@@ -79,7 +79,7 @@ public class TestTriggerChallenge
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
 
-        List<Challenge> challenges = responseTriggerChallenge.multichallenge;
+        List<Challenge> challenges = responseTriggerChallenge.multiChallenge;
         String imageTOTP = "";
         for (Challenge c : challenges)
         {
@@ -98,7 +98,7 @@ public class TestTriggerChallenge
     public void testNoServiceAccount()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
 
@@ -111,7 +111,7 @@ public class TestTriggerChallenge
     public void testWrongServerURL()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://12ds7:1nvcbn080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
@@ -126,7 +126,7 @@ public class TestTriggerChallenge
     public void testNoUsername()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
