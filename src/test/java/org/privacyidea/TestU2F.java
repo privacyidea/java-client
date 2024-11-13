@@ -41,7 +41,7 @@ public class TestU2F
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
     }
@@ -79,7 +79,7 @@ public class TestU2F
         assertTrue(response.status);
         assertFalse(response.value);
 
-        Optional<Challenge> opt = response.multichallenge.stream()
+        Optional<Challenge> opt = response.multiChallenge.stream()
                                                          .filter(challenge -> TOKEN_TYPE_U2F.equals(challenge.getType()))
                                                          .findFirst();
         if (opt.isPresent())
