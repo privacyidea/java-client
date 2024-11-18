@@ -49,8 +49,6 @@ public class PIResponse
     int otpLength = 0;
     PIError error = null;
 
-
-
     /**
      * Check if a PUSH token was triggered.
      *
@@ -164,5 +162,97 @@ public class PIResponse
     public String toString()
     {
         return rawMessage;
+    }
+
+    // GETTERS
+
+    public String getMessage()
+    {
+        return message;
+    }
+
+    public String getPreferredClientMode()
+    {
+        return preferredClientMode;
+    }
+
+    public List<String> getMessages()
+    {
+        return messages;
+    }
+
+    public List<Challenge> getMultiChallenge()
+    {
+        return multiChallenge;
+    }
+
+    public String getTransactionID()
+    {
+        return transactionID;
+    }
+
+    public String getSerial()
+    {
+        return serial;
+    }
+
+    public String getImage()
+    {
+        return image;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public String getJsonRPCVersion()
+    {
+        return jsonRPCVersion;
+    }
+
+    public boolean getStatus()
+    {
+        return status;
+    }
+
+    public boolean getValue()
+    {
+        return value;
+    }
+
+    public AuthenticationStatus getAuthentication()
+    {
+        return authentication;
+    }
+
+    public String getPiVersion()
+    {
+        return piVersion;
+    }
+
+    public String getRawMessage()
+    {
+        return rawMessage;
+    }
+
+    public String getSignature()
+    {
+        return signature;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public int getOtpLength()
+    {
+        return otpLength;
+    }
+
+    public PIError getError()
+    {
+        return error;
     }
 }
