@@ -43,7 +43,6 @@ public class PIConstants
     // TOKEN TYPES
     public static final String TOKEN_TYPE_PUSH = "push";
     public static final String TOKEN_TYPE_WEBAUTHN = "webauthn";
-    public static final String TOKEN_TYPE_U2F = "u2f";
 
     // JSON KEYS
     public static final String USERNAME = "username";
@@ -65,6 +64,7 @@ public class PIConstants
     public static final String MESSAGE = "message";
     public static final String CLIENT_MODE = "client_mode";
     public static final String IMAGE = "image";
+    public static final String CLIENT_IP = "client";
     public static final String MESSAGES = "messages";
     public static final String MULTI_CHALLENGE = "multi_challenge";
     public static final String ATTRIBUTES = "attributes";
