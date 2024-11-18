@@ -370,6 +370,10 @@ public class PrivacyIDEA implements Closeable
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
                                    String method)
     {
+        if (!configuration().getForwardClientIP().isEmpty())
+        {
+            params.put(CLIENT_IP,configuration().getForwardClientIP());
+        }
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
         String response = null;
@@ -538,6 +542,7 @@ public class PrivacyIDEA implements Closeable
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
+        private String forwardClientIP = "";
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
@@ -631,6 +636,18 @@ public class PrivacyIDEA implements Closeable
         }
 
         /**
+         * Set the client IP to be forwarded to the privacyIDEA server.
+         *
+         * @param clientIP client IP or an empty String
+         * @return Builder
+         */
+        public Builder forwardClientIP(String clientIP)
+        {
+            this.forwardClientIP = clientIP;
+            return this;
+        }
+
+        /**
          * Disable logging completely regardless of any set loggers.
          *
          * @return Builder
@@ -661,6 +678,7 @@ public class PrivacyIDEA implements Closeable
             configuration.setServiceAccountName(serviceAccountName);
             configuration.setServiceAccountPass(serviceAccountPass);
             configuration.setServiceAccountRealm(serviceAccountRealm);
+            configuration.setForwardClientIP(forwardClientIP);
             configuration.setDisableLog(disableLog);
             configuration.setHttpTimeoutMs(httpTimeoutMs);
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
