@@ -370,9 +370,9 @@ public class PrivacyIDEA implements Closeable
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
                                    String method)
     {
-        if (!configuration().getForwardClientIP().isEmpty())
+        if (!configuration.getForwardClientIP().isEmpty())
         {
-            params.put(CLIENT_IP,configuration().getForwardClientIP());
+            params.put(CLIENT_IP,configuration.getForwardClientIP());
         }
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
