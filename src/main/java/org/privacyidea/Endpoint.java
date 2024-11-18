@@ -110,6 +110,11 @@ class Endpoint
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
+        if (!piConfig.getForwardClientIP().isEmpty())
+        {
+            privacyIDEA.log("Forwarding client IP: " + piConfig.getForwardClientIP());
+            params.put(CLIENT_IP, piConfig.getForwardClientIP());
+        }
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
                            {
