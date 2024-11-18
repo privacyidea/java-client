@@ -26,7 +26,7 @@ class PIConfig
     private String serviceAccountPass = "";
     private String serviceAccountRealm = "";
     private boolean disableLog = false;
-    private final boolean forwardClientIP = false;
+    private String forwardClientIP = "";
     private int httpTimeoutMs = 30000;
 
     public PIConfig(String serverURL, String userAgent)
@@ -60,6 +60,11 @@ class PIConfig
     public void setServiceAccountRealm(String serviceAccountRealm)
     {
         this.serviceAccountRealm = serviceAccountRealm;
+    }
+
+    public void setForwardClientIP(String forwardClientIP)
+    {
+        this.forwardClientIP = forwardClientIP;
     }
 
     public void setDisableLog(boolean disableLog)
@@ -114,7 +119,7 @@ class PIConfig
         return disableLog;
     }
 
-    public boolean getForwardClientIP()
+    public String getForwardClientIP()
     {
         return forwardClientIP;
     }
