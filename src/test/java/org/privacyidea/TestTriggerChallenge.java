@@ -35,6 +35,7 @@ public class TestTriggerChallenge
     private PrivacyIDEA privacyIDEA;
     String serviceAccount = "service";
     String servicePass = "pass";
+    String forwardClientIP = "127.0.0.1";
 
     @Before
     public void setup()
@@ -44,6 +45,7 @@ public class TestTriggerChallenge
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
+                                 .forwardClientIP(forwardClientIP)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
                                  .build();
@@ -60,7 +62,7 @@ public class TestTriggerChallenge
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
-                                   .withBody("user=testuser&realm=realm"))
+                                   .withBody("user=testuser&realm=realm&client=127.0.0.1"))
                   .respond(HttpResponse.response().withBody(Utils.triggerChallengeSuccess()));
 
         String username = "testuser";
