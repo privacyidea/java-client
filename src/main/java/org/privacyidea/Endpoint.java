@@ -23,6 +23,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
@@ -60,6 +62,11 @@ class Endpoint
         }
     }};
 
+    /**
+     * Constructor
+     *
+     * @param privacyIDEA privacyIDEA instance
+     */
     Endpoint(PrivacyIDEA privacyIDEA)
     {
         this.privacyIDEA = privacyIDEA;
@@ -86,6 +93,13 @@ class Endpoint
                 privacyIDEA.error(e);
             }
         }
+
+        if (!piConfig.getProxyHost().isEmpty())
+        {
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(piConfig.getProxyHost(), piConfig.getProxyPort()));
+            builder.proxy(proxy);
+        }
+
         this.client = builder.build();
     }
 
@@ -98,8 +112,7 @@ class Endpoint
      * @param method   http request method
      * @param callback okhttp3 callback
      */
-    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method,
-                          Callback callback)
+    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback)
     {
         HttpUrl httpUrl = HttpUrl.parse(piConfig.getServerURL() + endpoint);
         if (httpUrl == null)
@@ -122,7 +135,6 @@ class Endpoint
                            {
                                v = "*".repeat(v.length());
                            }
-
                            privacyIDEA.log(k + "=" + v);
                            });
 
