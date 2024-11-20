@@ -62,11 +62,6 @@ class Endpoint
         }
     }};
 
-    /**
-     * Constructor
-     *
-     * @param privacyIDEA privacyIDEA instance
-     */
     Endpoint(PrivacyIDEA privacyIDEA)
     {
         this.privacyIDEA = privacyIDEA;
