@@ -30,24 +30,24 @@ import static org.privacyidea.PIConstants.*;
  */
 public class PIResponse
 {
-    String message = "";
-    String preferredClientMode = "";
-    List<String> messages = new ArrayList<>();
-    List<Challenge> multiChallenge = new ArrayList<>();
-    String transactionID = "";
-    String serial = "";
-    String image = "";
-    int id = 0;
-    String jsonRPCVersion = "";
-    boolean status = false;
-    boolean value = false;
-    AuthenticationStatus authentication = AuthenticationStatus.NONE;
-    String piVersion = ""; // e.g. 3.2.1
-    String rawMessage = "";
-    String signature = "";
-    String type = ""; // Type of token that was matching the request
-    int otpLength = 0;
-    PIError error = null;
+    public String message = "";
+    public String preferredClientMode = "";
+    public List<String> messages = new ArrayList<>();
+    public List<Challenge> multiChallenge = new ArrayList<>();
+    public String transactionID = "";
+    public String serial = "";
+    public String image = "";
+    public int id = 0;
+    public String jsonRPCVersion = "";
+    public boolean status = false;
+    public boolean value = false;
+    public AuthenticationStatus authentication = AuthenticationStatus.NONE;
+    public String piVersion = ""; // e.g. 3.2.1
+    public String rawMessage = "";
+    public String signature = "";
+    public String type = ""; // Type of token that was matching the request
+    public int otpLength = 0;
+    public PIError error = null;
 
     /**
      * Check if a PUSH token was triggered.
@@ -162,97 +162,5 @@ public class PIResponse
     public String toString()
     {
         return rawMessage;
-    }
-
-    // GETTERS
-
-    public String getMessage()
-    {
-        return message;
-    }
-
-    public String getPreferredClientMode()
-    {
-        return preferredClientMode;
-    }
-
-    public List<String> getMessages()
-    {
-        return messages;
-    }
-
-    public List<Challenge> getMultiChallenge()
-    {
-        return multiChallenge;
-    }
-
-    public String getTransactionID()
-    {
-        return transactionID;
-    }
-
-    public String getSerial()
-    {
-        return serial;
-    }
-
-    public String getImage()
-    {
-        return image;
-    }
-
-    public int getId()
-    {
-        return id;
-    }
-
-    public String getJsonRPCVersion()
-    {
-        return jsonRPCVersion;
-    }
-
-    public boolean getStatus()
-    {
-        return status;
-    }
-
-    public boolean getValue()
-    {
-        return value;
-    }
-
-    public AuthenticationStatus getAuthentication()
-    {
-        return authentication;
-    }
-
-    public String getPiVersion()
-    {
-        return piVersion;
-    }
-
-    public String getRawMessage()
-    {
-        return rawMessage;
-    }
-
-    public String getSignature()
-    {
-        return signature;
-    }
-
-    public String getType()
-    {
-        return type;
-    }
-
-    public int getOtpLength()
-    {
-        return otpLength;
-    }
-
-    public PIError getError()
-    {
-        return error;
     }
 }

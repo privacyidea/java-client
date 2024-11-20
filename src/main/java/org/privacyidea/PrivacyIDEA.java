@@ -262,16 +262,16 @@ public class PrivacyIDEA implements Closeable
     Map<String, String> serviceAccountParam()
     {
         Map<String, String> authTokenParams = new LinkedHashMap<>();
-        authTokenParams.put(USERNAME, configuration.getServiceAccountName());
-        authTokenParams.put(PASSWORD, configuration.getServiceAccountPass());
+        authTokenParams.put(USERNAME, configuration.serviceAccountName);
+        authTokenParams.put(PASSWORD, configuration.serviceAccountPass);
 
-        if (configuration.getServiceAccountRealm() != null && !configuration.getServiceAccountRealm().isEmpty())
+        if (configuration.serviceAccountRealm != null && !configuration.serviceAccountRealm.isEmpty())
         {
-            authTokenParams.put(REALM, configuration.getServiceAccountRealm());
+            authTokenParams.put(REALM, configuration.serviceAccountRealm);
         }
-        else if (configuration.getRealm() != null && !configuration.getRealm().isEmpty())
+        else if (configuration.realm != null && !configuration.realm.isEmpty())
         {
-            authTokenParams.put(REALM, configuration.getRealm());
+            authTokenParams.put(REALM, configuration.realm);
         }
         return authTokenParams;
     }
@@ -350,9 +350,9 @@ public class PrivacyIDEA implements Closeable
 
     private void appendRealm(Map<String, String> params)
     {
-        if (configuration.getRealm() != null && !configuration.getRealm().isEmpty())
+        if (configuration.realm != null && !configuration.realm.isEmpty())
         {
-            params.put(REALM, configuration.getRealm());
+            params.put(REALM, configuration.realm);
         }
     }
 
@@ -370,9 +370,9 @@ public class PrivacyIDEA implements Closeable
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
                                    String method)
     {
-        if (!configuration.getForwardClientIP().isEmpty())
+        if (!configuration.forwardClientIP.isEmpty())
         {
-            params.put(CLIENT_IP,configuration.getForwardClientIP());
+            params.put(CLIENT_IP,configuration.forwardClientIP);
         }
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
@@ -409,9 +409,9 @@ public class PrivacyIDEA implements Closeable
      */
     public boolean serviceAccountAvailable()
     {
-        return configuration.getServiceAccountName() != null && !configuration.getServiceAccountName().isEmpty()
-               && configuration.getServiceAccountPass() != null &&
-               !configuration.getServiceAccountPass().isEmpty();
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
+               && configuration.serviceAccountPass != null &&
+               !configuration.serviceAccountPass.isEmpty();
     }
 
     PIConfig configuration()
@@ -426,7 +426,7 @@ public class PrivacyIDEA implements Closeable
      */
     void error(String message)
     {
-        if (!configuration.getDisableLog())
+        if (!configuration.disableLog)
         {
             if (this.log != null)
             {
@@ -450,7 +450,7 @@ public class PrivacyIDEA implements Closeable
      */
     void error(Throwable e)
     {
-        if (!configuration.getDisableLog())
+        if (!configuration.disableLog)
         {
             if (this.log != null)
             {
@@ -474,7 +474,7 @@ public class PrivacyIDEA implements Closeable
      */
     void log(String message)
     {
-        if (!configuration.getDisableLog())
+        if (!configuration.disableLog)
         {
             if (this.log != null)
             {
@@ -498,7 +498,7 @@ public class PrivacyIDEA implements Closeable
      */
     void log(Throwable e)
     {
-        if (!configuration.getDisableLog())
+        if (!configuration.disableLog)
         {
             if (this.log != null)
             {
@@ -694,14 +694,14 @@ public class PrivacyIDEA implements Closeable
         public PrivacyIDEA build()
         {
             PIConfig configuration = new PIConfig(serverURL, userAgent);
-            configuration.setRealm(realm);
-            configuration.setVerifySSL(verifySSL);
-            configuration.setServiceAccountName(serviceAccountName);
-            configuration.setServiceAccountPass(serviceAccountPass);
-            configuration.setServiceAccountRealm(serviceAccountRealm);
-            configuration.setForwardClientIP(forwardClientIP);
-            configuration.setDisableLog(disableLog);
-            configuration.setHttpTimeoutMs(httpTimeoutMs);
+            configuration.realm = realm;
+            configuration.verifySSL = verifySSL;
+            configuration.serviceAccountName = serviceAccountName;
+            configuration.serviceAccountPass = serviceAccountPass;
+            configuration.serviceAccountRealm = serviceAccountRealm;
+            configuration.forwardClientIP = forwardClientIP;
+            configuration.disableLog = disableLog;
+            configuration.httpTimeoutMs = httpTimeoutMs;
             configuration.setProxy(proxyHost, proxyPort);
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }

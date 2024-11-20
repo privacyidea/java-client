@@ -18,18 +18,18 @@ package org.privacyidea;
 
 class PIConfig
 {
-    private final String serverURL;
-    private final String userAgent;
-    private String realm = "";
-    private boolean verifySSL = true;
-    private String serviceAccountName = "";
-    private String serviceAccountPass = "";
-    private String serviceAccountRealm = "";
-    private boolean disableLog = false;
-    private String forwardClientIP = "";
-    private int httpTimeoutMs = 30000;
-    private String proxyHost = "";
-    private int proxyPort = 0;
+    public final String serverURL;
+    public final String userAgent;
+    public String realm = "";
+    public boolean verifySSL = true;
+    public String serviceAccountName = "";
+    public String serviceAccountPass = "";
+    public String serviceAccountRealm = "";
+    public boolean disableLog = false;
+    public String forwardClientIP = "";
+    public int httpTimeoutMs = 30000;
+    protected String proxyHost = "";
+    protected int proxyPort = 0;
 
     public PIConfig(String serverURL, String userAgent)
     {
@@ -37,113 +37,9 @@ class PIConfig
         this.userAgent = userAgent;
     }
 
-    // SETTERS
-
-    public void setRealm(String realm)
-    {
-        this.realm = realm;
-    }
-
-    public void setVerifySSL(boolean verifySSL)
-    {
-        this.verifySSL = verifySSL;
-    }
-
-    public void setServiceAccountName(String serviceAccountName)
-    {
-        this.serviceAccountName = serviceAccountName;
-    }
-
-    public void setServiceAccountPass(String serviceAccountPass)
-    {
-        this.serviceAccountPass = serviceAccountPass;
-    }
-
-    public void setServiceAccountRealm(String serviceAccountRealm)
-    {
-        this.serviceAccountRealm = serviceAccountRealm;
-    }
-
-    public void setForwardClientIP(String forwardClientIP)
-    {
-        this.forwardClientIP = forwardClientIP;
-    }
-
-    public void setDisableLog(boolean disableLog)
-    {
-        this.disableLog = disableLog;
-    }
-
-    public void setHttpTimeoutMs(int httpTimeoutMs)
-    {
-        this.httpTimeoutMs = httpTimeoutMs;
-    }
-
     public void setProxy(String proxyHost, int proxyPort)
     {
         this.proxyHost = proxyHost;
         this.proxyPort = proxyPort;
-    }
-
-    // GETTERS
-
-    public String getServerURL()
-    {
-        return serverURL;
-    }
-
-    public String getUserAgent()
-    {
-        return userAgent;
-    }
-
-    public String getRealm()
-    {
-        return realm;
-    }
-
-    public boolean getVerifySSL()
-    {
-        return verifySSL;
-    }
-
-    public String getServiceAccountName()
-    {
-        return serviceAccountName;
-    }
-
-    public String getServiceAccountPass()
-    {
-        return serviceAccountPass;
-    }
-
-    public String getServiceAccountRealm()
-    {
-        return serviceAccountRealm;
-    }
-
-    public boolean getDisableLog()
-    {
-        return disableLog;
-    }
-
-    public String getForwardClientIP()
-    {
-        return forwardClientIP;
-    }
-
-    public int getHttpTimeoutMs()
-    {
-        return httpTimeoutMs;
-    }
-
-    public String getProxyHost()
-    {
-        return proxyHost;
-    }
-
-    public int getProxyPort()
-    {
-        return proxyPort;
     }
 }

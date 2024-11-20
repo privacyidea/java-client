@@ -68,11 +68,11 @@ class Endpoint
         this.piConfig = privacyIDEA.configuration();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.connectTimeout(piConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-               .writeTimeout(piConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS)
-               .readTimeout(piConfig.getHttpTimeoutMs(), TimeUnit.MILLISECONDS);
+        builder.connectTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .writeTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .readTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS);
 
-        if (!this.piConfig.getVerifySSL())
+        if (!this.piConfig.verifySSL)
         {
             // Trust all certs and verify every host
             try
@@ -89,9 +89,9 @@ class Endpoint
             }
         }
 
-        if (!piConfig.getProxyHost().isEmpty())
+        if (!piConfig.proxyHost.isEmpty())
         {
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(piConfig.getProxyHost(), piConfig.getProxyPort()));
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(piConfig.proxyHost, piConfig.proxyPort));
             builder.proxy(proxy);
         }
 
@@ -109,19 +109,19 @@ class Endpoint
      */
     void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback)
     {
-        HttpUrl httpUrl = HttpUrl.parse(piConfig.getServerURL() + endpoint);
+        HttpUrl httpUrl = HttpUrl.parse(piConfig.serverURL + endpoint);
         if (httpUrl == null)
         {
-            privacyIDEA.error("Server url could not be parsed: " + (piConfig.getServerURL() + endpoint));
+            privacyIDEA.error("Server url could not be parsed: " + (piConfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this function.
             callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
-        if (!piConfig.getForwardClientIP().isEmpty())
+        if (!piConfig.forwardClientIP.isEmpty())
         {
-            privacyIDEA.log("Forwarding client IP: " + piConfig.getForwardClientIP());
-            params.put(CLIENT_IP, piConfig.getForwardClientIP());
+            privacyIDEA.log("Forwarding client IP: " + piConfig.forwardClientIP);
+            params.put(CLIENT_IP, piConfig.forwardClientIP);
         }
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
@@ -147,7 +147,7 @@ class Endpoint
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
         // Add the headers
-        requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.getUserAgent());
+        requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.userAgent);
         if (headers != null && !headers.isEmpty())
         {
             headers.forEach(requestBuilder::addHeader);

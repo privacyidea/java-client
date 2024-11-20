@@ -21,13 +21,13 @@ import java.util.List;
 
 public class Challenge
 {
-    private final List<String> attributes = new ArrayList<>();
-    private final String serial;
-    private final String clientMode;
-    private final String message;
-    private final String transactionID;
-    private final String type;
-    private final String image;
+    protected final List<String> attributes = new ArrayList<>();
+    protected final String serial;
+    protected final String clientMode;
+    protected final String message;
+    protected final String transactionID;
+    protected final String type;
+    protected final String image;
 
     public Challenge(String serial, String message, String clientMode, String image, String transactionID, String type)
     {
