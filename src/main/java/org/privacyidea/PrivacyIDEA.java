@@ -547,6 +547,8 @@ public class PrivacyIDEA implements Closeable
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
         private int httpTimeoutMs = 30000;
+        private String proxyHost = "";
+        private int proxyPort = 0;
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
@@ -670,6 +672,25 @@ public class PrivacyIDEA implements Closeable
             return this;
         }
 
+        /**
+         * Set the proxy for the http requests.
+         *
+         * @param proxyHost proxy host
+         * @param proxyPort proxy port
+         * @return Builder
+         */
+        public Builder proxy(String proxyHost, int proxyPort)
+        {
+            this.proxyHost = proxyHost;
+            this.proxyPort = proxyPort;
+            return this;
+        }
+
+        /**
+         * Build the PrivacyIDEA instance with the set parameters.
+         *
+         * @return PrivacyIDEA instance
+         */
         public PrivacyIDEA build()
         {
             PIConfig configuration = new PIConfig(serverURL, userAgent);
@@ -681,6 +702,7 @@ public class PrivacyIDEA implements Closeable
             configuration.setForwardClientIP(forwardClientIP);
             configuration.setDisableLog(disableLog);
             configuration.setHttpTimeoutMs(httpTimeoutMs);
+            configuration.setProxy(proxyHost, proxyPort);
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }
     }
