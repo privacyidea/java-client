@@ -28,6 +28,8 @@ class PIConfig
     private boolean disableLog = false;
     private String forwardClientIP = "";
     private int httpTimeoutMs = 30000;
+    private String proxyHost = "";
+    private int proxyPort = 0;
 
     public PIConfig(String serverURL, String userAgent)
     {
@@ -75,6 +77,12 @@ class PIConfig
     public void setHttpTimeoutMs(int httpTimeoutMs)
     {
         this.httpTimeoutMs = httpTimeoutMs;
+    }
+
+    public void setProxy(String proxyHost, int proxyPort)
+    {
+        this.proxyHost = proxyHost;
+        this.proxyPort = proxyPort;
     }
 
     // GETTERS
@@ -127,5 +135,15 @@ class PIConfig
     public int getHttpTimeoutMs()
     {
         return httpTimeoutMs;
+    }
+
+    public String getProxyHost()
+    {
+        return proxyHost;
+    }
+
+    public int getProxyPort()
+    {
+        return proxyPort;
     }
 }
