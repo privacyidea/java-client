@@ -35,6 +35,7 @@ public class TestTriggerChallenge
     private PrivacyIDEA privacyIDEA;
     String serviceAccount = "service";
     String servicePass = "pass";
+    String forwardClientIP = "127.0.0.1";
 
     @Before
     public void setup()
@@ -42,8 +43,9 @@ public class TestTriggerChallenge
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
+                                 .forwardClientIP(forwardClientIP)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
                                  .build();
@@ -60,7 +62,7 @@ public class TestTriggerChallenge
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
-                                   .withBody("user=testuser&realm=realm"))
+                                   .withBody("user=testuser&realm=realm&client=127.0.0.1"))
                   .respond(HttpResponse.response().withBody(Utils.triggerChallengeSuccess()));
 
         String username = "testuser";
@@ -79,7 +81,7 @@ public class TestTriggerChallenge
         assertTrue(responseTriggerChallenge.status);
         assertFalse(responseTriggerChallenge.value);
 
-        List<Challenge> challenges = responseTriggerChallenge.multichallenge;
+        List<Challenge> challenges = responseTriggerChallenge.multiChallenge;
         String imageTOTP = "";
         for (Challenge c : challenges)
         {
@@ -98,7 +100,7 @@ public class TestTriggerChallenge
     public void testNoServiceAccount()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
 
@@ -111,7 +113,7 @@ public class TestTriggerChallenge
     public void testWrongServerURL()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://12ds7:1nvcbn080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
@@ -126,7 +128,7 @@ public class TestTriggerChallenge
     public void testNoUsername()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
                                  .logger(new PILogImplementation())
                                  .realm("realm")

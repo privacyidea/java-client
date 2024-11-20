@@ -50,7 +50,7 @@ public class TestGetTokenInfo
                                  .serviceRealm(serviceRealm)
                                  .disableLog()
                                  .httpTimeoutMs(15000)
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
     }
@@ -117,7 +117,7 @@ public class TestGetTokenInfo
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").sslVerify(false).logger(new PILogImplementation()).build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").verifySSL(false).logger(new PILogImplementation()).build();
 
         List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
 

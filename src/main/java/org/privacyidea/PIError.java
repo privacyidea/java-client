@@ -18,12 +18,12 @@ package org.privacyidea;
 
 public class PIError
 {
+    public final int code;
+    public final String message;
+
     public PIError(int code, String message)
     {
         this.code = code;
         this.message = message;
     }
-
-    public int code;
-    public String message;
 }

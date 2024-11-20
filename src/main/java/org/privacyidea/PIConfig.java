@@ -18,19 +18,28 @@ package org.privacyidea;
 
 class PIConfig
 {
-    String serverURL;
-    String realm = "";
-    boolean doSSLVerify = true;
-    String serviceAccountName = "";
-    String serviceAccountPass = "";
-    String serviceAccountRealm = "";
-    boolean disableLog = false;
-    String userAgent;
-    int httpTimeoutMs = 30000;
+    public final String serverURL;
+    public final String userAgent;
+    public String realm = "";
+    public boolean verifySSL = true;
+    public String serviceAccountName = "";
+    public String serviceAccountPass = "";
+    public String serviceAccountRealm = "";
+    public boolean disableLog = false;
+    public String forwardClientIP = "";
+    public int httpTimeoutMs = 30000;
+    protected String proxyHost = "";
+    protected int proxyPort = 0;
 
     public PIConfig(String serverURL, String userAgent)
     {
         this.serverURL = serverURL;
         this.userAgent = userAgent;
+    }
+
+    public void setProxy(String proxyHost, int proxyPort)
+    {
+        this.proxyHost = proxyHost;
+        this.proxyPort = proxyPort;
     }
 }

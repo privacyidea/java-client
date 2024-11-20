@@ -40,7 +40,7 @@ public class TestRollout
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .serviceAccount("admin", "admin")
                                  .logger(new PILogImplementation())
                                  .build();
@@ -89,7 +89,7 @@ public class TestRollout
     public void testNoServiceAccount()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
 
@@ -102,7 +102,7 @@ public class TestRollout
     public void testRolloutViaValidateCheck()
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .build();
 

@@ -16,57 +16,14 @@
  */
 package org.privacyidea;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
-import static org.privacyidea.PIConstants.ATTRIBUTES;
-import static org.privacyidea.PIConstants.AUTHENTICATION;
-import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
-import static org.privacyidea.PIConstants.CLIENTDATA;
-import static org.privacyidea.PIConstants.CLIENT_MODE;
-import static org.privacyidea.PIConstants.CODE;
-import static org.privacyidea.PIConstants.CREDENTIALID;
-import static org.privacyidea.PIConstants.DETAIL;
-import static org.privacyidea.PIConstants.ERROR;
-import static org.privacyidea.PIConstants.ID;
-import static org.privacyidea.PIConstants.IMAGE;
-import static org.privacyidea.PIConstants.INFO;
-import static org.privacyidea.PIConstants.JSONRPC;
-import static org.privacyidea.PIConstants.MAXFAIL;
-import static org.privacyidea.PIConstants.MESSAGE;
-import static org.privacyidea.PIConstants.MESSAGES;
-import static org.privacyidea.PIConstants.MULTI_CHALLENGE;
-import static org.privacyidea.PIConstants.OTPLEN;
-import static org.privacyidea.PIConstants.PREFERRED_CLIENT_MODE;
-import static org.privacyidea.PIConstants.REALMS;
-import static org.privacyidea.PIConstants.RESULT;
-import static org.privacyidea.PIConstants.SERIAL;
-import static org.privacyidea.PIConstants.SIGNATURE;
-import static org.privacyidea.PIConstants.SIGNATUREDATA;
-import static org.privacyidea.PIConstants.STATUS;
-import static org.privacyidea.PIConstants.TOKEN;
-import static org.privacyidea.PIConstants.TOKENS;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_U2F;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
-import static org.privacyidea.PIConstants.TRANSACTION_ID;
-import static org.privacyidea.PIConstants.TYPE;
-import static org.privacyidea.PIConstants.U2F_SIGN_REQUEST;
-import static org.privacyidea.PIConstants.USERHANDLE;
-import static org.privacyidea.PIConstants.USERNAME;
-import static org.privacyidea.PIConstants.VALUE;
-import static org.privacyidea.PIConstants.VERSION_NUMBER;
-import static org.privacyidea.PIConstants.WEBAUTHN_SIGN_REQUEST;
+import static org.privacyidea.PIConstants.*;
 
 public class JSONParser
 {
@@ -221,12 +178,12 @@ public class JSONParser
             if (arrMessages != null)
             {
                 arrMessages.forEach(val ->
-                                    {
+                                        {
                                         if (val != null)
                                         {
                                             response.messages.add(val.getAsString());
                                         }
-                                    });
+                                        });
             }
 
             JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
@@ -237,24 +194,19 @@ public class JSONParser
                     JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
                     String serial = getString(challenge, SERIAL);
                     String message = getString(challenge, MESSAGE);
-                    String clientmode = getString(challenge, CLIENT_MODE);
+                    String clientMode = getString(challenge, CLIENT_MODE);
                     String image = getString(challenge, IMAGE);
-                    String transactionid = getString(challenge, TRANSACTION_ID);
+                    String transactionID = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
-                        String webAuthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new WebAuthn(serial, message, clientmode, image, transactionid, webAuthnSignRequest));
-                    }
-                    else if (TOKEN_TYPE_U2F.equals(type))
-                    {
-                        String u2fSignRequest = getItemFromAttributes(U2F_SIGN_REQUEST, challenge);
-                        response.multichallenge.add(new U2F(serial, message, clientmode, image, transactionid, u2fSignRequest));
+                        String webauthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
+                        response.multiChallenge.add(new WebAuthn(serial, message, clientMode, image, transactionID, webauthnSignRequest));
                     }
                     else
                     {
-                        response.multichallenge.add(new Challenge(serial, message, clientmode, image, transactionid, type));
+                        response.multiChallenge.add(new Challenge(serial, message, clientMode, image, transactionID, type));
                     }
                 }
             }
@@ -262,7 +214,7 @@ public class JSONParser
         return response;
     }
 
-    static String mergeWebAuthnSignRequest(WebAuthn webAuthn, List<String> arr) throws JsonSyntaxException
+    static String mergeWebAuthnSignRequest(WebAuthn webauthn, List<String> arr) throws JsonSyntaxException
     {
         List<JsonArray> extracted = new ArrayList<>();
         for (String signRequest : arr)
@@ -271,7 +223,7 @@ public class JSONParser
             extracted.add(obj.getAsJsonArray("allowCredentials"));
         }
 
-        JsonObject signRequest = JsonParser.parseString(webAuthn.signRequest()).getAsJsonObject();
+        JsonObject signRequest = JsonParser.parseString(webauthn.signRequest()).getAsJsonObject();
         JsonArray allowCredentials = new JsonArray();
         extracted.forEach(allowCredentials::addAll);
 
@@ -391,24 +343,24 @@ public class JSONParser
         if (joInfo != null)
         {
             joInfo.entrySet().forEach(entry ->
-                                      {
+                                          {
                                           if (entry.getKey() != null && entry.getValue() != null)
                                           {
                                               info.info.put(entry.getKey(), entry.getValue().getAsString());
                                           }
-                                      });
+                                          });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
         if (arrRealms != null)
         {
             arrRealms.forEach(val ->
-                              {
+                                  {
                                   if (val != null)
                                   {
                                       info.realms.add(val.getAsString());
                                   }
-                              });
+                                  });
         }
         return info;
     }
@@ -421,15 +373,15 @@ public class JSONParser
      */
     RolloutInfo parseRolloutInfo(String serverResponse)
     {
-        RolloutInfo rinfo = new RolloutInfo();
-        rinfo.raw = serverResponse;
-        rinfo.googleurl = new RolloutInfo.GoogleURL();
-        rinfo.oathurl = new RolloutInfo.OATHURL();
-        rinfo.otpkey = new RolloutInfo.OTPKey();
+        RolloutInfo rInfo = new RolloutInfo();
+        rInfo.raw = serverResponse;
+        rInfo.googleurl = new RolloutInfo.GoogleURL();
+        rInfo.oathurl = new RolloutInfo.OATHURL();
+        rInfo.otpkey = new RolloutInfo.OTPKey();
 
         if (serverResponse == null || serverResponse.isEmpty())
         {
-            return rinfo;
+            return rInfo;
         }
 
         JsonObject obj;
@@ -442,8 +394,8 @@ public class JSONParser
             if (errElem != null && !errElem.isJsonNull())
             {
                 JsonObject errObj = result.getAsJsonObject(ERROR);
-                rinfo.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
-                return rinfo;
+                rInfo.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
+                return rInfo;
             }
 
             JsonObject detail = obj.getAsJsonObject("detail");
@@ -452,39 +404,39 @@ public class JSONParser
                 JsonObject google = detail.getAsJsonObject("googleurl");
                 if (google != null)
                 {
-                    rinfo.googleurl.description = getString(google, "description");
-                    rinfo.googleurl.img = getString(google, "img");
-                    rinfo.googleurl.value = getString(google, "value");
+                    rInfo.googleurl.description = getString(google, "description");
+                    rInfo.googleurl.img = getString(google, "img");
+                    rInfo.googleurl.value = getString(google, "value");
                 }
 
                 JsonObject oath = detail.getAsJsonObject("oath");
                 if (oath != null)
                 {
-                    rinfo.oathurl.description = getString(oath, "description");
-                    rinfo.oathurl.img = getString(oath, "img");
-                    rinfo.oathurl.value = getString(oath, "value");
+                    rInfo.oathurl.description = getString(oath, "description");
+                    rInfo.oathurl.img = getString(oath, "img");
+                    rInfo.oathurl.value = getString(oath, "value");
                 }
 
                 JsonObject otp = detail.getAsJsonObject("otpkey");
                 if (otp != null)
                 {
-                    rinfo.otpkey.description = getString(otp, "description");
-                    rinfo.otpkey.img = getString(otp, "img");
-                    rinfo.otpkey.value = getString(otp, "value");
-                    rinfo.otpkey.value_b32 = getString(otp, "value_b32");
+                    rInfo.otpkey.description = getString(otp, "description");
+                    rInfo.otpkey.img = getString(otp, "img");
+                    rInfo.otpkey.value = getString(otp, "value");
+                    rInfo.otpkey.value_b32 = getString(otp, "value_b32");
                 }
 
-                rinfo.serial = getString(detail, "serial");
-                rinfo.rolloutState = getString(detail, "rollout_state");
+                rInfo.serial = getString(detail, "serial");
+                rInfo.rolloutState = getString(detail, "rollout_state");
             }
         }
         catch (JsonSyntaxException | ClassCastException e)
         {
             privacyIDEA.error(e);
-            return rinfo;
+            return rInfo;
         }
 
-        return rinfo;
+        return rInfo;
     }
 
     /**
@@ -524,33 +476,6 @@ public class JSONParser
         {
             params.put(ASSERTIONCLIENTEXTENSIONS, extensions);
         }
-        return params;
-    }
-
-    /**
-     * Parse the json string that is returned from the browser after signing the U2FSignRequest into a map.
-     * The map contains the parameters with the corresponding keys ready to be sent to the server.
-     *
-     * @param json json string from the browser
-     * @return map
-     */
-    Map<String, String> parseU2FSignResponse(String json)
-    {
-        Map<String, String> params = new LinkedHashMap<>();
-        JsonObject obj;
-        try
-        {
-            obj = JsonParser.parseString(json).getAsJsonObject();
-        }
-        catch (JsonSyntaxException e)
-        {
-            privacyIDEA.error("U2F sign response has the wrong format: " + e.getLocalizedMessage());
-            return null;
-        }
-
-        params.put(CLIENTDATA, getString(obj, "clientData"));
-        params.put(SIGNATUREDATA, getString(obj, "signatureData"));
-
         return params;
     }
 

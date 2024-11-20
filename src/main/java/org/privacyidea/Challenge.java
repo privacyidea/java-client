@@ -21,21 +21,21 @@ import java.util.List;
 
 public class Challenge
 {
-    private final List<String> attributes = new ArrayList<>();
-    private final String serial;
-    private final String clientMode;
-    private final String message;
-    private final String transactionId;
-    private final String type;
-    private final String image;
+    protected final List<String> attributes = new ArrayList<>();
+    protected final String serial;
+    protected final String clientMode;
+    protected final String message;
+    protected final String transactionID;
+    protected final String type;
+    protected final String image;
 
-    public Challenge(String serial, String message, String clientMode, String image, String transactionId, String type)
+    public Challenge(String serial, String message, String clientMode, String image, String transactionID, String type)
     {
         this.serial = serial;
         this.message = message;
         this.clientMode = clientMode;
         this.image = image;
-        this.transactionId = transactionId;
+        this.transactionID = transactionID;
         this.type = type;
     }
 
@@ -49,7 +49,7 @@ public class Challenge
 
     public String getImage() {return image.replaceAll("\"", "");}
 
-    public String getTransactionID() {return transactionId;}
+    public String getTransactionID() {return transactionID;}
 
     public String getType() {return type;}
 }

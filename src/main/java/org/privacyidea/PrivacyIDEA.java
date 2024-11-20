@@ -18,39 +18,10 @@ package org.privacyidea;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
-import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
-import static org.privacyidea.PIConstants.ENDPOINT_TOKEN;
-import static org.privacyidea.PIConstants.ENDPOINT_TOKEN_INIT;
-import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
-import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
-import static org.privacyidea.PIConstants.GENKEY;
-import static org.privacyidea.PIConstants.GET;
-import static org.privacyidea.PIConstants.HEADER_ORIGIN;
-import static org.privacyidea.PIConstants.OTPKEY;
-import static org.privacyidea.PIConstants.PASS;
-import static org.privacyidea.PIConstants.PASSWORD;
-import static org.privacyidea.PIConstants.POST;
-import static org.privacyidea.PIConstants.REALM;
-import static org.privacyidea.PIConstants.SERIAL;
-import static org.privacyidea.PIConstants.TRANSACTION_ID;
-import static org.privacyidea.PIConstants.TYPE;
-import static org.privacyidea.PIConstants.USER;
-import static org.privacyidea.PIConstants.USERNAME;
+import static org.privacyidea.PIConstants.*;
 
 /**
  * This is the main class. It implements the common endpoints such as /validate/check as methods for easy usage.
@@ -99,9 +70,9 @@ public class PrivacyIDEA implements Closeable
     /**
      * @see PrivacyIDEA#validateCheck(String, String, String, Map)
      */
-    public PIResponse validateCheck(String username, String pass, String transactionId)
+    public PIResponse validateCheck(String username, String pass, String transactionID)
     {
-        return this.validateCheck(username, pass, transactionId, Collections.emptyMap());
+        return this.validateCheck(username, pass, transactionID, Collections.emptyMap());
     }
 
     /**
@@ -111,13 +82,13 @@ public class PrivacyIDEA implements Closeable
      *
      * @param username      username
      * @param pass          pass/otp value
-     * @param transactionId optional, will be appended if set
+     * @param transactionID optional, will be appended if set
      * @param headers       optional headers for the request
      * @return PIResponse object containing the response or null if error
      */
-    public PIResponse validateCheck(String username, String pass, String transactionId, Map<String, String> headers)
+    public PIResponse validateCheck(String username, String pass, String transactionID, Map<String, String> headers)
     {
-        return getPIResponse(USER, username, pass, headers, transactionId);
+        return getPIResponse(USER, username, pass, headers, transactionID);
     }
 
     /**
@@ -139,9 +110,9 @@ public class PrivacyIDEA implements Closeable
     /**
      * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
      */
-    public PIResponse validateCheckSerial(String serial, String pass, String transactionId)
+    public PIResponse validateCheckSerial(String serial, String pass, String transactionID)
     {
-        return this.validateCheckSerial(serial, pass, transactionId, Collections.emptyMap());
+        return this.validateCheckSerial(serial, pass, transactionID, Collections.emptyMap());
     }
 
     /**
@@ -149,12 +120,12 @@ public class PrivacyIDEA implements Closeable
      *
      * @param serial        serial of the token
      * @param pass          pass/otp value
-     * @param transactionId transactionId
+     * @param transactionID transaction ID
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckSerial(String serial, String pass, String transactionId, Map<String, String> headers)
+    public PIResponse validateCheckSerial(String serial, String pass, String transactionID, Map<String, String> headers)
     {
-        return getPIResponse(SERIAL, serial, pass, headers, transactionId);
+        return getPIResponse(SERIAL, serial, pass, headers, transactionID);
     }
 
     /**
@@ -164,19 +135,19 @@ public class PrivacyIDEA implements Closeable
      * @param input         forwarded username for classic validateCheck or serial to trigger exact token
      * @param pass          OTP, PIN+OTP or password to use
      * @param headers       optional headers for the request
-     * @param transactionId optional, will be appended if set
+     * @param transactionID optional, will be appended if set
      * @return PIResponse object containing the response or null if error
      */
-    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionId)
+    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionID)
     {
         Map<String, String> params = new LinkedHashMap<>();
         // Add forwarded user or serial to the params
         params.put(type, input);
         params.put(PASS, (pass != null ? pass : ""));
         appendRealm(params);
-        if (transactionId != null && !transactionId.isEmpty())
+        if (transactionID != null && !transactionID.isEmpty())
         {
-            params.put(TRANSACTION_ID, transactionId);
+            params.put(TRANSACTION_ID, transactionID);
         }
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return this.parser.parsePIResponse(response);
@@ -185,27 +156,28 @@ public class PrivacyIDEA implements Closeable
     /**
      * @see PrivacyIDEA#validateCheckWebAuthn(String, String, String, String, Map)
      */
-    public PIResponse validateCheckWebAuthn(String user, String transactionId, String signResponse, String origin)
+    public PIResponse validateCheckWebAuthn(String user, String transactionID, String signResponse, String origin)
     {
-        return this.validateCheckWebAuthn(user, transactionId, signResponse, origin, Collections.emptyMap());
+        return this.validateCheckWebAuthn(user, transactionID, signResponse, origin, Collections.emptyMap());
     }
 
     /**
      * Sends a request to /validate/check with the data required to authenticate a WebAuthn token.
      *
      * @param user                 username
-     * @param transactionId        transactionId
+     * @param transactionID        transaction ID
      * @param webAuthnSignResponse the WebAuthnSignResponse as returned from the browser
      * @param origin               server name that was used for
      * @param headers              optional headers for the request
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckWebAuthn(String user, String transactionId, String webAuthnSignResponse, String origin, Map<String, String> headers)
+    public PIResponse validateCheckWebAuthn(String user, String transactionID, String webAuthnSignResponse, String origin,
+                                            Map<String, String> headers)
     {
         Map<String, String> params = new LinkedHashMap<>();
         // Standard validateCheck data
         params.put(USER, user);
-        params.put(TRANSACTION_ID, transactionId);
+        params.put(TRANSACTION_ID, transactionID);
         params.put(PASS, "");
         appendRealm(params);
 
@@ -218,39 +190,6 @@ public class PrivacyIDEA implements Closeable
         hdrs.putAll(headers);
 
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
-        return this.parser.parsePIResponse(response);
-    }
-
-    /**
-     * @see PrivacyIDEA#validateCheckU2F(String, String, String, Map)
-     */
-    public PIResponse validateCheckU2F(String user, String transactionId, String signResponse)
-    {
-        return this.validateCheckU2F(user, transactionId, signResponse, Collections.emptyMap());
-    }
-
-    /**
-     * Sends a request to /validate/check with the data required to authenticate a U2F token.
-     *
-     * @param user            username
-     * @param transactionId   transactionId
-     * @param u2fSignResponse the U2F Sign Response as returned from the browser
-     * @return PIResponse or null if error
-     */
-    public PIResponse validateCheckU2F(String user, String transactionId, String u2fSignResponse, Map<String, String> headers)
-    {
-        Map<String, String> params = new LinkedHashMap<>();
-        // Standard validateCheck data
-        params.put(USER, user);
-        params.put(TRANSACTION_ID, transactionId);
-        params.put(PASS, "");
-        appendRealm(params);
-
-        // Additional U2F data
-        Map<String, String> u2fParams = parser.parseU2FSignResponse(u2fSignResponse);
-        params.putAll(u2fParams);
-
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -289,15 +228,17 @@ public class PrivacyIDEA implements Closeable
     /**
      * Poll for status of the given transaction ID once.
      *
-     * @param transactionId transaction ID to poll for
+     * @param transactionID transaction ID to poll for
      * @return the status value, true or false
      */
-    public boolean pollTransaction(String transactionId)
+    public boolean pollTransaction(String transactionID)
     {
-        Objects.requireNonNull(transactionId, "TransactionID is required!");
+        Objects.requireNonNull(transactionID, "TransactionID is required!");
 
-        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionId), Collections.emptyMap(),
-                                          false, GET);
+        String
+                response =
+                runRequestAsync(ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionID), Collections.emptyMap(),
+                                false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
         return piresponse.value;
     }
@@ -426,8 +367,13 @@ public class PrivacyIDEA implements Closeable
      * @param method            http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired, String method)
+    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
+                                   String method)
     {
+        if (!configuration.forwardClientIP.isEmpty())
+        {
+            params.put(CLIENT_IP,configuration.forwardClientIP);
+        }
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
         String response = null;
@@ -458,9 +404,13 @@ public class PrivacyIDEA implements Closeable
         this.logExcludedEndpoints = list;
     }
 
+    /**
+     * @return true if a service account is available
+     */
     public boolean serviceAccountAvailable()
     {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() && configuration.serviceAccountPass != null &&
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
+               && configuration.serviceAccountPass != null &&
                !configuration.serviceAccountPass.isEmpty();
     }
 
@@ -484,7 +434,7 @@ public class PrivacyIDEA implements Closeable
             }
             else if (this.simpleLog != null)
             {
-                this.simpleLog.pilog(message);
+                this.simpleLog.piLog(message);
             }
             else
             {
@@ -508,7 +458,7 @@ public class PrivacyIDEA implements Closeable
             }
             else if (this.simpleLog != null)
             {
-                this.simpleLog.pilog(e.getMessage());
+                this.simpleLog.piLog(e.getMessage());
             }
             else
             {
@@ -532,7 +482,7 @@ public class PrivacyIDEA implements Closeable
             }
             else if (this.simpleLog != null)
             {
-                this.simpleLog.pilog(message);
+                this.simpleLog.piLog(message);
             }
             else
             {
@@ -556,7 +506,7 @@ public class PrivacyIDEA implements Closeable
             }
             else if (this.simpleLog != null)
             {
-                this.simpleLog.pilog(e.getMessage());
+                this.simpleLog.piLog(e.getMessage());
             }
             else
             {
@@ -588,14 +538,17 @@ public class PrivacyIDEA implements Closeable
         private final String serverURL;
         private final String userAgent;
         private String realm = "";
-        private boolean doSSLVerify = true;
+        private boolean verifySSL = true;
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
+        private String forwardClientIP = "";
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
         private int httpTimeoutMs = 30000;
+        private String proxyHost = "";
+        private int proxyPort = 0;
 
         /**
          * @param serverURL the server URL is mandatory to communicate with privacyIDEA.
@@ -649,12 +602,12 @@ public class PrivacyIDEA implements Closeable
          * Set whether to verify the peer when connecting.
          * It is not recommended to set this to false in productive environments.
          *
-         * @param sslVerify boolean
+         * @param verifySSL boolean
          * @return Builder
          */
-        public Builder sslVerify(boolean sslVerify)
+        public Builder verifySSL(boolean verifySSL)
         {
-            this.doSSLVerify = sslVerify;
+            this.verifySSL = verifySSL;
             return this;
         }
 
@@ -685,6 +638,18 @@ public class PrivacyIDEA implements Closeable
         }
 
         /**
+         * Set the client IP to be forwarded to the privacyIDEA server.
+         *
+         * @param clientIP client IP or an empty String
+         * @return Builder
+         */
+        public Builder forwardClientIP(String clientIP)
+        {
+            this.forwardClientIP = clientIP;
+            return this;
+        }
+
+        /**
          * Disable logging completely regardless of any set loggers.
          *
          * @return Builder
@@ -697,6 +662,7 @@ public class PrivacyIDEA implements Closeable
 
         /**
          * Set the timeout for http requests in milliseconds.
+         *
          * @param httpTimeoutMs timeout in milliseconds
          * @return Builder
          */
@@ -706,16 +672,37 @@ public class PrivacyIDEA implements Closeable
             return this;
         }
 
+        /**
+         * Set the proxy for the http requests.
+         *
+         * @param proxyHost proxy host
+         * @param proxyPort proxy port
+         * @return Builder
+         */
+        public Builder proxy(String proxyHost, int proxyPort)
+        {
+            this.proxyHost = proxyHost;
+            this.proxyPort = proxyPort;
+            return this;
+        }
+
+        /**
+         * Build the PrivacyIDEA instance with the set parameters.
+         *
+         * @return PrivacyIDEA instance
+         */
         public PrivacyIDEA build()
         {
             PIConfig configuration = new PIConfig(serverURL, userAgent);
             configuration.realm = realm;
-            configuration.doSSLVerify = doSSLVerify;
+            configuration.verifySSL = verifySSL;
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.serviceAccountRealm = serviceAccountRealm;
+            configuration.forwardClientIP = forwardClientIP;
             configuration.disableLog = disableLog;
             configuration.httpTimeoutMs = httpTimeoutMs;
+            configuration.setProxy(proxyHost, proxyPort);
             return new PrivacyIDEA(configuration, logger, simpleLogBridge);
         }
     }

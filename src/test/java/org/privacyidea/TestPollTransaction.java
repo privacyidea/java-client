@@ -44,7 +44,7 @@ public class TestPollTransaction
         mockServer = ClientAndServer.startClientAndServer(1080);
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .sslVerify(false)
+                                 .verifySSL(false)
                                  .logger(new PILogImplementation())
                                  .simpleLogger(System.out::println)
                                  .build();
@@ -67,7 +67,7 @@ public class TestPollTransaction
         PIResponse initialResponse = privacyIDEA.validateCheck(username, null);
 
         // Check the triggered challenges - the other things are already tested in org.privacyidea.TestOTP
-        List<Challenge> challenges = initialResponse.multichallenge;
+        List<Challenge> challenges = initialResponse.multiChallenge;
 
         Challenge hotpChallenge = challenges.stream()
                                             .filter(c -> c.getSerial().equals("OATH00020121"))

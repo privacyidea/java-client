@@ -16,28 +16,23 @@
  */
 package org.privacyidea;
 
+import okhttp3.*;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
-import static org.privacyidea.PIConstants.GET;
-import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
-import static org.privacyidea.PIConstants.POST;
-import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
+import static org.privacyidea.PIConstants.*;
 
 /**
  * This class handles sending requests to the server.
@@ -45,7 +40,7 @@ import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 class Endpoint
 {
     private final PrivacyIDEA privacyIDEA;
-    private final PIConfig piconfig;
+    private final PIConfig piConfig;
     private final OkHttpClient client;
 
     final TrustManager[] trustAllManager = new TrustManager[]{new X509TrustManager()
@@ -70,14 +65,14 @@ class Endpoint
     Endpoint(PrivacyIDEA privacyIDEA)
     {
         this.privacyIDEA = privacyIDEA;
-        this.piconfig = privacyIDEA.configuration();
+        this.piConfig = privacyIDEA.configuration();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.connectTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
-               .writeTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
-               .readTimeout(piconfig.httpTimeoutMs, TimeUnit.MILLISECONDS);
+        builder.connectTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .writeTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               .readTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS);
 
-        if (!this.piconfig.doSSLVerify)
+        if (!this.piConfig.verifySSL)
         {
             // Trust all certs and verify every host
             try
@@ -93,6 +88,13 @@ class Endpoint
                 privacyIDEA.error(e);
             }
         }
+
+        if (!piConfig.proxyHost.isEmpty())
+        {
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(piConfig.proxyHost, piConfig.proxyPort));
+            builder.proxy(proxy);
+        }
+
         this.client = builder.build();
     }
 
@@ -105,36 +107,39 @@ class Endpoint
      * @param method   http request method
      * @param callback okhttp3 callback
      */
-    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method,
-                          Callback callback)
+    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback)
     {
-        HttpUrl httpUrl = HttpUrl.parse(piconfig.serverURL + endpoint);
+        HttpUrl httpUrl = HttpUrl.parse(piConfig.serverURL + endpoint);
         if (httpUrl == null)
         {
-            privacyIDEA.error("Server url could not be parsed: " + (piconfig.serverURL + endpoint));
+            privacyIDEA.error("Server url could not be parsed: " + (piConfig.serverURL + endpoint));
             // Invoke the callback to terminate the thread that called this function.
             callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
+        if (!piConfig.forwardClientIP.isEmpty())
+        {
+            privacyIDEA.log("Forwarding client IP: " + piConfig.forwardClientIP);
+            params.put(CLIENT_IP, piConfig.forwardClientIP);
+        }
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
-                       {
+                           {
                            if (k.equals("pass") || k.equals("password"))
                            {
                                v = "*".repeat(v.length());
                            }
-
                            privacyIDEA.log(k + "=" + v);
-                       });
+                           });
 
         if (GET.equals(method))
         {
             params.forEach((key, value) ->
-                           {
+                               {
                                String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
                                urlBuilder.addQueryParameter(key, encValue);
-                           });
+                               });
         }
 
         String url = urlBuilder.build().toString();
@@ -142,7 +147,7 @@ class Endpoint
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
         // Add the headers
-        requestBuilder.addHeader(HEADER_USER_AGENT, piconfig.userAgent);
+        requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.userAgent);
         if (headers != null && !headers.isEmpty())
         {
             headers.forEach(requestBuilder::addHeader);
@@ -152,7 +157,7 @@ class Endpoint
         {
             FormBody.Builder formBodyBuilder = new FormBody.Builder();
             params.forEach((key, value) ->
-                           {
+                               {
                                if (key != null && value != null)
                                {
                                    String encValue = value;
@@ -164,7 +169,7 @@ class Endpoint
                                    }
                                    formBodyBuilder.add(key, encValue);
                                }
-                           });
+                               });
             // This switches okhttp to make a post request
             requestBuilder.post(formBodyBuilder.build());
         }

@@ -42,11 +42,7 @@ public class PIConstants
 
     // TOKEN TYPES
     public static final String TOKEN_TYPE_PUSH = "push";
-    public static final String TOKEN_TYPE_OTP = "otp";
-    public static final String TOKEN_TYPE_TOTP = "totp";
-    public static final String TOKEN_TYPE_HOTP = "hotp";
     public static final String TOKEN_TYPE_WEBAUTHN = "webauthn";
-    public static final String TOKEN_TYPE_U2F = "u2f";
 
     // JSON KEYS
     public static final String USERNAME = "username";
@@ -68,6 +64,7 @@ public class PIConstants
     public static final String MESSAGE = "message";
     public static final String CLIENT_MODE = "client_mode";
     public static final String IMAGE = "image";
+    public static final String CLIENT_IP = "client";
     public static final String MESSAGES = "messages";
     public static final String MULTI_CHALLENGE = "multi_challenge";
     public static final String ATTRIBUTES = "attributes";
@@ -83,17 +80,8 @@ public class PIConstants
     public static final String ID = "id";
     public static final String MAXFAIL = "maxfail";
     public static final String INFO = "info";
-    public static final String LOCKED = "locked";
-    public static final String FAILCOUNT = "failcount";
-    public static final String DESCRIPTION = "description";
-    public static final String COUNT = "count";
-    public static final String COUNT_WINDOW = "count_window";
-    public static final String ACTIVE = "active";
-    public static final String RESOLVER = "resolver";
-    public static final String REVOKED = "revoked";
-    public static final String SYNC_WINDOW = "sync_window";
 
-    // WebAuthn and U2F params
+    // WebAuthn params
     public static final String WEBAUTHN_SIGN_REQUEST = "webAuthnSignRequest";
     public static final String CREDENTIALID = "credentialid";
     public static final String CLIENTDATA = "clientdata";
@@ -101,12 +89,11 @@ public class PIConstants
     public static final String AUTHENTICATORDATA = "authenticatordata";
     public static final String USERHANDLE = "userhandle";
     public static final String ASSERTIONCLIENTEXTENSIONS = "assertionclientextensions";
-    public static final String U2F_SIGN_REQUEST = "u2fSignRequest";
 
 
     // These will be excluded from url encoding
-    public static final List<String> WEBAUTHN_PARAMETERS = Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE,
-                                                                         ASSERTIONCLIENTEXTENSIONS);
-    public static final List<String> U2F_PARAMETERS = Arrays.asList(CLIENTDATA, SIGNATUREDATA);
-
+    public static final List<String>
+            WEBAUTHN_PARAMETERS =
+            Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE,
+                          ASSERTIONCLIENTEXTENSIONS);
 }
