@@ -235,10 +235,9 @@ public class PrivacyIDEA implements Closeable
     {
         Objects.requireNonNull(transactionID, "TransactionID is required!");
 
-        String
-                response =
-                runRequestAsync(ENDPOINT_POLLTRANSACTION, Collections.singletonMap(TRANSACTION_ID, transactionID), Collections.emptyMap(),
-                                false, GET);
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(TRANSACTION_ID, transactionID);
+        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
         return piresponse.value;
     }
@@ -290,8 +289,9 @@ public class PrivacyIDEA implements Closeable
             error("Cannot retrieve token info without service account!");
             return null;
         }
-
-        String response = runRequestAsync(ENDPOINT_TOKEN, Collections.singletonMap(USER, username), new LinkedHashMap<>(), true, GET);
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(USER, username);
+        String response = runRequestAsync(ENDPOINT_TOKEN, params, new LinkedHashMap<>(), true, GET);
         return parser.parseTokenInfoList(response);
     }
 
@@ -372,7 +372,7 @@ public class PrivacyIDEA implements Closeable
     {
         if (!configuration.forwardClientIP.isEmpty())
         {
-            params.put(CLIENT_IP,configuration.forwardClientIP);
+            params.put(CLIENT_IP, configuration.forwardClientIP);
         }
         Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
         Future<String> future = threadPool.submit(callable);
