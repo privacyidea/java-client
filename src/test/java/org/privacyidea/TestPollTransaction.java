@@ -166,9 +166,9 @@ public class TestPollTransaction
                                    .withPath("/validate/polltransaction")
                                    .withQueryStringParameter("transaction_id", "02659936574063359702"), Times.exactly(times))
                   .respond(HttpResponse.response()
-                                       .withBody("{\n\"  id\": 1,\n\"  jsonrpc\": \"2.0\",\n" + challengeStatusParameter +
-                                                 "  \"result\": {\n    \"status\": true\n  },\n  \"time\": 1589446811.1909237,\n  \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "  \"versionnumber\": \"3.2.1\",\n  \"signature\": \"rsa_sha256_pss:\"\n}")
+                                       .withBody("{\n\"id\": 1,\n\"jsonrpc\": \"2.0\",\n" + challengeStatusParameter +
+                                                 "\"result\": {\n\"status\": true\n},\n\"time\": 1589446811.1909237,\n\"version\": \"privacyIDEA 3.2.1\",\n" +
+                                                 "\"versionnumber\": \"3.2.1\",\n\"signature\": \"rsa_sha256_pss:\"\n}")
                                        .withDelay(TimeUnit.MILLISECONDS, 50));
     }
 
@@ -177,21 +177,20 @@ public class TestPollTransaction
         String challengeStatusParameter = "";
         if (challengeStatus == ChallengeStatus.accept)
         {
-            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"accept\"\n  },\n";
+            challengeStatusParameter = "\"detail\": {\n\"challenge_status\": \"accept\"\n},\n";
         }
         else if (challengeStatus == ChallengeStatus.declined)
         {
-            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"declined\"\n  },\n";
+            challengeStatusParameter = "\"detail\": {\n\"challenge_status\": \"declined\"\n},\n";
 
         }
         else if (challengeStatus == ChallengeStatus.pending)
         {
-            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"pending\"\n  },\n";
+            challengeStatusParameter = "\"detail\": {\n\"challenge_status\": \"pending\"\n},\n";
         }
         return challengeStatusParameter;
     }
-
-
+    
     @After
     public void tearDown()
     {
