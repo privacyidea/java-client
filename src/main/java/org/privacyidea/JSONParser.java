@@ -174,6 +174,15 @@ public class JSONParser
             response.type = getString(detail, TYPE);
             response.otpLength = getInt(detail, OTPLEN);
 
+            String r = getString(detail, CHALLENGE_STATUS);
+            for (ChallengeStatus en : ChallengeStatus.values())
+            {
+                if (en.toString().equals(r))
+                {
+                    response.challengeStatus = en;
+                }
+            }
+
             JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
             if (arrMessages != null)
             {
