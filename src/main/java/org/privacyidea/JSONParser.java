@@ -129,11 +129,11 @@ public class JSONParser
         if (result != null)
         {
             String r = getString(result, AUTHENTICATION);
-            for (AuthenticationStatus en : AuthenticationStatus.values())
+            for (AuthenticationStatus as: AuthenticationStatus.values())
             {
-                if (en.toString().equals(r))
+                if (as.toString().equals(r))
                 {
-                    response.authentication = en;
+                    response.authentication = as;
                 }
             }
             response.status = getBoolean(result, STATUS);
@@ -173,6 +173,15 @@ public class JSONParser
             response.transactionID = getString(detail, TRANSACTION_ID);
             response.type = getString(detail, TYPE);
             response.otpLength = getInt(detail, OTPLEN);
+
+            String r = getString(detail, CHALLENGE_STATUS);
+            for (ChallengeStatus cs: ChallengeStatus.values())
+            {
+                if (cs.toString().equals(r))
+                {
+                    response.challengeStatus = cs;
+                }
+            }
 
             JsonArray arrMessages = detail.getAsJsonArray(MESSAGES);
             if (arrMessages != null)

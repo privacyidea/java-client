@@ -229,9 +229,9 @@ public class PrivacyIDEA implements Closeable
      * Poll for status of the given transaction ID once.
      *
      * @param transactionID transaction ID to poll for
-     * @return the status value, true or false
+     * @return the challenge status or "ChallengeStatus.none" if error
      */
-    public boolean pollTransaction(String transactionID)
+    public ChallengeStatus pollTransaction(String transactionID)
     {
         Objects.requireNonNull(transactionID, "TransactionID is required!");
 
@@ -239,7 +239,7 @@ public class PrivacyIDEA implements Closeable
         params.put(TRANSACTION_ID, transactionID);
         String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
-        return piresponse.value;
+        return piresponse.challengeStatus;
     }
 
     /**
