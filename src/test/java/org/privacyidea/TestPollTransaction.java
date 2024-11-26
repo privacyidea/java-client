@@ -18,6 +18,8 @@ package org.privacyidea;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,19 +113,27 @@ public class TestPollTransaction
 
         assertEquals(2, initialResponse.messages.size());
 
-        // Set the server up to respond to the polling requests twice with false
-        setPollTransactionResponse(false, 2);
+        // Set the server up to respond to the polling requests twice with "pending"
+        setPollTransactionResponse(ChallengeStatus.pending, 2);
 
-        // Polling is controlled by the code using the sdk
+        // Polling is controlled by the code using the java-client
         for (int i = 0; i < 2; i++)
         {
-            assertFalse(privacyIDEA.pollTransaction(initialResponse.transactionID));
+            assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.pending);
             Thread.sleep(500);
         }
 
-        // Set the server to respond with true
-        setPollTransactionResponse(true, 1);
-        assertTrue(privacyIDEA.pollTransaction(initialResponse.transactionID));
+        // Set the server to respond with "declined"
+        setPollTransactionResponse(ChallengeStatus.declined, 1);
+        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.declined);
+
+        // Set the server to respond with "accept"
+        setPollTransactionResponse(ChallengeStatus.accept, 1);
+        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.accept);
+
+        // Set the server to respond with "none" by not including or invalid challenge_status parameter
+        setPollTransactionResponse(ChallengeStatus.none, 1);
+        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.none);
 
         // Now the transaction has to be finalized manually
         setFinalizationResponse(initialResponse.transactionID);
@@ -148,22 +158,37 @@ public class TestPollTransaction
                                        .withBody(Utils.foundMatchingChallenge()));
     }
 
-    private void setPollTransactionResponse(boolean value, int times)
+    private void setPollTransactionResponse(ChallengeStatus challengeStatus, int times)
     {
-        String val = value ? "true" : "false";
+        String challengeStatusParameter = getChallengeStatusParameter(challengeStatus);
         mockServer.when(HttpRequest.request()
                                    .withMethod("GET")
                                    .withPath("/validate/polltransaction")
                                    .withQueryStringParameter("transaction_id", "02659936574063359702"), Times.exactly(times))
                   .respond(HttpResponse.response()
-                                       .withBody("{\n" + "    \"id\": 1,\n" + "    \"jsonrpc\": \"2.0\",\n" +
-                                                 "    \"result\": {\n" + "        \"status\": true,\n" +
-                                                 "        \"value\": " + val + "\n" + "    },\n" +
-                                                 "    \"time\": 1589446811.1909237,\n" +
-                                                 "    \"version\": \"privacyIDEA 3.2.1\",\n" +
-                                                 "    \"versionnumber\": \"3.2.1\",\n" +
-                                                 "    \"signature\": \"rsa_sha256_pss:\"\n" + "}")
+                                       .withBody("{\n\"  id\": 1,\n\"  jsonrpc\": \"2.0\",\n" + challengeStatusParameter +
+                                                 "  \"result\": {\n    \"status\": true\n  },\n  \"time\": 1589446811.1909237,\n  \"version\": \"privacyIDEA 3.2.1\",\n" +
+                                                 "  \"versionnumber\": \"3.2.1\",\n  \"signature\": \"rsa_sha256_pss:\"\n}")
                                        .withDelay(TimeUnit.MILLISECONDS, 50));
+    }
+
+    private static @NotNull String getChallengeStatusParameter(ChallengeStatus challengeStatus)
+    {
+        String challengeStatusParameter = "";
+        if (challengeStatus == ChallengeStatus.accept)
+        {
+            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"accept\"\n  },\n";
+        }
+        else if (challengeStatus == ChallengeStatus.declined)
+        {
+            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"declined\"\n  },\n";
+
+        }
+        else if (challengeStatus == ChallengeStatus.pending)
+        {
+            challengeStatusParameter = "  \"detail\": {\n    \"challenge_status\": \"pending\"\n  },\n";
+        }
+        return challengeStatusParameter;
     }
 
 
