@@ -129,11 +129,11 @@ public class JSONParser
         if (result != null)
         {
             String r = getString(result, AUTHENTICATION);
-            for (AuthenticationStatus en : AuthenticationStatus.values())
+            for (AuthenticationStatus as: AuthenticationStatus.values())
             {
-                if (en.toString().equals(r))
+                if (as.toString().equals(r))
                 {
-                    response.authentication = en;
+                    response.authentication = as;
                 }
             }
             response.status = getBoolean(result, STATUS);
@@ -175,11 +175,11 @@ public class JSONParser
             response.otpLength = getInt(detail, OTPLEN);
 
             String r = getString(detail, CHALLENGE_STATUS);
-            for (ChallengeStatus en : ChallengeStatus.values())
+            for (ChallengeStatus cs: ChallengeStatus.values())
             {
-                if (en.toString().equals(r))
+                if (cs.toString().equals(r))
                 {
-                    response.challengeStatus = en;
+                    response.challengeStatus = cs;
                 }
             }
 
