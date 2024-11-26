@@ -239,19 +239,7 @@ public class PrivacyIDEA implements Closeable
         params.put(TRANSACTION_ID, transactionID);
         String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
-        if (piresponse.challengeStatus == ChallengeStatus.pending)
-        {
-            return ChallengeStatus.pending;
-        }
-        else if (piresponse.challengeStatus == ChallengeStatus.accept)
-        {
-            return ChallengeStatus.accept;
-        }
-        else if (piresponse.challengeStatus == ChallengeStatus.declined)
-        {
-            return ChallengeStatus.declined;
-        }
-        return ChallengeStatus.none;
+        return piresponse.challengeStatus;
     }
 
     /**
