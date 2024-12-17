@@ -18,10 +18,7 @@ package org.privacyidea;
 
 import com.google.gson.*;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.privacyidea.PIConstants.*;
 
@@ -78,11 +75,23 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    String authToken = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    var parts = authToken.split("\\.");
+                    String dec = new String(Base64.getDecoder().decode(parts[1]));
+
+                    // Extract the expiration date from the token
+                    int respDate = obj.getAsJsonPrimitive("time").getAsInt();
+                    int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive("exp").getAsInt();
+                    int difference = expDate - respDate;
+                    privacyIDEA.error("Authentication token valid time: " + difference / 60 + " minutes");
+
+                    //return new AuthToken(authToken, partsList.stream().filter(s -> s.contains("exp")).findFirst().orElse(""));
+                    return authToken;
                 }
                 catch (Exception e)
                 {
-                    privacyIDEA.error("Response did not contain an authorization token: " + formatJson(serverResponse));
+                    //privacyIDEA.error("Response did not contain an authorization token: " + formatJson(serverResponse));
+                    privacyIDEA.error("Auth token extraction failed: " + e);
                 }
             }
         }
@@ -129,7 +138,7 @@ public class JSONParser
         if (result != null)
         {
             String r = getString(result, AUTHENTICATION);
-            for (AuthenticationStatus as: AuthenticationStatus.values())
+            for (AuthenticationStatus as : AuthenticationStatus.values())
             {
                 if (as.toString().equals(r))
                 {
@@ -175,7 +184,7 @@ public class JSONParser
             response.otpLength = getInt(detail, OTPLEN);
 
             String r = getString(detail, CHALLENGE_STATUS);
-            for (ChallengeStatus cs: ChallengeStatus.values())
+            for (ChallengeStatus cs : ChallengeStatus.values())
             {
                 if (cs.toString().equals(r))
                 {
