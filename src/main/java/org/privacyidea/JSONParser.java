@@ -18,7 +18,6 @@ package org.privacyidea;
 
 import com.google.gson.*;
 
-import java.io.Serializable;
 import java.util.*;
 
 import static org.privacyidea.PIConstants.*;
