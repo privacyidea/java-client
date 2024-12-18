@@ -33,9 +33,12 @@ public class PrivacyIDEA implements Closeable
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
+    private String authToken = null;
     // Thread pool for connections
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
     private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final CountDownLatch authTokenLatch = new CountDownLatch(1);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -49,6 +52,10 @@ public class PrivacyIDEA implements Closeable
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
         this.threadPool.allowCoreThreadTimeOut(true);
+        if (serviceAccountAvailable())
+        {
+            retrieveAuthToken();
+        }
     }
 
     /**
@@ -243,21 +250,10 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * Get the auth token from the /auth endpoint using the service account.
+     * Get the service account parameters.
      *
-     * @return auth token or null.
+     * @return map with username and password.
      */
-    public String getAuthToken()
-    {
-        if (!serviceAccountAvailable())
-        {
-            error("Cannot retrieve auth token without service account!");
-            return null;
-        }
-        String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
-        return parser.extractAuthToken(response);
-    }
-
     Map<String, String> serviceAccountParam()
     {
         Map<String, String> authTokenParams = new LinkedHashMap<>();
@@ -348,12 +344,58 @@ public class PrivacyIDEA implements Closeable
         return parser.parseRolloutInfo(response);
     }
 
+    /**
+     * Append the realm to the parameters if it is set.
+     *
+     * @param params parameters
+     */
     private void appendRealm(Map<String, String> params)
     {
         if (configuration.realm != null && !configuration.realm.isEmpty())
         {
             params.put(REALM, configuration.realm);
         }
+    }
+
+    /**
+     * Retrieve the auth token from the /auth endpoint and schedule the next retrieval.
+     */
+    private void retrieveAuthToken()
+    {
+        String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
+        LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
+        this.authToken = authTokenMap.get(AUTH_TOKEN);
+        int authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
+
+        // Schedule the next token retrieval to 1 min before expiration
+        long delay = authTokenExp - 60 - System.currentTimeMillis() / 1000L;
+        scheduler.schedule(this::retrieveAuthToken, delay, TimeUnit.SECONDS);
+
+        // Count down the latch to indicate that the token is retrieved
+        authTokenLatch.countDown();
+    }
+
+    /**
+     * Get the auth token from the /auth endpoint using the service account.
+     *
+     * @return auth token or null.
+     * @throws InterruptedException if the thread is interrupted while waiting for the auth token.
+     */
+    public String getAuthToken() throws InterruptedException
+    {
+        // Wait for the auth token to be retrieved
+        authTokenLatch.await();
+        return this.authToken;
+    }
+
+    /**
+     * @return true if a service account is available
+     */
+    public boolean serviceAccountAvailable()
+    {
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
+               && configuration.serviceAccountPass != null &&
+               !configuration.serviceAccountPass.isEmpty();
     }
 
     /**
@@ -389,6 +431,14 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
+     * @return the configuration of this instance
+     */
+    PIConfig configuration()
+    {
+        return configuration;
+    }
+
+    /**
      * @return list of endpoints for which the response is not printed
      */
     public List<String> logExcludedEndpoints()
@@ -402,21 +452,6 @@ public class PrivacyIDEA implements Closeable
     public void logExcludedEndpoints(List<String> list)
     {
         this.logExcludedEndpoints = list;
-    }
-
-    /**
-     * @return true if a service account is available
-     */
-    public boolean serviceAccountAvailable()
-    {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
-               && configuration.serviceAccountPass != null &&
-               !configuration.serviceAccountPass.isEmpty();
-    }
-
-    PIConfig configuration()
-    {
-        return configuration;
     }
 
     /**
@@ -519,6 +554,7 @@ public class PrivacyIDEA implements Closeable
     public void close() throws IOException
     {
         this.threadPool.shutdown();
+        this.scheduler.shutdown();
     }
 
     /**
@@ -533,6 +569,9 @@ public class PrivacyIDEA implements Closeable
         return new Builder(serverURL, userAgent);
     }
 
+    /**
+     * Builder class to create a PrivacyIDEA instance.
+     */
     public static class Builder
     {
         private final String serverURL;
