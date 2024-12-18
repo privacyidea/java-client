@@ -51,6 +51,8 @@ public class PIConstants
     public static final String PASS = "pass";
     public static final String SERIAL = "serial";
     public static final String CHALLENGE_STATUS = "challenge_status";
+    public static final String AUTH_TOKEN = "authToken";
+    public static final String AUTH_TOKEN_EXP = "authTokenExp";
     public static final String TYPE = "type";
     public static final String TRANSACTION_ID = "transaction_id";
     public static final String REALM = "realm";
