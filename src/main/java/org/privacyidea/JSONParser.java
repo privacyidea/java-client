@@ -80,8 +80,8 @@ public class JSONParser
                     String dec = new String(Base64.getDecoder().decode(parts[1]));
 
                     // Extract the expiration date from the token
-                    int respDate = obj.getAsJsonPrimitive("time").getAsInt();
-                    int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive("exp").getAsInt();
+                    int respDate = obj.getAsJsonPrimitive(TIME).getAsInt();
+                    int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
                     int difference = expDate - respDate;
                     privacyIDEA.log("Authentication token expires in " + difference / 60 + " minutes.");
 
