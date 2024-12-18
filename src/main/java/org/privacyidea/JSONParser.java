@@ -18,6 +18,7 @@ package org.privacyidea;
 
 import com.google.gson.*;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static org.privacyidea.PIConstants.*;
@@ -63,9 +64,9 @@ public class JSONParser
      * Extract the auth token from the response of the server.
      *
      * @param serverResponse response of the server
-     * @return the auth token or null if error
+     * @return the AuthToken obj or null if error
      */
-    String extractAuthToken(String serverResponse)
+    LinkedHashMap<String, String> extractAuthToken(String serverResponse)
     {
         if (serverResponse != null && !serverResponse.isEmpty())
         {
@@ -83,10 +84,9 @@ public class JSONParser
                     int respDate = obj.getAsJsonPrimitive("time").getAsInt();
                     int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive("exp").getAsInt();
                     int difference = expDate - respDate;
-                    privacyIDEA.error("Authentication token valid time: " + difference / 60 + " minutes");
+                    privacyIDEA.error("Authentication token validity duration: " + difference / 60 + " minutes.");
 
-                    //return new AuthToken(authToken, partsList.stream().filter(s -> s.contains("exp")).findFirst().orElse(""));
-                    return authToken;
+                    return new LinkedHashMap<>(Map.of(AUTH_TOKEN, authToken, AUTH_TOKEN_EXP, String.valueOf(difference)));
                 }
                 catch (Exception e)
                 {
