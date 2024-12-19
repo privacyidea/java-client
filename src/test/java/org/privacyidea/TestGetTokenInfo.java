@@ -56,7 +56,7 @@ public class TestGetTokenInfo
     }
 
     @Test
-    public void testSuccess()
+    public void testSuccess() throws InterruptedException
     {
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_AUTH)
@@ -115,7 +115,7 @@ public class TestGetTokenInfo
     }
 
     @Test
-    public void testNoServiceAccount()
+    public void testNoServiceAccount() throws InterruptedException
     {
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").verifySSL(false).logger(new PILogImplementation()).build();
 
