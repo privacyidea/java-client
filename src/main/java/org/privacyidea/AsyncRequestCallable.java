@@ -22,7 +22,6 @@ import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -63,32 +62,8 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         // If an auth token is required for the request, get that first then do the actual request
         if (this.authTokenRequired)
         {
-            if (!privacyIDEA.serviceAccountAvailable())
-            {
-                privacyIDEA.error("Service account is required to retrieve auth token!");
-                return null;
-            }
-            latch = new CountDownLatch(1);
-            String tmpPath = path;
-            path = ENDPOINT_AUTH;
-            endpoint.sendRequestAsync(ENDPOINT_AUTH, privacyIDEA.serviceAccountParam(), Collections.emptyMap(), PIConstants.POST, this);
-            if (!latch.await(30, TimeUnit.SECONDS))
-            {
-                privacyIDEA.error("Latch timed out...");
-                return "";
-            }
-            // Extract the auth token from the response
-            String response = callbackResult[0];
-            String authToken = privacyIDEA.parser.extractAuthToken(response);
-            if (authToken == null)
-            {
-                // The parser already logs the error.
-                return null;
-            }
-            // Add the auth token to the header
-            headers.put(PIConstants.HEADER_AUTHORIZATION, authToken);
-            path = tmpPath;
-            callbackResult[0] = null;
+            // Wait for the auth token to be retrieved and add it to the header
+            headers.put(PIConstants.HEADER_AUTHORIZATION, privacyIDEA.getAuthToken());
         }
 
         // Do the actual request
