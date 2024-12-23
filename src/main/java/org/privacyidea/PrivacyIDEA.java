@@ -157,6 +157,11 @@ public class PrivacyIDEA implements Closeable
             params.put(TRANSACTION_ID, transactionID);
         }
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        // Shutdown the scheduler if user successfully authenticated
+        if (this.parser.parsePIResponse(response).value)
+        {
+            this.scheduler.shutdown();
+        }
         return this.parser.parsePIResponse(response);
     }
 
