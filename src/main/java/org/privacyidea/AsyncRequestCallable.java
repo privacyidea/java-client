@@ -34,7 +34,7 @@ import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
  */
 public class AsyncRequestCallable implements Callable<String>, Callback
 {
-    private String path;
+    private final String path;
     private final String method;
     private final Map<String, String> headers;
     private final Map<String, String> params;
