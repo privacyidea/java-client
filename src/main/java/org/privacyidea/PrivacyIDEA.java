@@ -371,6 +371,7 @@ public class PrivacyIDEA implements Closeable
         LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
         this.authToken = authTokenMap.get(AUTH_TOKEN);
         int authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
+        log("Auth token expires in: " + (authTokenExp - System.currentTimeMillis() / 1000L) + " seconds.");
 
         // Schedule the next token retrieval to 1 min before expiration
         long delay = authTokenExp - 60 - System.currentTimeMillis() / 1000L;
