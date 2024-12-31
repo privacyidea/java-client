@@ -160,7 +160,7 @@ public class PrivacyIDEA implements Closeable
         // Shutdown the scheduler if user successfully authenticated
         if (this.parser.parsePIResponse(response).value)
         {
-            this.scheduler.shutdown();
+            this.scheduler.shutdownNow();
         }
         return this.parser.parsePIResponse(response);
     }
