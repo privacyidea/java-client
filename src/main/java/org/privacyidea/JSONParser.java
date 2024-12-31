@@ -218,7 +218,7 @@ public class JSONParser
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
-                        String webauthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
+                        String webauthnSignRequest = getItemFromAttributes(challenge);
                         response.multiChallenge.add(new WebAuthn(serial, message, clientMode, image, transactionID, webauthnSignRequest));
                     }
                     else
@@ -249,13 +249,13 @@ public class JSONParser
         return signRequest.toString();
     }
 
-    private String getItemFromAttributes(String item, JsonObject jsonObject)
+    private String getItemFromAttributes(JsonObject jsonObject)
     {
         String ret = "";
         JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
         if (attributeElement != null && !attributeElement.isJsonNull())
         {
-            JsonElement requestElement = attributeElement.getAsJsonObject().get(item);
+            JsonElement requestElement = attributeElement.getAsJsonObject().get(PIConstants.WEBAUTHN_SIGN_REQUEST);
             if (requestElement != null && !requestElement.isJsonNull())
             {
                 ret = requestElement.toString();
