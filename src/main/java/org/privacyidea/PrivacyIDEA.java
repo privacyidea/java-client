@@ -559,7 +559,7 @@ public class PrivacyIDEA implements Closeable
     public void close() throws IOException
     {
         this.threadPool.shutdown();
-        this.scheduler.shutdown();
+        this.scheduler.shutdownNow();
     }
 
     /**
