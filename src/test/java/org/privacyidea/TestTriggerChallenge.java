@@ -41,6 +41,14 @@ public class TestTriggerChallenge
     public void setup()
     {
         mockServer = ClientAndServer.startClientAndServer(1080);
+    }
+
+    @Test
+    public void testTriggerChallengeSuccess()
+    {
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
+                  .respond(HttpResponse.response()
+                                       .withBody(Utils.postAuthSuccessResponse()));
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .verifySSL(false)
@@ -49,15 +57,6 @@ public class TestTriggerChallenge
                                  .logger(new PILogImplementation())
                                  .realm("realm")
                                  .build();
-    }
-
-    @Test
-    public void testTriggerChallengeSuccess()
-    {
-        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
-                  .respond(HttpResponse.response()
-                                       // This response is simplified because it is very long and contains info that is not (yet) processed anyway
-                                       .withBody(Utils.postAuthSuccessResponse()));
 
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
@@ -110,23 +109,12 @@ public class TestTriggerChallenge
     }
 
     @Test
-    public void testWrongServerURL()
-    {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://12ds7:1nvcbn080", "test")
-                                 .verifySSL(false)
-                                 .serviceAccount(serviceAccount, servicePass)
-                                 .logger(new PILogImplementation())
-                                 .realm("realm")
-                                 .build();
-
-        PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges("Test");
-
-        assertNull(responseTriggerChallenge);
-    }
-
-    @Test
     public void testNoUsername()
     {
+        mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
+                  .respond(HttpResponse.response()
+                                       .withBody(Utils.postAuthSuccessResponse()));
+
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)

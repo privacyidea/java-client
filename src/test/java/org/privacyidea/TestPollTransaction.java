@@ -119,21 +119,21 @@ public class TestPollTransaction
         // Polling is controlled by the code using the java-client
         for (int i = 0; i < 2; i++)
         {
-            assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.pending);
+            assertEquals(ChallengeStatus.pending, privacyIDEA.pollTransaction(initialResponse.transactionID));
             Thread.sleep(500);
         }
 
         // Set the server to respond with "declined"
         setPollTransactionResponse(ChallengeStatus.declined, 1);
-        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.declined);
+        assertEquals(ChallengeStatus.declined, privacyIDEA.pollTransaction(initialResponse.transactionID));
 
         // Set the server to respond with "accept"
         setPollTransactionResponse(ChallengeStatus.accept, 1);
-        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.accept);
+        assertEquals(ChallengeStatus.accept, privacyIDEA.pollTransaction(initialResponse.transactionID));
 
         // Set the server to respond with "none" by not including or invalid challenge_status parameter
         setPollTransactionResponse(ChallengeStatus.none, 1);
-        assertEquals(privacyIDEA.pollTransaction(initialResponse.transactionID), ChallengeStatus.none);
+        assertEquals(ChallengeStatus.none, privacyIDEA.pollTransaction(initialResponse.transactionID));
 
         // Now the transaction has to be finalized manually
         setFinalizationResponse(initialResponse.transactionID);
