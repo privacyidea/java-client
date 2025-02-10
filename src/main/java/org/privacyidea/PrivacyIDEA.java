@@ -158,11 +158,12 @@ public class PrivacyIDEA implements Closeable
         }
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         // Shutdown the scheduler if user successfully authenticated
-        if (this.parser.parsePIResponse(response) != null && this.parser.parsePIResponse(response).value)
+        PIResponse piResponse = this.parser.parsePIResponse(response);
+        if (piResponse != null && piResponse.value)
         {
             this.scheduler.shutdownNow();
         }
-        return this.parser.parsePIResponse(response);
+        return piResponse;
     }
 
     /**
