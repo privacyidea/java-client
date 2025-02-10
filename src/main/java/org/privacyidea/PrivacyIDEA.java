@@ -38,7 +38,7 @@ public class PrivacyIDEA implements Closeable
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
     private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final CountDownLatch authTokenLatch = new CountDownLatch(1);
+    private CountDownLatch authTokenLatch = new CountDownLatch(1);
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -380,6 +380,9 @@ public class PrivacyIDEA implements Closeable
 
         // Count down the latch to indicate that the token is retrieved
         authTokenLatch.countDown();
+
+        // Create a new CountDownLatch for the next token retrieval
+        authTokenLatch = new CountDownLatch(1);
     }
 
     /**
