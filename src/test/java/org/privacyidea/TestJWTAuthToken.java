@@ -80,7 +80,7 @@ public class TestJWTAuthToken
             // Wait 5 seconds for a new token
             try
             {
-                Thread.sleep(3000);
+                Thread.sleep(4000);
             }
             catch (InterruptedException e)
             {
