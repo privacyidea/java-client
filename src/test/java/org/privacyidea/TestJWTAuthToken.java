@@ -13,7 +13,7 @@ import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestJWTAuthToken
+public class TestJWTAuthToken extends PILogImplementation
 {
     private ClientAndServer mockServer;
     private String authToken;
@@ -57,9 +57,9 @@ public class TestJWTAuthToken
             // Compare the tokens
             assertEquals(authToken, privacyIDEA.authToken);
 
-            System.out.println("Expected: " + authToken);
-            System.out.println("Actual  : " + privacyIDEA.authToken);
-            System.out.println(i + 1 + "/3 auth token test passed!");
+            log("Expected: " + authToken);
+            log("Actual  : " + privacyIDEA.authToken);
+            log(i + 1 + "/3 auth token test passed!");
 
             // Actualize the auth token
             authToken = getAuthToken();
@@ -89,9 +89,9 @@ public class TestJWTAuthToken
         }
 
         assertEquals(authToken, privacyIDEA.authToken);
-        System.out.println("Expected: " + authToken);
-        System.out.println("Actual  : " + privacyIDEA.authToken);
-        System.out.println("3/3 auth token test passed!");
+        log("Expected: " + authToken);
+        log("Actual  : " + privacyIDEA.authToken);
+        log("3/3 auth token test passed!");
     }
 
     @After
@@ -108,7 +108,7 @@ public class TestJWTAuthToken
      */
     private String getAuthToken()
     {
-        System.out.println("JWT test token's expiration date: " + new Date(System.currentTimeMillis() + 65000));
+        log("JWT test token's expiration date: " + new Date(System.currentTimeMillis() + 65000));
         return JWT.create()
                   .withSubject("testUser")
                   .withIssuer("testIssuer")
