@@ -83,13 +83,12 @@ public class JSONParser
                     int respDate = obj.getAsJsonPrimitive(TIME).getAsInt();
                     int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
                     int difference = expDate - respDate;
-                    privacyIDEA.log("Authentication token expires in " + difference / 60 + " minutes.");
+                    privacyIDEA.log("Authentication token's durability: " + difference / 60 + " minutes. Token expires at: " + new Date(expDate * 1000L));
 
                     return new LinkedHashMap<>(Map.of(AUTH_TOKEN, authToken, AUTH_TOKEN_EXP, String.valueOf(expDate)));
                 }
                 catch (Exception e)
                 {
-                    //privacyIDEA.error("Response did not contain an authorization token: " + formatJson(serverResponse));
                     privacyIDEA.error("Auth token extraction failed: " + e);
                 }
             }
