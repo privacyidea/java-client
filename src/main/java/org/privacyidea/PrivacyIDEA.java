@@ -33,12 +33,12 @@ public class PrivacyIDEA implements Closeable
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
-    private String authToken = null;
+    protected String authToken = null;
     // Thread pool for connections
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
     private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private CountDownLatch authTokenLatch = new CountDownLatch(1);
+    private CountDownLatch authTokenLatch;
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -368,21 +368,26 @@ public class PrivacyIDEA implements Closeable
      */
     private void retrieveAuthToken()
     {
-        String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
-        LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
-        this.authToken = authTokenMap.get(AUTH_TOKEN);
-        int authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
-        log("Auth token expires in: " + (authTokenExp - System.currentTimeMillis() / 1000L) + " seconds.");
+        try
+        {
+            authTokenLatch = new CountDownLatch(1);
+            String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
+            LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
+            this.authToken = authTokenMap.get(AUTH_TOKEN);
+            long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
 
-        // Schedule the next token retrieval to 1 min before expiration
-        long delay = authTokenExp - 60 - System.currentTimeMillis() / 1000L;
-        scheduler.schedule(this::retrieveAuthToken, delay, TimeUnit.SECONDS);
+            // Schedule the next token retrieval to 1 min before expiration
+            long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
+            scheduler.schedule(this::retrieveAuthToken, delay, TimeUnit.SECONDS);
 
-        // Count down the latch to indicate that the token is retrieved
-        authTokenLatch.countDown();
-
-        // Create a new CountDownLatch for the next token retrieval
-        authTokenLatch = new CountDownLatch(1);
+            // Count down the latch to indicate that the token is retrieved
+            authTokenLatch.countDown();
+        }
+        catch (Exception e)
+        {
+            error("Failed to retrieve auth token: " + e.getMessage());
+            authTokenLatch.countDown();
+        }
     }
 
     /**
@@ -419,7 +424,8 @@ public class PrivacyIDEA implements Closeable
      * @param method            http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
+    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers,
+                                   boolean authTokenRequired,
                                    String method)
     {
         if (!configuration.forwardClientIP.isEmpty())
