@@ -20,9 +20,9 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
 {
     private ClientAndServer mockServer;
     private String jwt;
-    private final int jwtExpirationTimeMs = 4000;
-    private final int mockServerResponseDelayMs = 2000;
-    private int testIterations = 4;
+    private final int jwtExpirationTimeMs = 3000;
+    private final int mockServerResponseDelayMs = 1000;
+    private final int testIterations = 5;
 
     private final String serviceAccount = "admin";
     private final String servicePassword = "admin";
@@ -53,7 +53,8 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
     {
         for (int i = 0; i < this.testIterations; i++)
         {
-            assertEquals(this.jwt, privacyIDEA.getJWT());
+            String newJWT = privacyIDEA.getJWT();
+            assertEquals(this.jwt, newJWT);
             try
             {
                 Thread.sleep(this.jwtExpirationTimeMs);
@@ -66,7 +67,7 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
         // Wait for the last connection to finish before closing
         try
         {
-            Thread.sleep(this.mockServerResponseDelayMs);
+            Thread.sleep(this.mockServerResponseDelayMs*2);
         }
         catch (InterruptedException e)
         {
@@ -109,7 +110,8 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
     public HttpResponse handle(HttpRequest httpRequest) throws Exception
     {
         // The next retrieval is always scheduled for 1 minute before expiration
-        this.jwt = generateJWT(65000 + this.jwtExpirationTimeMs);
+        this.jwt = generateJWT(60000 + this.jwtExpirationTimeMs);
+        //System.out.println("Generated JWT: " + this.jwt);
         return HttpResponse.response().withBody(postAuthSuccessResponse(this.jwt));
     }
 }
