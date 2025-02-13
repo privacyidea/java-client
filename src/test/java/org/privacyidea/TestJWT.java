@@ -49,7 +49,7 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
     }
 
     @Test
-    public void testSuccess() throws IOException
+    public void testMultipleRetrieval()
     {
         for (int i = 0; i < this.testIterations; i++)
         {
@@ -72,13 +72,13 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
         {
             throw new RuntimeException(e);
         }
-        privacyIDEA.close();
     }
 
     @After
-    public void tearDown()
+    public void tearDown() throws IOException
     {
         mockServer.stop();
+        privacyIDEA.close();
     }
 
     private String generateJWT(long validityMs)
