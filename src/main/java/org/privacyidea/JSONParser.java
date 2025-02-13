@@ -83,7 +83,7 @@ public class JSONParser
                     int respDate = obj.getAsJsonPrimitive(TIME).getAsInt();
                     int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
                     int difference = expDate - respDate;
-                    privacyIDEA.log("Authentication token's durability: " + difference / 60 + " minutes. Token expires at: " + new Date(expDate * 1000L));
+                    privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expDate * 1000L));
 
                     return new LinkedHashMap<>(Map.of(AUTH_TOKEN, authToken, AUTH_TOKEN_EXP, String.valueOf(expDate)));
                 }

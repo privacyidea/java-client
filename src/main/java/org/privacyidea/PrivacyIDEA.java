@@ -33,12 +33,12 @@ public class PrivacyIDEA implements Closeable
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
-    protected String authToken = null;
+    private String jwt = null;
     // Thread pool for connections
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
     private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private CountDownLatch authTokenLatch;
+    private CountDownLatch jwtRetrievalLatch;
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -54,7 +54,7 @@ public class PrivacyIDEA implements Closeable
         this.threadPool.allowCoreThreadTimeOut(true);
         if (serviceAccountAvailable())
         {
-            retrieveAuthToken();
+            retrieveJWT();
         }
     }
 
@@ -364,43 +364,49 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * Retrieve the auth token from the /auth endpoint and schedule the next retrieval.
+     * Retrieve the JWT from the /auth endpoint and schedule the next retrieval.
      */
-    private void retrieveAuthToken()
+    private void retrieveJWT()
     {
         try
         {
-            authTokenLatch = new CountDownLatch(1);
+            this.jwtRetrievalLatch = new CountDownLatch(1);
             String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
             LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
-            this.authToken = authTokenMap.get(AUTH_TOKEN);
+            this.jwt = authTokenMap.get(AUTH_TOKEN);
             long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
 
             // Schedule the next token retrieval to 1 min before expiration
             long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
-            scheduler.schedule(this::retrieveAuthToken, delay, TimeUnit.SECONDS);
-
+            this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
+            log("Next JWT retrieval in " + delay + " seconds.");
             // Count down the latch to indicate that the token is retrieved
-            authTokenLatch.countDown();
+            this.jwtRetrievalLatch.countDown();
         }
         catch (Exception e)
         {
             error("Failed to retrieve auth token: " + e.getMessage());
-            authTokenLatch.countDown();
+            this.jwtRetrievalLatch.countDown();
         }
     }
 
     /**
-     * Get the auth token from the /auth endpoint using the service account.
+     * Get the JWT from the /auth endpoint using the service account.
      *
-     * @return auth token or null.
-     * @throws InterruptedException if the thread is interrupted while waiting for the auth token.
+     * @return JWT as string or null on error.
      */
-    public String getAuthToken() throws InterruptedException
+    public String getJWT()
     {
-        // Wait for the auth token to be retrieved
-        authTokenLatch.await();
-        return this.authToken;
+        try
+        {
+            jwtRetrievalLatch.await();
+        }
+        catch (InterruptedException e)
+        {
+            error(e);
+            return null;
+        }
+        return this.jwt;
     }
 
     /**
@@ -408,9 +414,8 @@ public class PrivacyIDEA implements Closeable
      */
     public boolean serviceAccountAvailable()
     {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty()
-               && configuration.serviceAccountPass != null &&
-               !configuration.serviceAccountPass.isEmpty();
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
+               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
     }
 
     /**
@@ -424,16 +429,15 @@ public class PrivacyIDEA implements Closeable
      * @param method            http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers,
-                                   boolean authTokenRequired,
+    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
                                    String method)
     {
         if (!configuration.forwardClientIP.isEmpty())
         {
             params.put(CLIENT_IP, configuration.forwardClientIP);
         }
-        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
-        Future<String> future = threadPool.submit(callable);
+        Callable<String> callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, authTokenRequired, method);
+        Future<String> future = this.threadPool.submit(callable);
         String response = null;
         try
         {
@@ -535,10 +539,6 @@ public class PrivacyIDEA implements Closeable
             {
                 this.simpleLog.piLog(message);
             }
-            else
-            {
-                System.out.println(message);
-            }
         }
     }
 
@@ -558,10 +558,6 @@ public class PrivacyIDEA implements Closeable
             else if (this.simpleLog != null)
             {
                 this.simpleLog.piLog(e.getMessage());
-            }
-            else
-            {
-                System.out.println(e.getLocalizedMessage());
             }
         }
     }
@@ -743,7 +739,7 @@ public class PrivacyIDEA implements Closeable
 
         /**
          * Build the PrivacyIDEA instance with the set parameters.
-         *
+         * If a service account is set, the JWT retrieval is done immediately.
          * @return PrivacyIDEA instance
          */
         public PrivacyIDEA build()

@@ -63,7 +63,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         if (this.authTokenRequired)
         {
             // Wait for the auth token to be retrieved and add it to the header
-            headers.put(PIConstants.HEADER_AUTHORIZATION, privacyIDEA.getAuthToken());
+            headers.put(PIConstants.HEADER_AUTHORIZATION, privacyIDEA.getJWT());
         }
 
         // Do the actual request

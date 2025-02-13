@@ -37,7 +37,7 @@ import static org.privacyidea.PIConstants.*;
 /**
  * This class handles sending requests to the server.
  */
-class Endpoint
+public class Endpoint
 {
     private final PrivacyIDEA privacyIDEA;
     private final PIConfig piConfig;

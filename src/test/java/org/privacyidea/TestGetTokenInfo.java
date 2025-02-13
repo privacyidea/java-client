@@ -17,7 +17,6 @@
 package org.privacyidea;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
@@ -100,7 +99,7 @@ public class TestGetTokenInfo
         assertEquals("defrealm", tokenInfo.userRealm);
         assertEquals("Test", tokenInfo.username);
 
-        assertEquals(authToken, privacyIDEA.getAuthToken());
+        assertEquals(authToken, privacyIDEA.getJWT());
     }
 
     @Test
