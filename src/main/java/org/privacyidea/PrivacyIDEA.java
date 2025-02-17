@@ -368,26 +368,32 @@ public class PrivacyIDEA implements Closeable
      */
     private void retrieveJWT()
     {
+        this.jwtRetrievalLatch = new CountDownLatch(1);
         try
         {
-            this.jwtRetrievalLatch = new CountDownLatch(1);
             String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
-            LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
-            this.jwt = authTokenMap.get(AUTH_TOKEN);
-            long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
+            if (response == null)
+            {
+                error("Failed to retrieve auth token, response was empty. Retrying in 10 seconds.");
+                this.scheduler.schedule(this::retrieveJWT, 10, TimeUnit.SECONDS);
+            }
+            else
+            {
+                LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
+                this.jwt = authTokenMap.get(AUTH_TOKEN);
+                long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
 
-            // Schedule the next token retrieval to 1 min before expiration
-            long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
-            this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
-            log("Next JWT retrieval in " + delay + " seconds.");
-            // Count down the latch to indicate that the token is retrieved
-            this.jwtRetrievalLatch.countDown();
+                // Schedule the next token retrieval to 1 min before expiration
+                long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
+                this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
+                log("Next JWT retrieval in " + delay + " seconds.");
+            }
         }
         catch (Exception e)
         {
             error("Failed to retrieve auth token: " + e.getMessage());
-            this.jwtRetrievalLatch.countDown();
         }
+        this.jwtRetrievalLatch.countDown();
     }
 
     /**
@@ -740,6 +746,7 @@ public class PrivacyIDEA implements Closeable
         /**
          * Build the PrivacyIDEA instance with the set parameters.
          * If a service account is set, the JWT retrieval is done immediately.
+         *
          * @return PrivacyIDEA instance
          */
         public PrivacyIDEA build()
