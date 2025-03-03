@@ -21,10 +21,6 @@ import java.util.List;
 
 public class PIConstants
 {
-    private PIConstants()
-    {
-    }
-
     public static final String GET = "GET";
     public static final String POST = "POST";
 
@@ -34,6 +30,7 @@ public class PIConstants
     public static final String ENDPOINT_TRIGGERCHALLENGE = "/validate/triggerchallenge";
     public static final String ENDPOINT_POLLTRANSACTION = "/validate/polltransaction";
     public static final String ENDPOINT_VALIDATE_CHECK = "/validate/check";
+    public static final String ENDPOINT_VALIDATE_INITIALIZE = "/validate/initialize";
     public static final String ENDPOINT_TOKEN = "/token/";
 
     public static final String HEADER_ORIGIN = "Origin";
@@ -43,6 +40,7 @@ public class PIConstants
     // TOKEN TYPES
     public static final String TOKEN_TYPE_PUSH = "push";
     public static final String TOKEN_TYPE_WEBAUTHN = "webauthn";
+    public static final String TOKEN_TYPE_PASSKEY = "passkey";
 
     // JSON KEYS
     public static final String USERNAME = "username";
@@ -81,20 +79,28 @@ public class PIConstants
     public static final String ID = "id";
     public static final String MAXFAIL = "maxfail";
     public static final String INFO = "info";
+    public static final String PASSKEY_REGISTRATION = "passkey_registration";
+    public static final String AUTH_FORM = "authenticationForm";
+    public static final String AUTH_FORM_RESULT = "authenticationFormResult";
 
-    // WebAuthn params
+    // WebAuthn/Passkey params
     public static final String WEBAUTHN_SIGN_REQUEST = "webAuthnSignRequest";
     public static final String CREDENTIALID = "credentialid";
+    public static final String CREDENTIAL_ID = "credential_id";
     public static final String CLIENTDATA = "clientdata";
+    public static final String CLIENTDATAJSON = "clientDataJSON";
     public static final String SIGNATUREDATA = "signaturedata";
     public static final String AUTHENTICATORDATA = "authenticatordata";
+    public static final String AUTHENTICATOR_DATA = "authenticatorData";
     public static final String USERHANDLE = "userhandle";
     public static final String ASSERTIONCLIENTEXTENSIONS = "assertionclientextensions";
-
+    public static final String PASSKEY = "passkey";
+    public static final String RAW_ID = "rawId";
+    public static final String AUTHENTICATOR_ATTACHMENT = "authenticatorAttachment";
+    public static final String ATTESTATION_OBJECT = "attestationObject";
 
     // These will be excluded from url encoding
-    public static final List<String>
-            WEBAUTHN_PARAMETERS =
-            Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA, USERHANDLE,
-                          ASSERTIONCLIENTEXTENSIONS);
+    public static final List<String> WEBAUTHN_PARAMETERS = Arrays.asList(CREDENTIALID, CLIENTDATA, SIGNATUREDATA, AUTHENTICATORDATA,
+                                                                         USERHANDLE, ASSERTIONCLIENTEXTENSIONS, CREDENTIAL_ID, RAW_ID,
+                                                                         AUTHENTICATOR_ATTACHMENT, ATTESTATION_OBJECT);
 }

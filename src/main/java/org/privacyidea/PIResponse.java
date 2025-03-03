@@ -49,7 +49,10 @@ public class PIResponse
     public String type = ""; // Type of token that was matching the request
     public int otpLength = 0;
     public PIError error = null;
-
+    // Passkey content is json string and can be passed to the browser as is
+    public String passkeyChallenge = "";
+    public String passkeyRegistration = "";
+    public String username = "";
     /**
      * Check if a PUSH token was triggered.
      *
