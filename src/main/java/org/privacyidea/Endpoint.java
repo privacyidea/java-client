@@ -125,21 +125,21 @@ public class Endpoint
         }
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
-                           {
+                       {
                            if (k.equals("pass") || k.equals("password"))
                            {
                                v = "*".repeat(v.length());
                            }
                            privacyIDEA.log(k + "=" + v);
-                           });
+                       });
 
         if (GET.equals(method))
         {
             params.forEach((key, value) ->
-                               {
+                           {
                                String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
                                urlBuilder.addQueryParameter(key, encValue);
-                               });
+                           });
         }
 
         String url = urlBuilder.build().toString();
@@ -157,7 +157,7 @@ public class Endpoint
         {
             FormBody.Builder formBodyBuilder = new FormBody.Builder();
             params.forEach((key, value) ->
-                               {
+                           {
                                if (key != null && value != null)
                                {
                                    String encValue = value;
@@ -169,13 +169,13 @@ public class Endpoint
                                    }
                                    formBodyBuilder.add(key, encValue);
                                }
-                               });
+                           });
             // This switches okhttp to make a post request
             requestBuilder.post(formBodyBuilder.build());
         }
 
         Request request = requestBuilder.build();
-        //privacyIDEA.log("HEADERS:\n" + request.headers().toString());
+        //privacyIDEA.log("HEADERS:\n" + request.headers());
         client.newCall(request).enqueue(callback);
     }
 }

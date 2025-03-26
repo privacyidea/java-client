@@ -42,7 +42,7 @@ public class PrivacyIDEA implements Closeable
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
-                                                              PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList(); //
+                                                              PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList();
 
     private PrivacyIDEA(PIConfig configuration, IPILogger logger, IPISimpleLogger simpleLog)
     {
@@ -59,27 +59,35 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map, Map)
      */
     public PIResponse validateCheck(String username, String pass)
     {
-        return this.validateCheck(username, pass, null, Collections.emptyMap());
+        return this.validateCheck(username, pass, null, Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
-     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map, Map)
      */
     public PIResponse validateCheck(String username, String pass, Map<String, String> headers)
     {
-        return this.validateCheck(username, pass, null, headers);
+        return this.validateCheck(username, pass, null, Collections.emptyMap(), headers);
     }
 
     /**
-     * @see PrivacyIDEA#validateCheck(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map, Map)
      */
     public PIResponse validateCheck(String username, String pass, String transactionID)
     {
-        return this.validateCheck(username, pass, transactionID, Collections.emptyMap());
+        return this.validateCheck(username, pass, transactionID, Collections.emptyMap(), Collections.emptyMap());
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheck(String, String, String, Map, Map)
+     */
+    public PIResponse validateCheck(String username, String pass, String transactionID, Map<String, String> headers)
+    {
+        return this.validateCheck(username, pass, transactionID, Collections.emptyMap(), headers);
     }
 
     /**
@@ -93,9 +101,10 @@ public class PrivacyIDEA implements Closeable
      * @param headers       optional headers for the request
      * @return PIResponse object containing the response or null if error
      */
-    public PIResponse validateCheck(String username, String pass, String transactionID, Map<String, String> headers)
+    public PIResponse validateCheck(String username, String pass, String transactionID, Map<String, String> additionalParams,
+                                    Map<String, String> headers)
     {
-        return getPIResponse(USER, username, pass, headers, transactionID);
+        return getPIResponse(USER, username, pass, headers, transactionID, additionalParams);
     }
 
     /**
@@ -132,7 +141,7 @@ public class PrivacyIDEA implements Closeable
      */
     public PIResponse validateCheckSerial(String serial, String pass, String transactionID, Map<String, String> headers)
     {
-        return getPIResponse(SERIAL, serial, pass, headers, transactionID);
+        return getPIResponse(SERIAL, serial, pass, headers, transactionID, Collections.emptyMap());
     }
 
     /**
@@ -145,12 +154,13 @@ public class PrivacyIDEA implements Closeable
      * @param transactionID optional, will be appended if set
      * @return PIResponse object containing the response or null if error
      */
-    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionID)
+    private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionID,
+                                     Map<String, String> additionalParams)
     {
         Map<String, String> params = new LinkedHashMap<>();
-        // Add forwarded user or serial to the params
         params.put(type, input);
         params.put(PASS, (pass != null ? pass : ""));
+        params.putAll(additionalParams);
         appendRealm(params);
         if (transactionID != null && !transactionID.isEmpty())
         {
@@ -197,6 +207,76 @@ public class PrivacyIDEA implements Closeable
         // Additional WebAuthn data
         Map<String, String> wanParams = parser.parseWebAuthnSignResponse(webAuthnSignResponse);
         params.putAll(wanParams);
+
+        Map<String, String> hdrs = new LinkedHashMap<>();
+        hdrs.put(HEADER_ORIGIN, origin);
+        hdrs.putAll(headers);
+
+        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        return this.parser.parsePIResponse(response);
+    }
+
+    /**
+     * Request an unbound challenge from the server. Unbound means that any token that has the same type may answer the challenge.
+     * In contrast, traditional challenges that were triggered for a user are bound to specific token by their serial.
+     * Note: Currently on type "passkey" is supported by privacyIDEA.
+     *
+     * @param type type of the challenge
+     * @return PIResponse or null if error
+     */
+    public PIResponse validateInitialize(String type)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(TYPE, type);
+
+        String response = runRequestAsync(ENDPOINT_VALIDATE_INITIALIZE, params, Collections.emptyMap(), false, POST);
+        return this.parser.parsePIResponse(response);
+    }
+
+    /**
+     * Authenticate using a passkey. If successful, the response will contain the username.
+     *
+     * @param transactionID   transactionID
+     * @param passkeyResponse the json serialized response from the authenticator. Is the same as a webauthnSignResponse.
+     * @param origin          origin of the passkeyResponse, usually gotten from a browser
+     * @param headers         optional headers for the request
+     * @return PIResponse or null if error
+     */
+    public PIResponse validateCheckPasskey(String transactionID, String passkeyResponse, String origin, Map<String, String> headers)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(TRANSACTION_ID, transactionID);
+        params.putAll(parser.parseFIDO2AuthenticationResponse(passkeyResponse));
+
+        Map<String, String> hdrs = new LinkedHashMap<>();
+        hdrs.put(HEADER_ORIGIN, origin);
+        hdrs.putAll(headers);
+
+        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        return this.parser.parsePIResponse(response);
+    }
+
+    /**
+     * Complete a passkey registration via the endpoint /validate/check. This is the second step of the registration process that was
+     * triggered by the enroll_via_multichallenge setting in privacyIDEA.
+     *
+     * @param transactionID        transactionID
+     * @param serial               serial of the token
+     * @param username             username
+     * @param registrationResponse the registration data from the authenticator in json format
+     * @param origin               origin of the registrationResponse, usually gotten from a browser
+     * @param headers              optional headers for the request
+     * @return PIResponse or null if error
+     */
+    public PIResponse validateCheckCompletePasskeyRegistration(String transactionID, String serial, String username,
+                                                               String registrationResponse, String origin, Map<String, String> headers)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(TRANSACTION_ID, transactionID);
+        params.put(SERIAL, serial);
+        params.put(USER, username);
+        params.put(TYPE, TOKEN_TYPE_PASSKEY);
+        params.putAll(parser.parseFIDO2RegistrationResponse(registrationResponse));
 
         Map<String, String> hdrs = new LinkedHashMap<>();
         hdrs.put(HEADER_ORIGIN, origin);
@@ -478,6 +558,20 @@ public class PrivacyIDEA implements Closeable
     public void logExcludedEndpoints(List<String> list)
     {
         this.logExcludedEndpoints = list;
+    }
+
+    /**
+     * @return true if a service account is available
+     */
+    public boolean serviceAccountAvailable()
+    {
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
+               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
+    }
+
+    PIConfig configuration()
+    {
+        return configuration;
     }
 
     /**

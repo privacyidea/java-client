@@ -175,12 +175,23 @@ public class JSONParser
                 response.preferredClientMode = modeFromResponse;
             }
             response.message = getString(detail, MESSAGE);
+            response.username = getString(detail, USERNAME);
             response.image = getString(detail, IMAGE);
             response.serial = getString(detail, SERIAL);
             response.transactionID = getString(detail, TRANSACTION_ID);
             response.type = getString(detail, TYPE);
             response.otpLength = getInt(detail, OTPLEN);
-
+            JsonObject passkeyChallenge = detail.getAsJsonObject(PASSKEY);
+            if (passkeyChallenge != null && !passkeyChallenge.isJsonNull())
+            {
+                response.passkeyChallenge = passkeyChallenge.toString();
+                // The passkey challenge can contain a transaction id, use that if none was set prior
+                // This will happen if the passkey challenge was requested via /validate/initialize
+                if (response.transactionID == null || response.transactionID.isEmpty())
+                {
+                    response.transactionID = getString(passkeyChallenge, TRANSACTION_ID);
+                }
+            }
             String r = getString(detail, CHALLENGE_STATUS);
             for (ChallengeStatus cs : ChallengeStatus.values())
             {
@@ -194,12 +205,12 @@ public class JSONParser
             if (arrMessages != null)
             {
                 arrMessages.forEach(val ->
-                                        {
+                                    {
                                         if (val != null)
                                         {
                                             response.messages.add(val.getAsString());
                                         }
-                                        });
+                                    });
             }
 
             JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
@@ -214,6 +225,17 @@ public class JSONParser
                     String image = getString(challenge, IMAGE);
                     String transactionID = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
+
+                    if (challenge.has(PASSKEY_REGISTRATION))
+                    {
+                        response.passkeyRegistration = challenge.get(PASSKEY_REGISTRATION).toString();
+                        // TODO for passkey registration with enroll_via_multichallenge, the txid is probably in the wrong place
+                        // as of 3.11.0
+                        if (response.transactionID == null || response.transactionID.isEmpty())
+                        {
+                            response.transactionID = transactionID;
+                        }
+                    }
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
@@ -359,24 +381,24 @@ public class JSONParser
         if (joInfo != null)
         {
             joInfo.entrySet().forEach(entry ->
-                                          {
+                                      {
                                           if (entry.getKey() != null && entry.getValue() != null)
                                           {
                                               info.info.put(entry.getKey(), entry.getValue().getAsString());
                                           }
-                                          });
+                                      });
         }
 
         JsonArray arrRealms = obj.getAsJsonArray(REALMS);
         if (arrRealms != null)
         {
             arrRealms.forEach(val ->
-                                  {
+                              {
                                   if (val != null)
                                   {
                                       info.realms.add(val.getAsString());
                                   }
-                                  });
+                              });
         }
         return info;
     }
@@ -472,7 +494,7 @@ public class JSONParser
         }
         catch (JsonSyntaxException e)
         {
-            privacyIDEA.error("WebAuthn sign response has the wrong format: " + e.getLocalizedMessage());
+            privacyIDEA.error("FIDO2 sign response has the wrong format: " + e.getLocalizedMessage());
             return null;
         }
 
@@ -494,6 +516,40 @@ public class JSONParser
         }
         return params;
     }
+
+    Map<String, String> parseFIDO2AuthenticationResponse(String json)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        JsonObject obj;
+        try
+        {
+            obj = JsonParser.parseString(json).getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
+            privacyIDEA.error("FIDO2 sign response has the wrong format: " + e.getLocalizedMessage());
+            return null;
+        }
+
+        params.put(CREDENTIAL_ID, getString(obj, CREDENTIAL_ID));
+        params.put(CLIENTDATAJSON, getString(obj, CLIENTDATAJSON));
+        params.put(SIGNATURE, getString(obj, SIGNATURE));
+        params.put(AUTHENTICATOR_DATA, getString(obj, AUTHENTICATOR_DATA));
+
+        // The userhandle and assertionclientextension fields are optional
+        String userhandle = getString(obj, USERHANDLE);
+        if (!userhandle.isEmpty())
+        {
+            params.put(USERHANDLE, userhandle);
+        }
+        String extensions = getString(obj, ASSERTIONCLIENTEXTENSIONS);
+        if (!extensions.isEmpty())
+        {
+            params.put(ASSERTIONCLIENTEXTENSIONS, extensions);
+        }
+        return params;
+    }
+
 
     private boolean getBoolean(JsonObject obj, String name)
     {
@@ -527,5 +583,27 @@ public class JSONParser
             privacyIDEA.error(e);
         }
         return primitive;
+    }
+
+    public Map<String, String> parseFIDO2RegistrationResponse(String registrationResponse)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        JsonObject obj;
+        try
+        {
+            obj = JsonParser.parseString(registrationResponse).getAsJsonObject();
+        }
+        catch (JsonSyntaxException e)
+        {
+            privacyIDEA.error("Passkey registration response is not JSON: " + e.getLocalizedMessage());
+            return null;
+        }
+
+        params.put(CREDENTIAL_ID, getString(obj, CREDENTIAL_ID));
+        params.put(CLIENTDATAJSON, getString(obj, CLIENTDATAJSON));
+        params.put(ATTESTATION_OBJECT, getString(obj, ATTESTATION_OBJECT));
+        params.put(AUTHENTICATOR_ATTACHMENT, getString(obj, AUTHENTICATOR_ATTACHMENT));
+        params.put(RAW_ID, getString(obj, RAW_ID));
+        return params;
     }
 }

@@ -50,6 +50,22 @@ public class PIResponse
     public String type = ""; // Type of token that was matching the request
     public int otpLength = 0;
     public PIError error = null;
+    // Passkey content is json string and can be passed to the browser as is
+    public String passkeyChallenge = "";
+    public String passkeyRegistration = "";
+    public String username = "";
+
+    public boolean authenticationSuccessful()
+    {
+        if (authentication == AuthenticationStatus.ACCEPT)
+        {
+            return true;
+        }
+        else
+        {
+            return value && authentication != AuthenticationStatus.CHALLENGE;
+        }
+    }
 
     /**
      * Check if a PUSH token was triggered.
@@ -84,12 +100,8 @@ public class PIResponse
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(multiChallenge.stream()
-                                .filter(predicate)
-                                .map(Challenge::getMessage)
-                                .distinct()
-                                .reduce("", (a, s) -> a + s + ", ")
-                                .trim());
+        sb.append(
+                multiChallenge.stream().filter(predicate).map(Challenge::getMessage).distinct().reduce("", (a, s) -> a + s + ", ").trim());
 
         if (sb.length() > 0)
         {
@@ -114,16 +126,13 @@ public class PIResponse
     public List<WebAuthn> webAuthnSignRequests()
     {
         List<WebAuthn> ret = new ArrayList<>();
-        multiChallenge.stream()
-                      .filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType()))
-                      .collect(Collectors.toList())
-                      .forEach(c ->
-                                   {
-                                   if (c instanceof WebAuthn)
-                                   {
-                                       ret.add((WebAuthn) c);
-                                   }
-                                   });
+        multiChallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
+                                                                                                                          {
+                                                                                                                              if (c instanceof WebAuthn)
+                                                                                                                              {
+                                                                                                                                  ret.add((WebAuthn) c);
+                                                                                                                              }
+                                                                                                                          });
         return ret;
     }
 
