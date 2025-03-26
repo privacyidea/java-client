@@ -33,9 +33,12 @@ public class PrivacyIDEA implements Closeable
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
+    private String jwt = null;
     // Thread pool for connections
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
     private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private CountDownLatch jwtRetrievalLatch;
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
     private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
@@ -49,6 +52,10 @@ public class PrivacyIDEA implements Closeable
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
         this.threadPool.allowCoreThreadTimeOut(true);
+        if (serviceAccountAvailable())
+        {
+            retrieveJWT();
+        }
     }
 
     /**
@@ -160,7 +167,13 @@ public class PrivacyIDEA implements Closeable
             params.put(TRANSACTION_ID, transactionID);
         }
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return this.parser.parsePIResponse(response);
+        // Shutdown the scheduler if user successfully authenticated
+        PIResponse piResponse = this.parser.parsePIResponse(response);
+        if (piResponse != null && piResponse.value)
+        {
+            this.scheduler.shutdownNow();
+        }
+        return piResponse;
     }
 
     /**
@@ -323,21 +336,10 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * Get the auth token from the /auth endpoint using the service account.
+     * Get the service account parameters.
      *
-     * @return auth token or null.
+     * @return map with username and password.
      */
-    public String getAuthToken()
-    {
-        if (!serviceAccountAvailable())
-        {
-            error("Cannot retrieve auth token without service account!");
-            return null;
-        }
-        String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
-        return parser.extractAuthToken(response);
-    }
-
     Map<String, String> serviceAccountParam()
     {
         Map<String, String> authTokenParams = new LinkedHashMap<>();
@@ -428,12 +430,78 @@ public class PrivacyIDEA implements Closeable
         return parser.parseRolloutInfo(response);
     }
 
+    /**
+     * Append the realm to the parameters if it is set.
+     *
+     * @param params parameters
+     */
     private void appendRealm(Map<String, String> params)
     {
         if (configuration.realm != null && !configuration.realm.isEmpty())
         {
             params.put(REALM, configuration.realm);
         }
+    }
+
+    /**
+     * Retrieve the JWT from the /auth endpoint and schedule the next retrieval.
+     */
+    private void retrieveJWT()
+    {
+        this.jwtRetrievalLatch = new CountDownLatch(1);
+        try
+        {
+            String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
+            if (response == null)
+            {
+                error("Failed to retrieve auth token, response was empty. Retrying in 10 seconds.");
+                this.scheduler.schedule(this::retrieveJWT, 10, TimeUnit.SECONDS);
+            }
+            else
+            {
+                LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
+                this.jwt = authTokenMap.get(AUTH_TOKEN);
+                long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
+
+                // Schedule the next token retrieval to 1 min before expiration
+                long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
+                this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
+                log("Next JWT retrieval in " + delay + " seconds.");
+            }
+        }
+        catch (Exception e)
+        {
+            error("Failed to retrieve auth token: " + e.getMessage());
+        }
+        this.jwtRetrievalLatch.countDown();
+    }
+
+    /**
+     * Get the JWT from the /auth endpoint using the service account.
+     *
+     * @return JWT as string or null on error.
+     */
+    public String getJWT()
+    {
+        try
+        {
+            jwtRetrievalLatch.await();
+        }
+        catch (InterruptedException e)
+        {
+            error(e);
+            return null;
+        }
+        return this.jwt;
+    }
+
+    /**
+     * @return true if a service account is available
+     */
+    public boolean serviceAccountAvailable()
+    {
+        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
+               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
     }
 
     /**
@@ -454,8 +522,8 @@ public class PrivacyIDEA implements Closeable
         {
             params.put(CLIENT_IP, configuration.forwardClientIP);
         }
-        Callable<String> callable = new AsyncRequestCallable(this, endpoint, path, params, headers, authTokenRequired, method);
-        Future<String> future = threadPool.submit(callable);
+        Callable<String> callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, authTokenRequired, method);
+        Future<String> future = this.threadPool.submit(callable);
         String response = null;
         try
         {
@@ -466,6 +534,14 @@ public class PrivacyIDEA implements Closeable
             log("runRequestAsync: " + e.getLocalizedMessage());
         }
         return response;
+    }
+
+    /**
+     * @return the configuration of this instance
+     */
+    PIConfig configuration()
+    {
+        return configuration;
     }
 
     /**
@@ -482,20 +558,6 @@ public class PrivacyIDEA implements Closeable
     public void logExcludedEndpoints(List<String> list)
     {
         this.logExcludedEndpoints = list;
-    }
-
-    /**
-     * @return true if a service account is available
-     */
-    public boolean serviceAccountAvailable()
-    {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
-               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
-    }
-
-    PIConfig configuration()
-    {
-        return configuration;
     }
 
     /**
@@ -563,10 +625,6 @@ public class PrivacyIDEA implements Closeable
             {
                 this.simpleLog.piLog(message);
             }
-            else
-            {
-                System.out.println(message);
-            }
         }
     }
 
@@ -587,10 +645,6 @@ public class PrivacyIDEA implements Closeable
             {
                 this.simpleLog.piLog(e.getMessage());
             }
-            else
-            {
-                System.out.println(e.getLocalizedMessage());
-            }
         }
     }
 
@@ -598,6 +652,7 @@ public class PrivacyIDEA implements Closeable
     public void close() throws IOException
     {
         this.threadPool.shutdown();
+        this.scheduler.shutdownNow();
     }
 
     /**
@@ -612,6 +667,9 @@ public class PrivacyIDEA implements Closeable
         return new Builder(serverURL, userAgent);
     }
 
+    /**
+     * Builder class to create a PrivacyIDEA instance.
+     */
     public static class Builder
     {
         private final String serverURL;
@@ -767,6 +825,7 @@ public class PrivacyIDEA implements Closeable
 
         /**
          * Build the PrivacyIDEA instance with the set parameters.
+         * If a service account is set, the JWT retrieval is done immediately.
          *
          * @return PrivacyIDEA instance
          */

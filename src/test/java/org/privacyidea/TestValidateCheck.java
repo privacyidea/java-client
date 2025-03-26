@@ -138,7 +138,7 @@ public class TestValidateCheck
     }
 
     @Test
-    public void testEmptyResponse()
+    public void testEmptyResponse() throws NullPointerException
     {
         mockServer.when(HttpRequest.request()
                                    .withMethod("POST")

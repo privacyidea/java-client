@@ -18,8 +18,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -93,6 +96,21 @@ public class TestValidateCheckSerial
         assertTrue(response.value);
         assertEquals("3.2.1", response.piVersion);
         assertEquals("rsa_sha256_pss:AAAAAAAAAAA", response.signature);
+    }
+
+    @Test
+    public void testValidateCheckSerialWithHeader()
+    {
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_VALIDATE_CHECK)
+                                   .withMethod("POST")
+                                .withHeader(Header.header("Accept-Language", "test"))
+                                   .withBody("serial=PISP0001C673&pass=123456"))
+                  .respond(HttpResponse.response().withBody(Utils.matchingOneToken()));
+
+        PIResponse response = privacyIDEA.validateCheckSerial("PISP0001C673", "123456", Map.of("Accept-Language", "test"));
+
+        assertEquals(Utils.matchingOneToken(), response.toString());
     }
 
     @After

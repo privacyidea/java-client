@@ -18,10 +18,7 @@ package org.privacyidea;
 
 import com.google.gson.*;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.privacyidea.PIConstants.*;
 
@@ -66,9 +63,9 @@ public class JSONParser
      * Extract the auth token from the response of the server.
      *
      * @param serverResponse response of the server
-     * @return the auth token or null if error
+     * @return the AuthToken obj or null if error
      */
-    String extractAuthToken(String serverResponse)
+    LinkedHashMap<String, String> extractAuthToken(String serverResponse)
     {
         if (serverResponse != null && !serverResponse.isEmpty())
         {
@@ -78,11 +75,21 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    return obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    String authToken = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    var parts = authToken.split("\\.");
+                    String dec = new String(Base64.getDecoder().decode(parts[1]));
+
+                    // Extract the expiration date from the token
+                    int respDate = obj.getAsJsonPrimitive(TIME).getAsInt();
+                    int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
+                    int difference = expDate - respDate;
+                    privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expDate * 1000L));
+
+                    return new LinkedHashMap<>(Map.of(AUTH_TOKEN, authToken, AUTH_TOKEN_EXP, String.valueOf(expDate)));
                 }
                 catch (Exception e)
                 {
-                    privacyIDEA.error("Response did not contain an authorization token: " + formatJson(serverResponse));
+                    privacyIDEA.error("Auth token extraction failed: " + e);
                 }
             }
         }
@@ -232,7 +239,7 @@ public class JSONParser
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
-                        String webauthnSignRequest = getItemFromAttributes(WEBAUTHN_SIGN_REQUEST, challenge);
+                        String webauthnSignRequest = getItemFromAttributes(challenge);
                         response.multiChallenge.add(new WebAuthn(serial, message, clientMode, image, transactionID, webauthnSignRequest));
                     }
                     else
@@ -263,13 +270,13 @@ public class JSONParser
         return signRequest.toString();
     }
 
-    private String getItemFromAttributes(String item, JsonObject jsonObject)
+    private String getItemFromAttributes(JsonObject jsonObject)
     {
         String ret = "";
         JsonElement attributeElement = jsonObject.get(ATTRIBUTES);
         if (attributeElement != null && !attributeElement.isJsonNull())
         {
-            JsonElement requestElement = attributeElement.getAsJsonObject().get(item);
+            JsonElement requestElement = attributeElement.getAsJsonObject().get(PIConstants.WEBAUTHN_SIGN_REQUEST);
             if (requestElement != null && !requestElement.isJsonNull())
             {
                 ret = requestElement.toString();
