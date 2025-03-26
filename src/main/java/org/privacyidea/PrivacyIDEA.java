@@ -561,20 +561,6 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * @return true if a service account is available
-     */
-    public boolean serviceAccountAvailable()
-    {
-        return configuration.serviceAccountName != null && !configuration.serviceAccountName.isEmpty() &&
-               configuration.serviceAccountPass != null && !configuration.serviceAccountPass.isEmpty();
-    }
-
-    PIConfig configuration()
-    {
-        return configuration;
-    }
-
-    /**
      * Pass the message to the appropriate logger implementation.
      *
      * @param message message to log.
