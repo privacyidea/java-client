@@ -54,6 +54,8 @@ public class PIResponse
     public String passkeyChallenge = "";
     public String passkeyRegistration = "";
     public String username = "";
+    public String enrollmentLink = "";
+
 
     public boolean authenticationSuccessful()
     {

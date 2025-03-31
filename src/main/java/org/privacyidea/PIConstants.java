@@ -73,6 +73,7 @@ public class PIConstants
     public static final String ATTRIBUTES = "attributes";
     public static final String DETAIL = "detail";
     public static final String OTPLEN = "otplen";
+    public static final String LINK = "link";
     public static final String CODE = "code";
     public static final String ERROR = "error";
     public static final String STATUS = "status";

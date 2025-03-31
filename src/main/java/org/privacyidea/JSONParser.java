@@ -223,18 +223,18 @@ public class JSONParser
                     String message = getString(challenge, MESSAGE);
                     String clientMode = getString(challenge, CLIENT_MODE);
                     String image = getString(challenge, IMAGE);
+
                     String transactionID = getString(challenge, TRANSACTION_ID);
                     String type = getString(challenge, TYPE);
 
                     if (challenge.has(PASSKEY_REGISTRATION))
                     {
                         response.passkeyRegistration = challenge.get(PASSKEY_REGISTRATION).toString();
-                        // TODO for passkey registration with enroll_via_multichallenge, the txid is probably in the wrong place
-                        // as of 3.11.0
-                        if (response.transactionID == null || response.transactionID.isEmpty())
-                        {
-                            response.transactionID = transactionID;
-                        }
+                    }
+                    String link = getString(challenge, LINK);
+                    if (response.enrollmentLink == null || response.enrollmentLink.isEmpty())
+                    {
+                        response.enrollmentLink = link;
                     }
 
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
