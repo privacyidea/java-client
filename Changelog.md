@@ -1,10 +1,11 @@
 # Changelog
 
-### v1.3.0 - 0 Apr 2025
+### v1.3.0 - 8 Apr 2025
 
 * Passkey functions
 * JWT will be reused and renewed automatically
 * Added option to add arbitrary parameters to the requests
+* Added enrollmentLink to PIResponse for enroll_via_multichallenge responses
 
 ### v1.2.2 - 5 Mar 2024
 
