@@ -52,7 +52,6 @@ public class PrivacyIDEA implements Closeable
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
         this.threadPool.allowCoreThreadTimeOut(true);
-        error("privacyidea constructor");
         if (serviceAccountAvailable())
         {
             retrieveJWT();
@@ -307,17 +306,17 @@ public class PrivacyIDEA implements Closeable
     public PIResponse triggerChallenges(String username, Map<String, String> additionalParams, Map<String, String> headers)
     {
         Objects.requireNonNull(username, "Username is required!");
-
         if (!serviceAccountAvailable())
         {
             log("No service account configured. Cannot trigger challenges");
             return null;
         }
+        Map<String, String> headersCopy = new LinkedHashMap<>(headers);
         Map<String, String> params = new LinkedHashMap<>(additionalParams);
         params.put(USER, username);
         appendRealm(params);
 
-        String response = runRequestAsync(ENDPOINT_TRIGGERCHALLENGE, params, headers, true, POST);
+        String response = runRequestAsync(ENDPOINT_TRIGGERCHALLENGE, params, headersCopy, true, POST);
         return this.parser.parsePIResponse(response);
     }
 
