@@ -41,8 +41,8 @@ public class PrivacyIDEA implements Closeable
     private CountDownLatch jwtRetrievalLatch;
     final JSONParser parser;
     // Responses from these endpoints will not be logged. The list can be overwritten.
-    private List<String> logExcludedEndpoints = Arrays.asList(PIConstants.ENDPOINT_AUTH,
-                                                              PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList();
+    private List<String> logExcludedEndpoints = Arrays.asList(
+            PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList();PIConstants.ENDPOINT_AUTH,
 
     private PrivacyIDEA(PIConfig configuration, IPILogger logger, IPISimpleLogger simpleLog)
     {
@@ -52,9 +52,14 @@ public class PrivacyIDEA implements Closeable
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
         this.threadPool.allowCoreThreadTimeOut(true);
+        error("privacyidea constructor");
         if (serviceAccountAvailable())
         {
             retrieveJWT();
+        }
+        else
+        {
+            error("No service account configured. No JWT will be retrieved.");
         }
     }
 
@@ -95,10 +100,11 @@ public class PrivacyIDEA implements Closeable
      * Which parameters to send depends on the use case and how privacyIDEA is configured.
      * (E.g. this can also be used to trigger challenges without a service account)
      *
-     * @param username      username
-     * @param pass          pass/otp value
-     * @param transactionID optional, will be appended if set
-     * @param headers       optional headers for the request
+     * @param username         username
+     * @param pass             pass/otp value
+     * @param transactionID    optional, will be appended if set
+     * @param additionalParams additional parameters for the request
+     * @param headers          optional headers for the request
      * @return PIResponse object containing the response or null if error
      */
     public PIResponse validateCheck(String username, String pass, String transactionID, Map<String, String> additionalParams,
@@ -108,27 +114,27 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map, Map)
      */
     public PIResponse validateCheckSerial(String serial, String pass)
     {
-        return this.validateCheckSerial(serial, pass, null, Collections.emptyMap());
+        return this.validateCheckSerial(serial, pass, null, Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
-     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map, Map)
      */
     public PIResponse validateCheckSerial(String serial, String pass, Map<String, String> headers)
     {
-        return this.validateCheckSerial(serial, pass, null, headers);
+        return this.validateCheckSerial(serial, pass, null, Collections.emptyMap(), headers);
     }
 
     /**
-     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map)
+     * @see PrivacyIDEA#validateCheckSerial(String, String, String, Map, Map)
      */
     public PIResponse validateCheckSerial(String serial, String pass, String transactionID)
     {
-        return this.validateCheckSerial(serial, pass, transactionID, Collections.emptyMap());
+        return this.validateCheckSerial(serial, pass, transactionID, Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
@@ -139,49 +145,44 @@ public class PrivacyIDEA implements Closeable
      * @param transactionID transaction ID
      * @return PIResponse or null if error
      */
-    public PIResponse validateCheckSerial(String serial, String pass, String transactionID, Map<String, String> headers)
+    public PIResponse validateCheckSerial(String serial, String pass, String transactionID, Map<String, String> additionalParams,
+                                          Map<String, String> headers)
     {
-        return getPIResponse(SERIAL, serial, pass, headers, transactionID, Collections.emptyMap());
+        return getPIResponse(SERIAL, serial, pass, headers, transactionID, additionalParams);
     }
 
     /**
      * Used by validateCheck and validateCheckSerial to get the PI Response.
      *
-     * @param type          distinguish between user and serial to set forwarded input to the right PI-request param
-     * @param input         forwarded username for classic validateCheck or serial to trigger exact token
-     * @param pass          OTP, PIN+OTP or password to use
-     * @param headers       optional headers for the request
-     * @param transactionID optional, will be appended if set
+     * @param type             distinguish between user and serial to set forwarded input to the right PI-request param
+     * @param input            forwarded username for classic validateCheck or serial to trigger exact token
+     * @param pass             OTP, PIN+OTP or password to use
+     * @param headers          optional headers for the request
+     * @param transactionID    optional, will be appended if set
+     * @param additionalParams additional parameters for the request
      * @return PIResponse object containing the response or null if error
      */
     private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionID,
                                      Map<String, String> additionalParams)
     {
-        Map<String, String> params = new LinkedHashMap<>();
+        Map<String, String> params = new LinkedHashMap<>(additionalParams);
         params.put(type, input);
         params.put(PASS, (pass != null ? pass : ""));
-        params.putAll(additionalParams);
         appendRealm(params);
         if (transactionID != null && !transactionID.isEmpty())
         {
             params.put(TRANSACTION_ID, transactionID);
         }
         String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        // Shutdown the scheduler if user successfully authenticated
-        PIResponse piResponse = this.parser.parsePIResponse(response);
-        if (piResponse != null && piResponse.value)
-        {
-            this.scheduler.shutdownNow();
-        }
-        return piResponse;
+        return this.parser.parsePIResponse(response);
     }
 
     /**
-     * @see PrivacyIDEA#validateCheckWebAuthn(String, String, String, String, Map)
+     * @see PrivacyIDEA#validateCheckWebAuthn(String, String, String, String, Map, Map)
      */
     public PIResponse validateCheckWebAuthn(String user, String transactionID, String signResponse, String origin)
     {
-        return this.validateCheckWebAuthn(user, transactionID, signResponse, origin, Collections.emptyMap());
+        return this.validateCheckWebAuthn(user, transactionID, signResponse, origin, Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
@@ -191,13 +192,14 @@ public class PrivacyIDEA implements Closeable
      * @param transactionID        transaction ID
      * @param webAuthnSignResponse the WebAuthnSignResponse as returned from the browser
      * @param origin               server name that was used for
+     * @param additionalParams     additional parameters for the request
      * @param headers              optional headers for the request
      * @return PIResponse or null if error
      */
     public PIResponse validateCheckWebAuthn(String user, String transactionID, String webAuthnSignResponse, String origin,
-                                            Map<String, String> headers)
+                                            Map<String, String> additionalParams, Map<String, String> headers)
     {
-        Map<String, String> params = new LinkedHashMap<>();
+        Map<String, String> params = new LinkedHashMap<>(additionalParams);
         // Standard validateCheck data
         params.put(USER, user);
         params.put(TRANSACTION_ID, transactionID);
@@ -287,21 +289,22 @@ public class PrivacyIDEA implements Closeable
     }
 
     /**
-     * @see PrivacyIDEA#triggerChallenges(String, Map)
+     * @see PrivacyIDEA#triggerChallenges(String, Map, Map)
      */
     public PIResponse triggerChallenges(String username)
     {
-        return this.triggerChallenges(username, new LinkedHashMap<>());
+        return this.triggerChallenges(username, Collections.emptyMap(), Collections.emptyMap());
     }
 
     /**
      * Trigger all challenges for the given username. This requires a service account to be set.
      *
-     * @param username username to trigger challenges for
-     * @param headers  optional headers for the request
+     * @param username         username to trigger challenges for
+     * @param additionalParams additional parameters for the request
+     * @param headers          optional headers for the request
      * @return the server response or null if error
      */
-    public PIResponse triggerChallenges(String username, Map<String, String> headers)
+    public PIResponse triggerChallenges(String username, Map<String, String> additionalParams, Map<String, String> headers)
     {
         Objects.requireNonNull(username, "Username is required!");
 
@@ -310,7 +313,7 @@ public class PrivacyIDEA implements Closeable
             log("No service account configured. Cannot trigger challenges");
             return null;
         }
-        Map<String, String> params = new LinkedHashMap<>();
+        Map<String, String> params = new LinkedHashMap<>(additionalParams);
         params.put(USER, username);
         appendRealm(params);
 
@@ -448,30 +451,31 @@ public class PrivacyIDEA implements Closeable
      */
     private void retrieveJWT()
     {
+        log("Getting new JWT with service account...");
         this.jwtRetrievalLatch = new CountDownLatch(1);
         try
         {
             String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
             if (response == null)
             {
-                error("Failed to retrieve auth token, response was empty. Retrying in 10 seconds.");
+                error("Failed to retrieve JWT: Response was empty. Retrying in 10 seconds.");
                 this.scheduler.schedule(this::retrieveJWT, 10, TimeUnit.SECONDS);
             }
             else
             {
-                LinkedHashMap<String, String> authTokenMap = parser.extractAuthToken(response);
-                this.jwt = authTokenMap.get(AUTH_TOKEN);
-                long authTokenExp = Integer.parseInt(authTokenMap.get(AUTH_TOKEN_EXP));
+                LinkedHashMap<String, String> jwtMap = parser.getJWT(response);
+                this.jwt = jwtMap.get(JWT);
+                long jwtExpiration = Integer.parseInt(jwtMap.get(JWT_EXPIRATION_TIME));
 
                 // Schedule the next token retrieval to 1 min before expiration
-                long delay = Math.max(1, authTokenExp - 60 - (System.currentTimeMillis() / 1000L));
+                long delay = Math.max(1, jwtExpiration - 60 - (System.currentTimeMillis() / 1000L));
                 this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
                 log("Next JWT retrieval in " + delay + " seconds.");
             }
         }
         catch (Exception e)
         {
-            error("Failed to retrieve auth token: " + e.getMessage());
+            error("Failed to retrieve JWT: " + e.getMessage());
         }
         this.jwtRetrievalLatch.countDown();
     }
@@ -483,12 +487,17 @@ public class PrivacyIDEA implements Closeable
      */
     public String getJWT()
     {
+        if (jwtRetrievalLatch.getCount() == 0 && this.jwt == null)
+        {
+            retrieveJWT();
+        }
         try
         {
             jwtRetrievalLatch.await();
         }
         catch (InterruptedException e)
         {
+            error("Error while waiting for JWT retrieval: " + e.getMessage());
             error(e);
             return null;
         }
@@ -508,21 +517,22 @@ public class PrivacyIDEA implements Closeable
      * Run a request in a thread of the thread pool. Then join that thread to the one that was calling this method.
      * If the server takes longer to answer a request, the other requests do not have to wait.
      *
-     * @param path              path to the endpoint of the privacyIDEA server
-     * @param params            request parameters
-     * @param headers           request headers
-     * @param authTokenRequired whether an auth token should be acquired prior to the request
-     * @param method            http request method
+     * @param path                  path to the endpoint of the privacyIDEA server
+     * @param params                request parameters
+     * @param headers               request headers
+     * @param authorizationRequired whether an JWT for Authorization should be acquired prior to the request. Requires a service account.
+     * @param method                http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authTokenRequired,
+    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authorizationRequired,
                                    String method)
     {
-        if (!configuration.forwardClientIP.isEmpty())
+        if (authorizationRequired)
         {
-            params.put(CLIENT_IP, configuration.forwardClientIP);
+            // Wait for the JWT to be retrieved and add it to the header
+            headers.put(PIConstants.HEADER_AUTHORIZATION, getJWT());
         }
-        Callable<String> callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, authTokenRequired, method);
+        Callable<String> callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, method);
         Future<String> future = this.threadPool.submit(callable);
         String response = null;
         try
@@ -679,11 +689,10 @@ public class PrivacyIDEA implements Closeable
         private String serviceAccountName = "";
         private String serviceAccountPass = "";
         private String serviceAccountRealm = "";
-        private String forwardClientIP = "";
         private IPILogger logger = null;
         private boolean disableLog = false;
         private IPISimpleLogger simpleLogBridge = null;
-        private int httpTimeoutMs = 30000;
+        private int httpTimeoutMs = 10000;
         private String proxyHost = "";
         private int proxyPort = 0;
 
@@ -775,18 +784,6 @@ public class PrivacyIDEA implements Closeable
         }
 
         /**
-         * Set the client IP to be forwarded to the privacyIDEA server.
-         *
-         * @param clientIP client IP or an empty String
-         * @return Builder
-         */
-        public Builder forwardClientIP(String clientIP)
-        {
-            this.forwardClientIP = clientIP;
-            return this;
-        }
-
-        /**
          * Disable logging completely regardless of any set loggers.
          *
          * @return Builder
@@ -837,7 +834,6 @@ public class PrivacyIDEA implements Closeable
             configuration.serviceAccountName = serviceAccountName;
             configuration.serviceAccountPass = serviceAccountPass;
             configuration.serviceAccountRealm = serviceAccountRealm;
-            configuration.forwardClientIP = forwardClientIP;
             configuration.disableLog = disableLog;
             configuration.httpTimeoutMs = httpTimeoutMs;
             configuration.setProxy(proxyHost, proxyPort);

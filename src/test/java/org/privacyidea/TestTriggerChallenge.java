@@ -16,6 +16,7 @@
  */
 package org.privacyidea;
 
+import java.util.Collections;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
@@ -47,13 +48,11 @@ public class TestTriggerChallenge
     public void testTriggerChallengeSuccess()
     {
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
-                  .respond(HttpResponse.response()
-                                       .withBody(Utils.postAuthSuccessResponse()));
+                  .respond(HttpResponse.response().withBody(Utils.postAuthSuccessResponse()));
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .verifySSL(false)
                                  .serviceAccount(serviceAccount, servicePass)
-                                 .forwardClientIP(forwardClientIP)
                                  .logger(new PILogImplementation())
                                  .realm("realm")
                                  .build();
@@ -61,26 +60,27 @@ public class TestTriggerChallenge
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
-                                   .withBody("user=testuser&realm=realm&client=127.0.0.1"))
+                                   .withBody("user=testuser&realm=realm&clientip=127.0.0.1"))
                   .respond(HttpResponse.response().withBody(Utils.triggerChallengeSuccess()));
 
         String username = "testuser";
-        PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges(username);
+        PIResponse response = privacyIDEA.triggerChallenges(username, Collections.singletonMap("clientip", forwardClientIP),
+                                                            Collections.emptyMap());
 
-        assertEquals("otp", responseTriggerChallenge.preferredClientMode);
-        assertEquals(1, responseTriggerChallenge.id);
-        assertEquals("BittegebenSieeinenOTP-Wertein:", responseTriggerChallenge.message);
-        assertEquals("2.0", responseTriggerChallenge.jsonRPCVersion);
-        assertEquals("3.6.3", responseTriggerChallenge.piVersion);
-        assertEquals("rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b", responseTriggerChallenge.signature);
+        assertEquals("otp", response.preferredClientMode);
+        assertEquals(1, response.id);
+        assertEquals("BittegebenSieeinenOTP-Wertein:", response.message);
+        assertEquals("2.0", response.jsonRPCVersion);
+        assertEquals("3.6.3", response.piVersion);
+        assertEquals("rsa_sha256_pss:4b0f0e12c2...89409a2e65c87d27b", response.signature);
         // Trim all whitespaces, newlines
-        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), responseTriggerChallenge.rawMessage.replaceAll("[\n\r]", ""));
-        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), responseTriggerChallenge.toString().replaceAll("[\n\r]", ""));
+        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), response.rawMessage.replaceAll("[\n\r]", ""));
+        assertEquals(Utils.triggerChallengeSuccess().replaceAll("[\n\r]", ""), response.toString().replaceAll("[\n\r]", ""));
         // result
-        assertTrue(responseTriggerChallenge.status);
-        assertFalse(responseTriggerChallenge.value);
+        assertTrue(response.status);
+        assertFalse(response.value);
 
-        List<Challenge> challenges = responseTriggerChallenge.multiChallenge;
+        List<Challenge> challenges = response.multiChallenge;
         String imageTOTP = "";
         for (Challenge c : challenges)
         {
@@ -98,10 +98,7 @@ public class TestTriggerChallenge
     @Test
     public void testNoServiceAccount()
     {
-        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
-                                 .verifySSL(false)
-                                 .logger(new PILogImplementation())
-                                 .build();
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test").verifySSL(false).logger(new PILogImplementation()).build();
 
         PIResponse responseTriggerChallenge = privacyIDEA.triggerChallenges("Test");
 
@@ -112,8 +109,7 @@ public class TestTriggerChallenge
     public void testNoUsername()
     {
         mockServer.when(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH).withMethod("POST").withBody(""))
-                  .respond(HttpResponse.response()
-                                       .withBody(Utils.postAuthSuccessResponse()));
+                  .respond(HttpResponse.response().withBody(Utils.postAuthSuccessResponse()));
 
         privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
                                  .verifySSL(false)
