@@ -17,7 +17,6 @@
 package org.privacyidea;
 
 import com.google.gson.JsonSyntaxException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -55,7 +54,6 @@ public class PIResponse
     public String passkeyRegistration = "";
     public String username = "";
     public String enrollmentLink = "";
-
 
     public boolean authenticationSuccessful()
     {

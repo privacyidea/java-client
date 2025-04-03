@@ -16,11 +16,70 @@
  */
 package org.privacyidea;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
-
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.ASSERTIONCLIENTEXTENSIONS;
+import static org.privacyidea.PIConstants.ATTESTATION_OBJECT;
+import static org.privacyidea.PIConstants.ATTRIBUTES;
+import static org.privacyidea.PIConstants.AUTHENTICATION;
+import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
+import static org.privacyidea.PIConstants.AUTHENTICATOR_ATTACHMENT;
+import static org.privacyidea.PIConstants.AUTHENTICATOR_DATA;
+import static org.privacyidea.PIConstants.CHALLENGE_STATUS;
+import static org.privacyidea.PIConstants.CLIENTDATA;
+import static org.privacyidea.PIConstants.CLIENTDATAJSON;
+import static org.privacyidea.PIConstants.CLIENT_MODE;
+import static org.privacyidea.PIConstants.CODE;
+import static org.privacyidea.PIConstants.CREDENTIALID;
+import static org.privacyidea.PIConstants.CREDENTIAL_ID;
+import static org.privacyidea.PIConstants.DETAIL;
+import static org.privacyidea.PIConstants.ERROR;
+import static org.privacyidea.PIConstants.EXP;
+import static org.privacyidea.PIConstants.ID;
+import static org.privacyidea.PIConstants.IMAGE;
+import static org.privacyidea.PIConstants.INFO;
+import static org.privacyidea.PIConstants.JSONRPC;
+import static org.privacyidea.PIConstants.JWT;
+import static org.privacyidea.PIConstants.JWT_EXPIRATION_TIME;
+import static org.privacyidea.PIConstants.LINK;
+import static org.privacyidea.PIConstants.MAXFAIL;
+import static org.privacyidea.PIConstants.MESSAGE;
+import static org.privacyidea.PIConstants.MESSAGES;
+import static org.privacyidea.PIConstants.MULTI_CHALLENGE;
+import static org.privacyidea.PIConstants.OTPLEN;
+import static org.privacyidea.PIConstants.PASSKEY;
+import static org.privacyidea.PIConstants.PASSKEY_REGISTRATION;
+import static org.privacyidea.PIConstants.PREFERRED_CLIENT_MODE;
+import static org.privacyidea.PIConstants.RAW_ID;
+import static org.privacyidea.PIConstants.REALMS;
+import static org.privacyidea.PIConstants.RESULT;
+import static org.privacyidea.PIConstants.SERIAL;
+import static org.privacyidea.PIConstants.SIGNATURE;
+import static org.privacyidea.PIConstants.SIGNATUREDATA;
+import static org.privacyidea.PIConstants.STATUS;
+import static org.privacyidea.PIConstants.TIME;
+import static org.privacyidea.PIConstants.TOKEN;
+import static org.privacyidea.PIConstants.TOKENS;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.TRANSACTION_ID;
+import static org.privacyidea.PIConstants.TYPE;
+import static org.privacyidea.PIConstants.USERHANDLE;
+import static org.privacyidea.PIConstants.USERNAME;
+import static org.privacyidea.PIConstants.VALUE;
+import static org.privacyidea.PIConstants.VERSION_NUMBER;
 
 public class JSONParser
 {

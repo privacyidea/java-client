@@ -16,18 +16,15 @@
  */
 package org.privacyidea;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Instances of this class are submitted to the thread pool so that requests can be executed in parallel.

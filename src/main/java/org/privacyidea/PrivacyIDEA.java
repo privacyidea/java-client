@@ -18,10 +18,46 @@ package org.privacyidea;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
+import static org.privacyidea.PIConstants.ENDPOINT_POLLTRANSACTION;
+import static org.privacyidea.PIConstants.ENDPOINT_TOKEN;
+import static org.privacyidea.PIConstants.ENDPOINT_TOKEN_INIT;
+import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
+import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
+import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_INITIALIZE;
+import static org.privacyidea.PIConstants.GENKEY;
+import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_ORIGIN;
+import static org.privacyidea.PIConstants.JWT;
+import static org.privacyidea.PIConstants.JWT_EXPIRATION_TIME;
+import static org.privacyidea.PIConstants.OTPKEY;
+import static org.privacyidea.PIConstants.PASS;
+import static org.privacyidea.PIConstants.PASSWORD;
+import static org.privacyidea.PIConstants.POST;
+import static org.privacyidea.PIConstants.REALM;
+import static org.privacyidea.PIConstants.SERIAL;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_PASSKEY;
+import static org.privacyidea.PIConstants.TRANSACTION_ID;
+import static org.privacyidea.PIConstants.TYPE;
+import static org.privacyidea.PIConstants.USER;
+import static org.privacyidea.PIConstants.USERNAME;
 
 /**
  * This is the main class. It implements the common endpoints such as /validate/check as methods for easy usage.

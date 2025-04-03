@@ -16,12 +16,6 @@
  */
 package org.privacyidea;
 
-import okhttp3.*;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -31,8 +25,20 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
+import static org.privacyidea.PIConstants.POST;
+import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 
 /**
  * This class handles sending requests to the server.
