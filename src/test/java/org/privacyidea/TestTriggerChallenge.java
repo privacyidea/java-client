@@ -36,7 +36,7 @@ public class TestTriggerChallenge
     private PrivacyIDEA privacyIDEA;
     String serviceAccount = "service";
     String servicePass = "pass";
-    String forwardClientIP = "127.0.0.1";
+    String clientIP = "127.0.0.1";
 
     @Before
     public void setup()
@@ -60,11 +60,11 @@ public class TestTriggerChallenge
         mockServer.when(HttpRequest.request()
                                    .withPath(PIConstants.ENDPOINT_TRIGGERCHALLENGE)
                                    .withMethod("POST")
-                                   .withBody("user=testuser&realm=realm&clientip=127.0.0.1"))
+                                   .withBody("clientip=127.0.0.1&user=testuser&realm=realm"))
                   .respond(HttpResponse.response().withBody(Utils.triggerChallengeSuccess()));
 
         String username = "testuser";
-        PIResponse response = privacyIDEA.triggerChallenges(username, Collections.singletonMap("clientip", forwardClientIP),
+        PIResponse response = privacyIDEA.triggerChallenges(username, Collections.singletonMap("clientip", clientIP),
                                                             Collections.emptyMap());
 
         assertEquals("otp", response.preferredClientMode);
