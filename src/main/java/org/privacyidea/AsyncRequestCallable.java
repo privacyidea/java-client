@@ -38,35 +38,25 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     private final String method;
     private final Map<String, String> headers;
     private final Map<String, String> params;
-    private final boolean authTokenRequired;
     private final Endpoint endpoint;
     private final PrivacyIDEA privacyIDEA;
     final String[] callbackResult = {null};
     private CountDownLatch latch;
 
     public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
-                                Map<String, String> headers, boolean authTokenRequired, String method)
+                                Map<String, String> headers, String method)
     {
         this.privacyIDEA = privacyIDEA;
         this.endpoint = endpoint;
         this.path = path;
         this.params = params;
         this.headers = headers;
-        this.authTokenRequired = authTokenRequired;
         this.method = method;
     }
 
     @Override
     public String call() throws Exception
     {
-        // If an auth token is required for the request, get that first then do the actual request
-        if (this.authTokenRequired)
-        {
-            // Wait for the auth token to be retrieved and add it to the header
-            headers.put(PIConstants.HEADER_AUTHORIZATION, privacyIDEA.getJWT());
-        }
-
-        // Do the actual request
         latch = new CountDownLatch(1);
         endpoint.sendRequestAsync(path, params, headers, method, this);
         if (!latch.await(30, TimeUnit.SECONDS))
@@ -90,7 +80,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         if (response.body() != null)
         {
             String s = response.body().string();
-            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
+            if (!privacyIDEA.logExcludedEndpoints().contains(path))
             {
                 privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
             }

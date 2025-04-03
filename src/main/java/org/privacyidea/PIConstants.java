@@ -51,8 +51,8 @@ public class PIConstants
     public static final String TIME = "time";
     public static final String EXP = "exp";
     public static final String CHALLENGE_STATUS = "challenge_status";
-    public static final String AUTH_TOKEN = "authToken";
-    public static final String AUTH_TOKEN_EXP = "authTokenExp";
+    public static final String JWT = "jwt";
+    public static final String JWT_EXPIRATION_TIME = "jwt_expiration_time";
     public static final String TYPE = "type";
     public static final String TRANSACTION_ID = "transaction_id";
     public static final String REALM = "realm";

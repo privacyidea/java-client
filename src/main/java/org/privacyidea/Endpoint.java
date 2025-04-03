@@ -118,11 +118,6 @@ public class Endpoint
             return;
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
-        if (!piConfig.forwardClientIP.isEmpty())
-        {
-            privacyIDEA.log("Forwarding client IP: " + piConfig.forwardClientIP);
-            params.put(CLIENT_IP, piConfig.forwardClientIP);
-        }
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
                        {
@@ -150,7 +145,17 @@ public class Endpoint
         requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.userAgent);
         if (headers != null && !headers.isEmpty())
         {
-            headers.forEach(requestBuilder::addHeader);
+            headers.forEach((k, v) ->
+                            {
+                                if (v == null)
+                                {
+                                    privacyIDEA.error("Unable to add header " + k + " because the value is null");
+                                }
+                                else
+                                {
+                                    requestBuilder.addHeader(k, v);
+                                }
+                            });
         }
 
         if (POST.equals(method))

@@ -26,7 +26,6 @@ class PIConfig
     public String serviceAccountPass = "";
     public String serviceAccountRealm = "";
     public boolean disableLog = false;
-    public String forwardClientIP = "";
     public int httpTimeoutMs = 30000;
     protected String proxyHost = "";
     protected int proxyPort = 0;

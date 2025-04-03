@@ -65,7 +65,7 @@ public class JSONParser
      * @param serverResponse response of the server
      * @return the AuthToken obj or null if error
      */
-    LinkedHashMap<String, String> extractAuthToken(String serverResponse)
+    LinkedHashMap<String, String> getJWT(String serverResponse)
     {
         if (serverResponse != null && !serverResponse.isEmpty())
         {
@@ -75,21 +75,22 @@ public class JSONParser
                 try
                 {
                     JsonObject obj = root.getAsJsonObject();
-                    String authToken = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
-                    var parts = authToken.split("\\.");
+                    String jwt = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                    var parts = jwt.split("\\.");
                     String dec = new String(Base64.getDecoder().decode(parts[1]));
 
                     // Extract the expiration date from the token
-                    int respDate = obj.getAsJsonPrimitive(TIME).getAsInt();
-                    int expDate = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
-                    int difference = expDate - respDate;
-                    privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expDate * 1000L));
+                    int responseTime = obj.getAsJsonPrimitive(TIME).getAsInt();
+                    int expirationTime = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
+                    int difference = expirationTime - responseTime;
+                    privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expirationTime * 1000L));
 
-                    return new LinkedHashMap<>(Map.of(AUTH_TOKEN, authToken, AUTH_TOKEN_EXP, String.valueOf(expDate)));
+                    return new LinkedHashMap<>(Map.of(JWT, jwt, JWT_EXPIRATION_TIME, String.valueOf(expirationTime)));
                 }
                 catch (Exception e)
                 {
-                    privacyIDEA.error("Auth token extraction failed: " + e);
+                    privacyIDEA.error("JWT token extraction failed: " + e);
+                    privacyIDEA.error("Server response: " + serverResponse);
                 }
             }
         }
