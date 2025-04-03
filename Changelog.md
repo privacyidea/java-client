@@ -1,8 +1,14 @@
 # Changelog
 
+### v1.3.0 - 0 Apr 2025
+
+* Passkey functions
+* JWT will be reused and renewed automatically
+* Added option to add arbitrary parameters to the requests
+
 ### v1.2.2 - 5 Mar 2024
 
-* Fixed a problem with the threadpool where thread would not time out and accumulate over time
+* Fixed a problem with the thread pool where thread would not time out and accumulate over time
 * Added the option to set http timeouts
 
 ### v1.2.1 - 9 Aug 2023
