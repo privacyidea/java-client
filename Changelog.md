@@ -1,5 +1,9 @@
 # Changelog
 
+### v1.3.1 - 14 May 2025
+
+* PIResponse::isAuthenticationSuccessful will also consider if multi_challenge is present, not just the authentication field
+
 ### v1.3.0 - 8 Apr 2025
 
 * Passkey functions
