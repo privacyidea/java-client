@@ -57,13 +57,13 @@ public class PIResponse
 
     public boolean authenticationSuccessful()
     {
-        if (authentication == AuthenticationStatus.ACCEPT)
+        if (authentication == AuthenticationStatus.ACCEPT && (multiChallenge == null || multiChallenge.isEmpty()))
         {
             return true;
         }
         else
         {
-            return value && authentication != AuthenticationStatus.CHALLENGE;
+            return value && (multiChallenge == null || multiChallenge.isEmpty());
         }
     }
 
