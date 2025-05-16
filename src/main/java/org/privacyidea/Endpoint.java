@@ -186,7 +186,7 @@ public class Endpoint
         }
 
         Request request = requestBuilder.build();
-        //privacyIDEA.log("HEADERS:\n" + request.headers());
+        privacyIDEA.log("Header: " + request.headers().toString().replace("\n", " | "));
         client.newCall(request).enqueue(callback);
     }
 }

@@ -16,6 +16,8 @@
  */
 package org.privacyidea;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +57,9 @@ public class PIResponse
     public String username = "";
     public String enrollmentLink = "";
 
+    public String webAuthnSignRequest = "";
+    public String webAuthnTransactionId = "";
+
     public boolean authenticationSuccessful()
     {
         if (authentication == AuthenticationStatus.ACCEPT && (multiChallenge == null || multiChallenge.isEmpty()))
@@ -87,6 +92,29 @@ public class PIResponse
         return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
     }
 
+    public String otpTransactionId()
+    {
+        for (Challenge challenge : multiChallenge)
+        {
+            if (!TOKEN_TYPE_PUSH.equals(challenge.getType()) && !TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
+            {
+                return challenge.transactionID;
+            }
+        }
+        return null;
+    }
+
+    public String pushTransactionId() {
+        for (Challenge challenge : multiChallenge)
+        {
+            if (TOKEN_TYPE_PUSH.equals(challenge.getType()))
+            {
+                return challenge.transactionID;
+            }
+        }
+        return null;
+    }
+
     /**
      * Get the messages of all token that require an input field (HOTP, TOTP, SMS, Email...) reduced to a single string.
      *
@@ -115,25 +143,12 @@ public class PIResponse
      */
     public List<String> triggeredTokenTypes()
     {
-        return multiChallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
-    }
-
-    /**
-     * Get all WebAuthn challenges from the multi_challenge.
-     *
-     * @return List of WebAuthn objects or empty list
-     */
-    public List<WebAuthn> webAuthnSignRequests()
-    {
-        List<WebAuthn> ret = new ArrayList<>();
-        multiChallenge.stream().filter(c -> TOKEN_TYPE_WEBAUTHN.equals(c.getType())).collect(Collectors.toList()).forEach(c ->
-                                                                                                                          {
-                                                                                                                              if (c instanceof WebAuthn)
-                                                                                                                              {
-                                                                                                                                  ret.add((WebAuthn) c);
-                                                                                                                              }
-                                                                                                                          });
-        return ret;
+        List<String> types = multiChallenge.stream().map(Challenge::getType).distinct().collect(Collectors.toList());
+        if (this.webAuthnSignRequest != null && !this.webAuthnSignRequest.isEmpty())
+        {
+            types.add(TOKEN_TYPE_WEBAUTHN);
+        }
+        return types;
     }
 
     /**
@@ -146,27 +161,24 @@ public class PIResponse
      */
     public String mergedSignRequest()
     {
-        List<WebAuthn> webauthnSignRequests = webAuthnSignRequests();
-        if (webauthnSignRequests.isEmpty())
+        if (this.webAuthnSignRequest == null || this.webAuthnSignRequest.isEmpty())
         {
             return "";
         }
-        if (webauthnSignRequests.size() == 1)
-        {
-            return webauthnSignRequests.get(0).signRequest();
-        }
+        return this.webAuthnSignRequest;
+    }
 
-        WebAuthn webauthn = webauthnSignRequests.get(0);
-        List<String> stringSignRequests = webauthnSignRequests.stream().map(WebAuthn::signRequest).collect(Collectors.toList());
+    public String toJSON()
+    {
+        GsonBuilder builder = new GsonBuilder();
+        builder.setPrettyPrinting();
+        Gson gson = builder.create();
+        return gson.toJson(this);
+    }
 
-        try
-        {
-            return JSONParser.mergeWebAuthnSignRequest(webauthn, stringSignRequests);
-        }
-        catch (JsonSyntaxException e)
-        {
-            return "";
-        }
+    public static PIResponse fromJSON(String json)
+    {
+        return new Gson().fromJson(json, PIResponse.class);
     }
 
     @Override
