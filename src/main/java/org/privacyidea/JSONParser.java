@@ -276,6 +276,7 @@ public class JSONParser
             JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
             if (arrChallenges != null)
             {
+                List<String> webauthnSignRequests = new ArrayList<>();
                 for (int i = 0; i < arrChallenges.size(); i++)
                 {
                     JsonObject challenge = arrChallenges.get(i).getAsJsonObject();
@@ -300,28 +301,39 @@ public class JSONParser
                     if (TOKEN_TYPE_WEBAUTHN.equals(type))
                     {
                         String webauthnSignRequest = getItemFromAttributes(challenge);
-                        response.multiChallenge.add(new WebAuthn(serial, message, clientMode, image, transactionID, webauthnSignRequest));
+                        response.webAuthnTransactionId = transactionID;
+                        if (webauthnSignRequest != null && !webauthnSignRequest.isEmpty())
+                        {
+                            webauthnSignRequests.add(webauthnSignRequest);
+                        }
                     }
                     else
                     {
                         response.multiChallenge.add(new Challenge(serial, message, clientMode, image, transactionID, type));
                     }
                 }
+                if (!webauthnSignRequests.isEmpty())
+                {
+                    response.webAuthnSignRequest = mergeWebAuthnSignRequest(webauthnSignRequests);
+                }
             }
         }
         return response;
     }
 
-    static String mergeWebAuthnSignRequest(WebAuthn webauthn, List<String> arr) throws JsonSyntaxException
+    String mergeWebAuthnSignRequest(List<String> webAuthnSignRequests) throws JsonSyntaxException
     {
+        String first = webAuthnSignRequests.get(0);
+        //webAuthnSignRequests.remove(0);
+
         List<JsonArray> extracted = new ArrayList<>();
-        for (String signRequest : arr)
+        for (String signRequest : webAuthnSignRequests)
         {
             JsonObject obj = JsonParser.parseString(signRequest).getAsJsonObject();
             extracted.add(obj.getAsJsonArray("allowCredentials"));
         }
 
-        JsonObject signRequest = JsonParser.parseString(webauthn.signRequest()).getAsJsonObject();
+        JsonObject signRequest = JsonParser.parseString(first).getAsJsonObject();
         JsonArray allowCredentials = new JsonArray();
         extracted.forEach(allowCredentials::addAll);
 

@@ -17,11 +17,13 @@
 package org.privacyidea;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Challenge
 {
-    protected final List<String> attributes = new ArrayList<>();
+    protected final Map<String, String> attributes = new HashMap<>();
     protected final String serial;
     protected final String clientMode;
     protected final String message;
@@ -39,17 +41,38 @@ public class Challenge
         this.type = type;
     }
 
-    public List<String> getAttributes() {return attributes;}
+    public Map<String, String> getAttributes()
+    {
+        return attributes;
+    }
 
-    public String getSerial() {return serial;}
+    public String getSerial()
+    {
+        return serial;
+    }
 
-    public String getMessage() {return message;}
+    public String getMessage()
+    {
+        return message;
+    }
 
-    public String getClientMode() {return clientMode;}
+    public String getClientMode()
+    {
+        return clientMode;
+    }
 
-    public String getImage() {return image.replaceAll("\"", "");}
+    public String getImage()
+    {
+        return image.replaceAll("\"", "");
+    }
 
-    public String getTransactionID() {return transactionID;}
+    public String getTransactionID()
+    {
+        return transactionID;
+    }
 
-    public String getType() {return type;}
+    public String getType()
+    {
+        return type;
+    }
 }
