@@ -1,5 +1,13 @@
 # Changelog
 
+### 1.4.0 - 21 May 2025
+
+* PIResponse class can return the transaction based on the mode/type, which currently are Push, WebAuthn, Passkey and OTP.
+* HTTP request headers are logged
+* WebAuthn class as derived class of Challenge has been removed to allow simple serialization of PIResponse
+* allowCredentials for WebAuthnSignRequests are merged when the PIResponse object is created and the combined SignRequest
+  is set to PIResponse.webAuthnSignRequest. WebAuthn challenges are not in the multi_challenge list anymore!
+
 ### v1.3.1 - 14 May 2025
 
 * PIResponse::isAuthenticationSuccessful will also consider if multi_challenge is present, not just the authentication field

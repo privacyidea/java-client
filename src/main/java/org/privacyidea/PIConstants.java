@@ -97,7 +97,7 @@ public class PIConstants
     public static final String SIGNATUREDATA = "signaturedata";
     public static final String AUTHENTICATORDATA = "authenticatordata";
     public static final String AUTHENTICATOR_DATA = "authenticatorData";
-    public static final String USERHANDLE = "userhandle";
+    public static final String USERHANDLE = "userHandle";
     public static final String ASSERTIONCLIENTEXTENSIONS = "assertionclientextensions";
     public static final String PASSKEY = "passkey";
     public static final String RAW_ID = "rawId";
