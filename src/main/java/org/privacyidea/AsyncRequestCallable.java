@@ -26,6 +26,8 @@ import okhttp3.Callback;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 
+import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
+
 /**
  * Instances of this class are submitted to the thread pool so that requests can be executed in parallel.
  */
@@ -77,7 +79,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         if (response.body() != null)
         {
             String s = response.body().string();
-            if (!privacyIDEA.logExcludedEndpoints().contains(path))
+            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
             {
                 privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
             }

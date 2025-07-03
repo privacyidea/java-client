@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
-import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.*;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
@@ -90,6 +89,23 @@ public class PIResponse
     public String pushMessage()
     {
         return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+    }
+
+    /**
+     * Get passkey message
+     *
+     * @return String with passkey message or null if no passkey challenge was triggered.
+     */
+    public String passkeyMessage()
+    {
+        for (Challenge challenge : multiChallenge)
+        {
+            if (TOKEN_TYPE_PASSKEY.equals(challenge.getType()))
+            {
+                return challenge.getMessage();
+            }
+        }
+        return null;
     }
 
     public String otpTransactionId()
