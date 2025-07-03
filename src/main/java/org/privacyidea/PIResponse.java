@@ -52,6 +52,7 @@ public class PIResponse
     public PIError error = null;
     // Passkey content is json string and can be passed to the browser as is
     public String passkeyChallenge = "";
+    public String passkeyMessage = "";
     public String passkeyRegistration = "";
     public String username = "";
     public String enrollmentLink = "";
@@ -89,23 +90,6 @@ public class PIResponse
     public String pushMessage()
     {
         return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
-    }
-
-    /**
-     * Get passkey message
-     *
-     * @return String with passkey message or null if no passkey challenge was triggered.
-     */
-    public String passkeyMessage()
-    {
-        for (Challenge challenge : multiChallenge)
-        {
-            if (TOKEN_TYPE_PASSKEY.equals(challenge.getType()))
-            {
-                return challenge.getMessage();
-            }
-        }
-        return null;
     }
 
     public String otpTransactionId()

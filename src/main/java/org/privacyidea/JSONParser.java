@@ -245,6 +245,7 @@ public class JSONParser
             if (passkeyChallenge != null && !passkeyChallenge.isJsonNull())
             {
                 response.passkeyChallenge = passkeyChallenge.toString();
+                response.passkeyMessage = getString(passkeyChallenge, MESSAGE);
                 // The passkey challenge can contain a transaction id, use that if none was set prior
                 // This will happen if the passkey challenge was requested via /validate/initialize
                 if (response.transactionID == null || response.transactionID.isEmpty())
