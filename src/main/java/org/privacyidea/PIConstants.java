@@ -37,10 +37,11 @@ public class PIConstants
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_USER_AGENT = "User-Agent";
 
-    // TOKEN TYPES
+    // TOKEN TYPES / CONTAINER
     public static final String TOKEN_TYPE_PUSH = "push";
     public static final String TOKEN_TYPE_WEBAUTHN = "webauthn";
     public static final String TOKEN_TYPE_PASSKEY = "passkey";
+    public static final String CONTAINER_TYPE_SMARTPHONE = "smartphone";
 
     // JSON KEYS
     public static final String USERNAME = "username";
