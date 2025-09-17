@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.PIConstants.CONTAINER_TYPE_SMARTPHONE;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.CONTAINER_TYPE_SMARTPHONE;
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
