@@ -18,13 +18,14 @@ package org.privacyidea;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.privacyidea.PIConstants.*;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+
 
 /**
  * This class parses the JSON response of privacyIDEA into a POJO for easier access.
@@ -56,6 +57,9 @@ public class PIResponse
     public String passkeyRegistration = "";
     public String username = "";
     public String enrollmentLink = "";
+    // Enroll via Multichallenge
+    public boolean isEnrollViaMultichallenge = false;
+    public boolean isEnrollViaMultichallengeOptional = false;
 
     public String webAuthnSignRequest = "";
     public String webAuthnTransactionId = "";
