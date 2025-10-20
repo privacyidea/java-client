@@ -69,6 +69,7 @@ public class PIConstants
     public static final String CLIENT_MODE = "client_mode";
     public static final String IMAGE = "image";
     public static final String CLIENT_IP = "client";
+    public static final String CANCEL_ENROLLMENT = "cancel_enrollment";
     public static final String MESSAGES = "messages";
     public static final String MULTI_CHALLENGE = "multi_challenge";
     public static final String ATTRIBUTES = "attributes";
