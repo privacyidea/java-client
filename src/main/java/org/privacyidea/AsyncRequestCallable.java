@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 
 import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
@@ -76,15 +77,23 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     @Override
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException
     {
-        if (response.body() != null)
+        // The body of the response can be in `body()` for success cases or in `errorBody()` for error cases.
+        // We need to handle both and ensure the body is closed to prevent resource leaks.
+        // The body can only be consumed once.
+        try (ResponseBody responseBody = response.body())
         {
-            String s = response.body().string();
-            if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
+            if (responseBody != null)
             {
-                privacyIDEA.log(path + ":\n" + privacyIDEA.parser.formatJson(s));
+                String s = responseBody.string();
+                if (!privacyIDEA.logExcludedEndpoints().contains(path))
+                {
+                    privacyIDEA.log(path + " (" + response.code() + "):\n" + privacyIDEA.parser.formatJson(s));
+                }
+                callbackResult[0] = s;
             }
-            callbackResult[0] = s;
         }
-        latch.countDown();
+        finally {
+            latch.countDown();
+        }
     }
 }
