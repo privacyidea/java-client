@@ -55,6 +55,7 @@ public class PIResponse
     // Passkey content is json string and can be passed to the browser as is
     public String passkeyChallenge = "";
     public String passkeyRegistration = "";
+    public String passkeyMessage = "";
     public String username = "";
     public String enrollmentLink = "";
     // Enroll via Multichallenge
