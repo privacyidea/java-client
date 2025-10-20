@@ -241,6 +241,9 @@ public class JSONParser
             response.transactionID = getString(detail, TRANSACTION_ID);
             response.type = getString(detail, TYPE);
             response.otpLength = getInt(detail, OTPLEN);
+            response.isEnrollViaMultichallenge = getBoolean(detail, "enroll_via_multichallenge");
+            response.isEnrollViaMultichallengeOptional = getBoolean(detail, "enroll_via_multichallenge_optional");
+            // The enrollment link can be in the detail or in one of the
             JsonObject passkeyChallenge = detail.getAsJsonObject(PASSKEY);
             if (passkeyChallenge != null && !passkeyChallenge.isJsonNull())
             {

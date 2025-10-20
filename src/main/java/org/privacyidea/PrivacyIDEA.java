@@ -41,6 +41,7 @@ import static org.privacyidea.PIConstants.ENDPOINT_TOKEN;
 import static org.privacyidea.PIConstants.ENDPOINT_TOKEN_INIT;
 import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
+import static org.privacyidea.PIConstants.CANCEL_ENROLLMENT;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_INITIALIZE;
 import static org.privacyidea.PIConstants.GENKEY;
 import static org.privacyidea.PIConstants.GET;
@@ -371,6 +372,32 @@ public class PrivacyIDEA implements Closeable
         String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
         return piresponse.challengeStatus;
+    }
+
+    /**
+     * @see PrivacyIDEA#validateCheckCancelEnrollment(String, Map)
+     */
+    public PIResponse validateCheckCancelEnrollment(String transactionID)
+    {
+        return this.validateCheckCancelEnrollment(transactionID, Collections.emptyMap());
+    }
+
+    /**
+     * Cancel enrollment via multichallenge.
+     *
+     * @param transactionID transaction ID
+     * @param headers       optional headers for the request
+     * @return PIResponse or null if error
+     */
+    public PIResponse validateCheckCancelEnrollment(String transactionID, Map<String, String> headers)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(TRANSACTION_ID, transactionID);
+        params.put(CANCEL_ENROLLMENT, "true");
+        appendRealm(params);
+
+        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        return this.parser.parsePIResponse(response);
     }
 
     /**
