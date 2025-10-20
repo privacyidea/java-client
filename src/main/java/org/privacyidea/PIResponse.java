@@ -124,6 +124,17 @@ public class PIResponse
         return null;
     }
 
+    public boolean hasChallenges()
+    {
+        return (multiChallenge != null && !multiChallenge.isEmpty()) ||
+               isNotBlank(mergedSignRequest()) ||
+               isNotBlank(passkeyChallenge);
+    }
+
+    private boolean isNotBlank(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
     /**
      * Get the messages of all token that require an input field (HOTP, TOTP, SMS, Email...) reduced to a single string.
      *
