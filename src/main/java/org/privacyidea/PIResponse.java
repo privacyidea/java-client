@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static org.privacyidea.PIConstants.TOKEN_TYPE_PUSH;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
+import static org.privacyidea.PIConstants.CONTAINER_TYPE_SMARTPHONE;
 
 
 /**
@@ -53,8 +54,8 @@ public class PIResponse
     public PIError error = null;
     // Passkey content is json string and can be passed to the browser as is
     public String passkeyChallenge = "";
-    public String passkeyMessage = "";
     public String passkeyRegistration = "";
+    public String passkeyMessage = "";
     public String username = "";
     public String enrollmentLink = "";
     // Enroll via Multichallenge
@@ -83,7 +84,11 @@ public class PIResponse
      */
     public boolean pushAvailable()
     {
-        return multiChallenge.stream().anyMatch(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return multiChallenge.stream().anyMatch(c -> isPushOrSmartphoneContainer(c.getType()));
+    }
+
+    private boolean isPushOrSmartphoneContainer(String type) {
+        return TOKEN_TYPE_PUSH.equals(type) || CONTAINER_TYPE_SMARTPHONE.equals(type);
     }
 
     /**
@@ -93,14 +98,14 @@ public class PIResponse
      */
     public String pushMessage()
     {
-        return reduceChallengeMessagesWhere(c -> TOKEN_TYPE_PUSH.equals(c.getType()));
+        return reduceChallengeMessagesWhere(c -> isPushOrSmartphoneContainer(c.getType()));
     }
 
     public String otpTransactionId()
     {
         for (Challenge challenge : multiChallenge)
         {
-            if (!TOKEN_TYPE_PUSH.equals(challenge.getType()) && !TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
+            if (!isPushOrSmartphoneContainer(challenge.getType()) && !TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
             {
                 return challenge.transactionID;
             }
@@ -111,7 +116,7 @@ public class PIResponse
     public String pushTransactionId() {
         for (Challenge challenge : multiChallenge)
         {
-            if (TOKEN_TYPE_PUSH.equals(challenge.getType()))
+            if (isPushOrSmartphoneContainer(challenge.getType()))
             {
                 return challenge.transactionID;
             }
@@ -126,7 +131,7 @@ public class PIResponse
      */
     public String otpMessage()
     {
-        return reduceChallengeMessagesWhere(c -> !(TOKEN_TYPE_PUSH.equals(c.getType())));
+        return reduceChallengeMessagesWhere(c -> !(isPushOrSmartphoneContainer(c.getType())));
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
