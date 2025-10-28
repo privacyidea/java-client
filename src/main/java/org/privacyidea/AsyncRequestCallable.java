@@ -84,7 +84,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
             if (responseBody != null)
             {
                 String s = responseBody.string();
-                if (!privacyIDEA.logExcludedEndpoints().contains(path))
+                if (!privacyIDEA.logExcludedEndpoints().contains(path) && !ENDPOINT_AUTH.equals(path))
                 {
                     privacyIDEA.log(path + " (" + response.code() + "):\n" + privacyIDEA.parser.formatJson(s));
                 }
