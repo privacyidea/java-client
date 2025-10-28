@@ -77,8 +77,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     @Override
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException
     {
-        // The body of the response can be in `body()` for success cases or in `errorBody()` for error cases.
-        // We need to handle both and ensure the body is closed to prevent resource leaks.
+        // Only response.body() is available in OkHttp; ensure it is closed and consumed only once to prevent resource leaks.
         // The body can only be consumed once.
         try (ResponseBody responseBody = response.body())
         {
