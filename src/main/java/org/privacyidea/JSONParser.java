@@ -73,6 +73,7 @@ import static org.privacyidea.PIConstants.STATUS;
 import static org.privacyidea.PIConstants.TIME;
 import static org.privacyidea.PIConstants.TOKEN;
 import static org.privacyidea.PIConstants.TOKENS;
+import static org.privacyidea.PIConstants.TOKEN_TYPE_PASSKEY;
 import static org.privacyidea.PIConstants.TOKEN_TYPE_WEBAUTHN;
 import static org.privacyidea.PIConstants.TRANSACTION_ID;
 import static org.privacyidea.PIConstants.TYPE;
@@ -277,6 +278,7 @@ public class JSONParser
                                     });
             }
 
+            // Multichallenge
             JsonArray arrChallenges = detail.getAsJsonArray(MULTI_CHALLENGE);
             if (arrChallenges != null)
             {
@@ -310,6 +312,10 @@ public class JSONParser
                         {
                             webauthnSignRequests.add(webauthnSignRequest);
                         }
+                    }
+                    else if (TOKEN_TYPE_PASSKEY.equals(type))
+                    {
+                        response.passkeyChallenge = challenge.toString();
                     }
                     else
                     {
