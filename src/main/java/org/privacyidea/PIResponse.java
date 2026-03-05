@@ -133,11 +133,12 @@ public class PIResponse
 
     public boolean hasChallenges()
     {
-        return (multiChallenge != null && !multiChallenge.isEmpty()) || isNotBlank(mergedSignRequest()) || isNotBlank(passkeyChallenge);
+        return (multiChallenge != null && !multiChallenge.isEmpty()) ||
+               isNotBlank(mergedSignRequest()) ||
+               isNotBlank(passkeyChallenge);
     }
 
-    private boolean isNotBlank(String str)
-    {
+    private boolean isNotBlank(String str) {
         return str != null && !str.trim().isEmpty();
     }
 
