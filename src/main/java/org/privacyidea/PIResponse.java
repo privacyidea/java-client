@@ -18,6 +18,11 @@ package org.privacyidea;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -84,10 +89,11 @@ public class PIResponse
      */
     public boolean pushAvailable()
     {
-        return multiChallenge.stream().anyMatch(c -> isPushOrSmartphoneContainer(c.getType()));
+        return multiChallenge.stream().anyMatch(c -> isPushOrSmartphoneContainer(c.getType()) && "poll".equals(c.getClientMode()));
     }
 
-    private boolean isPushOrSmartphoneContainer(String type) {
+    private boolean isPushOrSmartphoneContainer(String type)
+    {
         return TOKEN_TYPE_PUSH.equals(type) || CONTAINER_TYPE_SMARTPHONE.equals(type);
     }
 
@@ -113,7 +119,8 @@ public class PIResponse
         return null;
     }
 
-    public String pushTransactionId() {
+    public String pushTransactionId()
+    {
         for (Challenge challenge : multiChallenge)
         {
             if (isPushOrSmartphoneContainer(challenge.getType()))
@@ -126,12 +133,11 @@ public class PIResponse
 
     public boolean hasChallenges()
     {
-        return (multiChallenge != null && !multiChallenge.isEmpty()) ||
-               isNotBlank(mergedSignRequest()) ||
-               isNotBlank(passkeyChallenge);
+        return (multiChallenge != null && !multiChallenge.isEmpty()) || isNotBlank(mergedSignRequest()) || isNotBlank(passkeyChallenge);
     }
 
-    private boolean isNotBlank(String str) {
+    private boolean isNotBlank(String str)
+    {
         return str != null && !str.trim().isEmpty();
     }
 
@@ -142,16 +148,27 @@ public class PIResponse
      */
     public String otpMessage()
     {
-        return reduceChallengeMessagesWhere(c -> !(isPushOrSmartphoneContainer(c.getType())));
+        return reduceChallengeMessagesWhere(c ->
+                                            {
+                                                String cm = c.getClientMode();
+                                                System.out.println(
+                                                        "challenge for " + c.getType() + " " + c.getSerial() + " with mode: " + cm);
+                                                boolean yes = "interactive".equals(cm);
+                                                return yes;
+                                            });
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(
-                multiChallenge.stream().filter(predicate).map(Challenge::getMessage).distinct().reduce("", (a, s) -> a + s + ", ").trim());
+        sb.append(this.multiChallenge.stream()
+                                     .filter(predicate)
+                                     .map(Challenge::getMessage)
+                                     .distinct()
+                                     .reduce("", (a, s) -> a + s + ", ")
+                                     .trim());
 
-        if (sb.length() > 0)
+        if (!sb.isEmpty())
         {
             sb.deleteCharAt(sb.length() - 1);
         }
@@ -198,7 +215,19 @@ public class PIResponse
 
     public static PIResponse fromJSON(String json)
     {
-        return new Gson().fromJson(json, PIResponse.class);
+        JsonDeserializer<Challenge> challengeDeserializer = (jsonElement, type, ctx) ->
+        {
+            JsonObject obj = jsonElement.getAsJsonObject();
+            String serial = obj.has("serial") && !obj.get("serial").isJsonNull() ? obj.get("serial").getAsString() : "";
+            String message = obj.has("message") && !obj.get("message").isJsonNull() ? obj.get("message").getAsString() : "";
+            String clientMode = obj.has("clientMode") && !obj.get("clientMode").isJsonNull() ? obj.get("clientMode").getAsString() : "";
+            String image = obj.has("image") && !obj.get("image").isJsonNull() ? obj.get("image").getAsString() : "";
+            String transactionID = obj.has("transactionID") && !obj.get("transactionID").isJsonNull() ? obj.get("transactionID").getAsString() : "";
+            String tokenType = obj.has("type") && !obj.get("type").isJsonNull() ? obj.get("type").getAsString() : "";
+            return new Challenge(serial, message, clientMode, image, transactionID, tokenType);
+        };
+        Gson gson = new GsonBuilder().registerTypeAdapter(Challenge.class, challengeDeserializer).create();
+        return gson.fromJson(json, PIResponse.class);
     }
 
     @Override
