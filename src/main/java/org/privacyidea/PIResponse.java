@@ -169,7 +169,7 @@ public class PIResponse
                                      .reduce("", (a, s) -> a + s + ", ")
                                      .trim());
 
-        if (!sb.isEmpty())
+        if (sb.length() > 0)
         {
             sb.deleteCharAt(sb.length() - 1);
         }
