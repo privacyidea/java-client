@@ -77,8 +77,9 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     @Override
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException
     {
-        // Only response.body() is available in OkHttp; ensure it is closed and consumed only once to prevent resource leaks.
-        // The body can only be consumed once.
+        // For OkHttp, the response body is always available via `body()`, regardless of HTTP status.
+        // We must ensure the body is closed to prevent resource leaks, and it can only be consumed once.
+        // Using try-with-resources guarantees the body is properly closed after reading.
         try (ResponseBody responseBody = response.body())
         {
             if (responseBody != null)
