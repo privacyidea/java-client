@@ -149,14 +149,7 @@ public class PIResponse
      */
     public String otpMessage()
     {
-        return reduceChallengeMessagesWhere(c ->
-                                            {
-                                                String cm = c.getClientMode();
-                                                System.out.println(
-                                                        "challenge for " + c.getType() + " " + c.getSerial() + " with mode: " + cm);
-                                                boolean yes = "interactive".equals(cm);
-                                                return yes;
-                                            });
+        return reduceChallengeMessagesWhere(c -> "interactive".equals(c.getClientMode()));
     }
 
     private String reduceChallengeMessagesWhere(Predicate<Challenge> predicate)
