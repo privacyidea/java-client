@@ -18,7 +18,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.3</version>
                 <configuration>
-                    <skipTests>true</skipTests>
+                    <skipTests>false</skipTests>
                 </configuration>
             </plugin>
             <plugin>
@@ -118,7 +118,7 @@
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>4.4.0</version>
+            <version>4.5.1</version>
         </dependency>
     </dependencies>
 </project>
