@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.5.0 - 26 March 2026
+* Adjusted several functions to differentiate between push token in interactive mode (push_code_to_phone in privacyIDEA 3.13)
+    For example PIResponse::OtpMessage() will only return messages of challenges that have the client_mode 'interactive'.
+
 ### 1.4.0 - 21 May 2025
 
 * PIResponse class can return the transaction based on the mode/type, which currently are Push, WebAuthn, Passkey and OTP.
