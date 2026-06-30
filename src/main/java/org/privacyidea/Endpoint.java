@@ -147,8 +147,15 @@ public class Endpoint
         //privacyIDEA.log("URL: " + url);
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
-        // Add the headers
-        requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.userAgent);
+        // Add the headers. A caller-supplied User-Agent (in the per-request headers) overrides the configured
+        // default, so a single request can be marked as originating from a specific flow. Only add the default
+        // when the caller did not provide one, to avoid sending two User-Agent headers.
+        boolean callerProvidedUserAgent = headers != null &&
+                                          headers.keySet().stream().anyMatch(h -> h.equalsIgnoreCase(HEADER_USER_AGENT));
+        if (!callerProvidedUserAgent)
+        {
+            requestBuilder.addHeader(HEADER_USER_AGENT, piConfig.userAgent);
+        }
         if (headers != null && !headers.isEmpty())
         {
             headers.forEach((k, v) ->
