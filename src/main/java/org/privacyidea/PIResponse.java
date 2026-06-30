@@ -111,7 +111,12 @@ public class PIResponse
     {
         for (Challenge challenge : multiChallenge)
         {
-            if (!isPushOrSmartphoneContainer(challenge.getType()) && !TOKEN_TYPE_WEBAUTHN.equals(challenge.getType()))
+            // A push/smartphone challenge with client_mode "interactive" (push_code_to_phone) requires the user to type
+            // the code displayed on the phone into an input field, just like a classic OTP. It therefore has to be
+            // finalized via the OTP transaction id so the entered code is submitted together with this transaction.
+            boolean interactivePush = isPushOrSmartphoneContainer(challenge.getType()) && "interactive".equals(challenge.getClientMode());
+            if (interactivePush ||
+                (!isPushOrSmartphoneContainer(challenge.getType()) && !TOKEN_TYPE_WEBAUTHN.equals(challenge.getType())))
             {
                 return challenge.transactionID;
             }

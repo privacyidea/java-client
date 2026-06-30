@@ -18,7 +18,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.3</version>
                 <configuration>
-                    <skipTests>false</skipTests>
+                    <!-- Tests can be skipped on demand with -DskipTests, but run by default (e.g. in CI). -->
+                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
             <plugin>
