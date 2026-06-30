@@ -6,6 +6,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Wait before adopting a freshly published release (supply-chain hardening).
+    cooldown:
+      default-days: 7
     groups:
       # Bundle non-major bumps into a single PR to cut noise.
       maven-minor-patch:
@@ -18,6 +21,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
