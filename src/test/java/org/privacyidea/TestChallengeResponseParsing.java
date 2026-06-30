@@ -101,8 +101,6 @@ public class TestChallengeResponseParsing
         assertEquals("Found matching challenge", r.message);
     }
 
-    // --- Response bodies from validate-doc (envelope fields trimmed) ---
-
     private static String hotpChallenge()
     {
         return "{\"detail\":{" +

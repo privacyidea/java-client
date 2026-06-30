@@ -204,8 +204,6 @@ public class TestPushValidate
         assertEquals("", r.preferredClientMode);
     }
 
-    // --- Response bodies taken from validate-doc/push.md (envelope fields trimmed) ---
-
     private static String pollPushChallenge()
     {
         return "{\"detail\":{" +

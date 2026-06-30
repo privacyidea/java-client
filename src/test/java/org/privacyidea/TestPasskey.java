@@ -52,8 +52,6 @@ public class TestPasskey
         parser = new JSONParser(privacyIDEA);
     }
 
-    // --- Response parsing (what validateInitialize / validateCheckPasskey return) ---
-
     /**
      * validateInitialize(type=passkey): an unbound challenge carried in detail.passkey
      * (validate-doc/passkey.md test_01, call 1). The provider reads passkeyChallenge + transactionID from this.
@@ -141,8 +139,6 @@ public class TestPasskey
         assertTrue(r.multiChallenge.isEmpty());
     }
 
-    // --- Request building (what validateCheckPasskey / ...CompletePasskeyRegistration send) ---
-
     /**
      * The browser assertion JSON is decomposed into the flat params privacyIDEA expects on /validate/check.
      */
@@ -201,8 +197,6 @@ public class TestPasskey
     {
         assertNull(parser.parseFIDO2RegistrationResponse("not json at all"));
     }
-
-    // --- Response bodies from validate-doc/passkey.md (envelope fields trimmed) ---
 
     private static String initializePasskeyChallenge()
     {
@@ -285,8 +279,6 @@ public class TestPasskey
                "\"userVerification\":\"discouraged\"}," +
                "\"result\":{\"authentication\":\"CHALLENGE\",\"status\":true,\"value\":false}}";
     }
-
-    // --- Browser response payloads fed to the FIDO2 request-param builders ---
 
     private static String fido2AuthenticationResponse()
     {
