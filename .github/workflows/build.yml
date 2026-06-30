@@ -1,4 +1,4 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# Build the project and run the test suite with Maven.
 
 name: Build
 
@@ -8,13 +8,26 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      - name: Set up JDK
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # 'verify' runs the unit tests (surefire) before packaging. Tests run by
+      # default now; they can be skipped locally with -DskipTests.
+      - name: Build and test with Maven
+        run: mvn -B verify --file pom.xml
