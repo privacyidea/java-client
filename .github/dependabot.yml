@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # Maven runtime/test dependencies (okhttp, gson, java-jwt, kotlin-stdlib, ...)
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Bundle non-major bumps into a single PR to cut noise.
+      maven-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Keep the SHA-pinned GitHub Actions fresh (the pins go stale otherwise).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

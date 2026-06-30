@@ -14,17 +14,22 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # LTS JVMs the library is consumed on (e.g. Keycloak runs on 17/21).
+        java-version: [ '17', '21' ]
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
 
-      - name: Set up JDK
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: ${{ matrix.java-version }}
           cache: maven
 
       # 'verify' runs the unit tests (surefire) before packaging. Tests run by
