@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.5.1 - 30 June 2026
+* Fixed PIResponse::otpTransactionId() to also return the transaction id for push/smartphone challenges in
+  interactive mode (push_code_to_phone). Previously it returned none for these, so the code entered by the user was
+  validated without the transaction id and rejected. This completes the interactive-push handling introduced in 1.5.0.
+* Added a test suite for the push, challenge-response/multichallenge and passkey /validate/* response shapes.
+
 ### 1.5.0 - 26 March 2026
 * Adjusted several functions to differentiate between push token in interactive mode (push_code_to_phone in privacyIDEA 3.13)
     For example PIResponse::OtpMessage() will only return messages of challenges that have the client_mode 'interactive'.
