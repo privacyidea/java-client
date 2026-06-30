@@ -16,6 +16,7 @@ import org.mockserver.model.HttpResponse;
 import java.util.Date;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestJWT extends PILogImplementation implements org.mockserver.mock.action.ExpectationResponseCallback
 {
@@ -87,6 +88,12 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
                 Thread.currentThread().interrupt();
             }
         }
+
+        // The 62s-valid token never expires during the ~12s run, so the validity checks above cannot tell a working
+        // refresh from a dead one. Assert the background scheduler actually re-fetched the token: more than one /auth
+        // request must have reached the mock (the initial retrieval plus at least one scheduled refresh).
+        HttpRequest[] authRequests = mockServer.retrieveRecordedRequests(HttpRequest.request().withPath(PIConstants.ENDPOINT_AUTH));
+        assertTrue("expected background JWT refresh (> 1 /auth call), got " + authRequests.length, authRequests.length > 1);
     }
 
     @After
