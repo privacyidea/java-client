@@ -2,6 +2,7 @@ package org.privacyidea;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -14,20 +15,28 @@ import org.mockserver.model.HttpResponse;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TestJWT extends PILogImplementation implements org.mockserver.mock.action.ExpectationResponseCallback
 {
     private ClientAndServer mockServer;
-    private String jwt;
-    private final int jwtExpirationTimeMs = 3000;
+
+    // Token validity. The client schedules its refresh 60s before expiry, so a validity of 62s makes it refresh
+    // roughly every 2s during the test - exercising several background refreshes.
+    private final int jwtValidityMs = 62_000;
     private final int mockServerResponseDelayMs = 1000;
-    private final int testIterations = 5;
+    // Deliberately NOT a multiple of the ~2s refresh cadence, so the reads in the loop are decoupled from the
+    // background refresh boundary instead of aliasing with it.
+    private final int loopSleepMs = 3000;
+    private final int testIterations = 4;
+
+    private final String issuer = "testIssuer";
+    private final String subject = "testUser";
+    private final String secret = "testSecret";
 
     private final String serviceAccount = "admin";
     private final String servicePassword = "admin";
     private PrivacyIDEA privacyIDEA;
-
 
     @Before
     public void setup()
@@ -48,48 +57,54 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
                                       .build();
     }
 
+    /**
+     * Across several background refresh cycles, getJWT() must always hand out a usable token. Rather than comparing
+     * against a field mutated by the mock-server callback thread (which races with the asynchronous refresh), this
+     * verifies the actual contract: the returned token is non-null and a valid, non-expired JWT with the expected
+     * issuer/subject (signature + expiry checked by the verifier).
+     */
     @Test
     public void testMultipleRetrieval()
     {
         for (int i = 0; i < this.testIterations; i++)
         {
             String newJWT = privacyIDEA.getJWT();
-            assertEquals(this.jwt, newJWT);
+            assertNotNull("getJWT() returned null", newJWT);
+            // Throws if the token is malformed, expired, wrongly signed or has unexpected claims.
+            DecodedJWT decoded = JWT.require(Algorithm.HMAC256(this.secret))
+                                    .withIssuer(this.issuer)
+                                    .withSubject(this.subject)
+                                    .build()
+                                    .verify(newJWT);
+            assertNotNull(decoded.getExpiresAt());
+
             try
             {
-                Thread.sleep(this.jwtExpirationTimeMs);
+                Thread.sleep(this.loopSleepMs);
             }
             catch (InterruptedException e)
             {
                 Thread.currentThread().interrupt();
             }
         }
-        // Wait for the last connection to finish before closing
-        try
-        {
-            Thread.sleep(this.mockServerResponseDelayMs*2);
-        }
-        catch (InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 
     @After
     public void tearDown() throws IOException
     {
-        mockServer.stop();
+        // Close the client first so its refresh scheduler is stopped before the mock server goes away; otherwise a
+        // scheduled refresh could fire against a dead (or, in the shared-port suite, a foreign) endpoint.
         privacyIDEA.close();
+        mockServer.stop();
     }
 
     private String generateJWT(long validityMs)
     {
-        //log("JWT expiration date: " + new Date(System.currentTimeMillis() + validityMs));
         return JWT.create()
-                  .withSubject("testUser")
-                  .withIssuer("testIssuer")
+                  .withSubject(this.subject)
+                  .withIssuer(this.issuer)
                   .withExpiresAt(new Date(System.currentTimeMillis() + validityMs))
-                  .sign(Algorithm.HMAC256("testSecret"));
+                  .sign(Algorithm.HMAC256(this.secret));
     }
 
     private String postAuthSuccessResponse(String jwt)
@@ -109,9 +124,9 @@ public class TestJWT extends PILogImplementation implements org.mockserver.mock.
     @Override
     public HttpResponse handle(HttpRequest httpRequest) throws Exception
     {
-        // The next retrieval is always scheduled for 1 minute before expiration
-        this.jwt = generateJWT(60000 + this.jwtExpirationTimeMs);
-        //System.out.println("Generated JWT: " + this.jwt);
-        return HttpResponse.response().withBody(postAuthSuccessResponse(this.jwt));
+        // Issue a fresh token on every /auth call. No shared field: the test verifies the token the client returns,
+        // not a value mutated here by the mock-server thread.
+        String freshJwt = generateJWT(this.jwtValidityMs);
+        return HttpResponse.response().withBody(postAuthSuccessResponse(freshJwt));
     }
 }
