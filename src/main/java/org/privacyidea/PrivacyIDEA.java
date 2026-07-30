@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -95,7 +94,7 @@ public class PrivacyIDEA implements Closeable
         }
         else
         {
-            error("No service account configured. No JWT will be retrieved.");
+            log("No service account configured. No JWT will be retrieved.");
         }
     }
 
@@ -209,8 +208,14 @@ public class PrivacyIDEA implements Closeable
         {
             params.put(TRANSACTION_ID, transactionID);
         }
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
-        return this.parser.parsePIResponse(response);
+        AsyncRequestCallable callable = submitRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        PIResponse piResponse = this.parser.parsePIResponse(callable.body);
+        if (piResponse != null)
+        {
+            // The rotated pi_remember_device cookie lives in the Set-Cookie response header, not the body.
+            piResponse.setCookieHeaders = callable.setCookies;
+        }
+        return piResponse;
     }
 
     /**
@@ -589,23 +594,32 @@ public class PrivacyIDEA implements Closeable
     private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authorizationRequired,
                                    String method)
     {
+        return submitRequest(path, params, headers, authorizationRequired, method).body;
+    }
+
+    /**
+     * Like {@link #runRequestAsync} but returns the completed callable so callers can also read
+     * response metadata (e.g. Set-Cookie headers) that the plain body string does not carry.
+     */
+    private AsyncRequestCallable submitRequest(String path, Map<String, String> params, Map<String, String> headers,
+                                               boolean authorizationRequired, String method)
+    {
         if (authorizationRequired)
         {
             // Wait for the JWT to be retrieved and add it to the header
             headers.put(PIConstants.HEADER_AUTHORIZATION, getJWT());
         }
-        Callable<String> callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, method);
+        AsyncRequestCallable callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, method);
         Future<String> future = this.threadPool.submit(callable);
-        String response = null;
         try
         {
-            response = future.get();
+            callable.body = future.get();
         }
         catch (InterruptedException | ExecutionException e)
         {
             log("runRequestAsync: " + e.getLocalizedMessage());
         }
-        return response;
+        return callable;
     }
 
     /**

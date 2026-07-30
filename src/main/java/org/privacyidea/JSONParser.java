@@ -244,6 +244,7 @@ public class JSONParser
             response.otpLength = getInt(detail, OTPLEN);
             response.isEnrollViaMultichallenge = getBoolean(detail, "enroll_via_multichallenge");
             response.isEnrollViaMultichallengeOptional = getBoolean(detail, "enroll_via_multichallenge_optional");
+            response.rememberedDevice = getBoolean(detail, "remembered_device");
             // The enrollment link can be in the detail or in one of the
             JsonObject passkeyChallenge = detail.getAsJsonObject(PASSKEY);
             if (passkeyChallenge != null && !passkeyChallenge.isJsonNull())

@@ -31,12 +31,15 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_COOKIE;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
+import static org.privacyidea.PIConstants.HEADER_X_API_KEY;
 import static org.privacyidea.PIConstants.POST;
 import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 
@@ -193,7 +196,20 @@ public class Endpoint
         }
 
         Request request = requestBuilder.build();
-        privacyIDEA.log("Header: " + request.headers().toString().replace("\n", " | "));
+        // Log headers, but never the secret values (API key, session cookie).
+        Headers reqHeaders = request.headers();
+        StringBuilder headerLog = new StringBuilder("Header: ");
+        for (int i = 0; i < reqHeaders.size(); i++)
+        {
+            String name = reqHeaders.name(i);
+            String value = reqHeaders.value(i);
+            if (HEADER_X_API_KEY.equalsIgnoreCase(name) || HEADER_COOKIE.equalsIgnoreCase(name))
+            {
+                value = "<hidden>";
+            }
+            headerLog.append(name).append(": ").append(value).append(" | ");
+        }
+        privacyIDEA.log(headerLog.toString());
         client.newCall(request).enqueue(callback);
     }
 }

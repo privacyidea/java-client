@@ -41,6 +41,10 @@ public class AsyncRequestCallable implements Callable<String>, Callback
     private final Endpoint endpoint;
     private final PrivacyIDEA privacyIDEA;
     final String[] callbackResult = {null};
+    // Body returned by call() (mirrors callbackResult[0], or null on timeout/failure) and the raw
+    // Set-Cookie response header(s). Populated on the request thread, read after the Future completes.
+    String body = null;
+    final java.util.List<String> setCookies = new java.util.ArrayList<>();
     private CountDownLatch latch;
 
     public AsyncRequestCallable(PrivacyIDEA privacyIDEA, Endpoint endpoint, String path, Map<String, String> params,
@@ -82,6 +86,7 @@ public class AsyncRequestCallable implements Callable<String>, Callback
         // Using try-with-resources guarantees the body is properly closed after reading.
         try (ResponseBody responseBody = response.body())
         {
+            setCookies.addAll(response.headers("Set-Cookie"));
             if (responseBody != null)
             {
                 String s = responseBody.string();

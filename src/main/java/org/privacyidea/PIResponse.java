@@ -70,6 +70,13 @@ public class PIResponse
     public String webAuthnSignRequest = "";
     public String webAuthnTransactionId = "";
 
+    // Remember-this-device: detail.remembered_device reports whether a presented persistent-session
+    // cookie was recognised. setCookieHeaders carries the raw Set-Cookie response header(s) (e.g. the
+    // rotated pi_remember_device cookie) which the JSON body does not contain; it is populated by
+    // PrivacyIDEA#validateCheck after parsing, not by fromJSON.
+    public boolean rememberedDevice = false;
+    public transient List<String> setCookieHeaders = new ArrayList<>();
+
     public boolean authenticationSuccessful()
     {
         if (authentication == AuthenticationStatus.ACCEPT && (multiChallenge == null || multiChallenge.isEmpty()))

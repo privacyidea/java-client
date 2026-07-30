@@ -36,6 +36,9 @@ public class PIConstants
     public static final String HEADER_ORIGIN = "Origin";
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_USER_AGENT = "User-Agent";
+    // Secret headers whose values must never be written to the log.
+    public static final String HEADER_X_API_KEY = "X-API-Key";
+    public static final String HEADER_COOKIE = "Cookie";
 
     // TOKEN TYPES / CONTAINER
     public static final String TOKEN_TYPE_PUSH = "push";
