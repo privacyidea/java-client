@@ -93,10 +93,8 @@ public class PrivacyIDEA implements Closeable
         {
             retrieveJWT();
         }
-        else
-        {
-            log("No service account configured. No JWT will be retrieved.");
-        }
+        // No service account is a normal configuration for flows that don't need one (default,
+        // sendStaticPass, remember-device); nothing to retrieve and nothing worth logging per build.
     }
 
     /**
