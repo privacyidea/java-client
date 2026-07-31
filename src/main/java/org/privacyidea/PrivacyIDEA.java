@@ -42,6 +42,7 @@ import static org.privacyidea.PIConstants.ENDPOINT_TRIGGERCHALLENGE;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
 import static org.privacyidea.PIConstants.CANCEL_ENROLLMENT;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_INITIALIZE;
+import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_REMEMBER_DEVICE;
 import static org.privacyidea.PIConstants.GENKEY;
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_ORIGIN;
@@ -213,6 +214,35 @@ public class PrivacyIDEA implements Closeable
         if (piResponse != null)
         {
             // The rotated pi_remember_device cookie lives in the Set-Cookie response header, not the body.
+            piResponse.setCookieHeaders = callable.setCookies;
+        }
+        return piResponse;
+    }
+
+    /**
+     * Check whether the request carries a valid "remember this device" cookie for the given user via
+     * {@code POST /validate/remember_device}. This is a recognition check, not an authentication: it
+     * sends no {@code pass}, never triggers a challenge, and is not an auth event server-side. The
+     * caller must supply the {@code X-API-Key} and the {@code pi_remember_device} cookie in {@code headers}.
+     * <p>
+     * On a hit the server rotates the cookie and returns a new {@code Set-Cookie} (surfaced via
+     * {@link PIResponse#setCookieHeaders}); recognition is reported in {@link PIResponse#value} (mirrored
+     * in {@link PIResponse#rememberedDevice}). On a miss it returns {@code value=false} and may clear the
+     * cookie. A grace-window duplicate answers {@code value=true} with no {@code Set-Cookie}.
+     *
+     * @param user    the username the cookie must be bound to
+     * @param headers request headers (must include {@code X-API-Key} and the {@code Cookie})
+     * @return the parsed response, or {@code null} on transport error
+     */
+    public PIResponse rememberDeviceCheck(String user, Map<String, String> headers)
+    {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put(USER, user);
+        appendRealm(params);
+        AsyncRequestCallable callable = submitRequest(ENDPOINT_VALIDATE_REMEMBER_DEVICE, params, headers, false, POST);
+        PIResponse piResponse = this.parser.parsePIResponse(callable.body);
+        if (piResponse != null)
+        {
             piResponse.setCookieHeaders = callable.setCookies;
         }
         return piResponse;
