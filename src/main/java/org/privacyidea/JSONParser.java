@@ -634,6 +634,44 @@ public class JSONParser
     }
 
 
+    /**
+     * Parse the {@code remember_device} client capability from a {@code /validate/capabilities} body.
+     * Tri-state so the caller can distinguish "server says no" from "couldn't ask":
+     * <ul>
+     *   <li>{@code TRUE} / {@code FALSE} — a valid privacyIDEA JSON response: the advertised value, or
+     *       {@code FALSE} when the response carries no {@code capabilities.remember_device} (e.g. a 401
+     *       from an unidentified client, or a server without the policy).</li>
+     *   <li>{@code null} — the body is not a privacyIDEA JSON object (e.g. a 404 HTML page from a server
+     *       too old to have the endpoint, or a proxy error). Unknown: the caller should not cache it.</li>
+     * </ul>
+     *
+     * @param serverResponse the raw {@code /validate/capabilities} body (may be null/empty)
+     * @return the advertised capability, or {@code null} if it could not be determined
+     */
+    public Boolean parseRememberDeviceCapability(String serverResponse)
+    {
+        if (serverResponse == null || serverResponse.isEmpty())
+        {
+            return null;
+        }
+        try
+        {
+            JsonObject obj = JsonParser.parseString(serverResponse).getAsJsonObject();
+            JsonObject capabilities = obj.getAsJsonObject("capabilities");
+            if (capabilities != null && capabilities.has("remember_device"))
+            {
+                return getBoolean(capabilities, "remember_device");
+            }
+            // Valid privacyIDEA response, but the capability is not offered to this client.
+            return Boolean.FALSE;
+        }
+        catch (JsonSyntaxException | IllegalStateException e)
+        {
+            // Not a privacyIDEA JSON object (old server's 404 page, proxy error, ...). Unknown.
+            return null;
+        }
+    }
+
     private boolean getBoolean(JsonObject obj, String name)
     {
         JsonPrimitive primitive = getPrimitiveOrNull(obj, name);

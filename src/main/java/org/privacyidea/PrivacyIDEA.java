@@ -43,6 +43,7 @@ import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CHECK;
 import static org.privacyidea.PIConstants.CANCEL_ENROLLMENT;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_INITIALIZE;
 import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_REMEMBER_DEVICE;
+import static org.privacyidea.PIConstants.ENDPOINT_VALIDATE_CAPABILITIES;
 import static org.privacyidea.PIConstants.GENKEY;
 import static org.privacyidea.PIConstants.GET;
 import static org.privacyidea.PIConstants.HEADER_ORIGIN;
@@ -244,6 +245,24 @@ public class PrivacyIDEA implements Closeable
             piResponse.setCookieHeaders = callable.setCookies;
         }
         return piResponse;
+    }
+
+    /**
+     * Ask the server which capabilities it offers this API client via {@code GET /validate/capabilities}.
+     * This is a client-level discovery hint (no user context): a {@code TRUE} result means the feature is
+     * available to this client and worth attempting, not that it applies to every user — the per-user
+     * decision is still made at issuance / recognition. The caller must supply the {@code X-API-Key} in
+     * {@code headers} (the endpoint returns 401 to an unidentified client).
+     *
+     * @param headers request headers (must include {@code X-API-Key})
+     * @return {@link Boolean#TRUE}/{@link Boolean#FALSE} for a definitive answer, or {@code null} if the
+     * server could not be asked (transport error, or a server too old to have the endpoint) — see
+     * {@link JSONParser#parseRememberDeviceCapability(String)}.
+     */
+    public Boolean getRememberDeviceCapability(Map<String, String> headers)
+    {
+        String response = runRequestAsync(ENDPOINT_VALIDATE_CAPABILITIES, Collections.emptyMap(), headers, false, GET);
+        return this.parser.parseRememberDeviceCapability(response);
     }
 
     /**

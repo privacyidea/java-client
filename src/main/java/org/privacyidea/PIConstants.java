@@ -32,6 +32,7 @@ public class PIConstants
     public static final String ENDPOINT_VALIDATE_CHECK = "/validate/check";
     public static final String ENDPOINT_VALIDATE_INITIALIZE = "/validate/initialize";
     public static final String ENDPOINT_VALIDATE_REMEMBER_DEVICE = "/validate/remember_device";
+    public static final String ENDPOINT_VALIDATE_CAPABILITIES = "/validate/capabilities";
     public static final String ENDPOINT_TOKEN = "/token/";
 
     public static final String HEADER_ORIGIN = "Origin";
