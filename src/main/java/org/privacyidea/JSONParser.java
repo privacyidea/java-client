@@ -656,13 +656,23 @@ public class JSONParser
         }
         try
         {
+            // The capability sits inside the JSON-RPC envelope: result.value.capabilities.remember_device.
             JsonObject obj = JsonParser.parseString(serverResponse).getAsJsonObject();
-            JsonObject capabilities = obj.getAsJsonObject("capabilities");
-            if (capabilities != null && capabilities.has("remember_device"))
+            JsonObject result = obj.getAsJsonObject(RESULT);
+            if (result != null)
             {
-                return getBoolean(capabilities, "remember_device");
+                JsonElement valueElem = result.get(VALUE);
+                if (valueElem != null && valueElem.isJsonObject())
+                {
+                    JsonObject capabilities = valueElem.getAsJsonObject().getAsJsonObject("capabilities");
+                    if (capabilities != null && capabilities.has("remember_device"))
+                    {
+                        return getBoolean(capabilities, "remember_device");
+                    }
+                }
             }
-            // Valid privacyIDEA response, but the capability is not offered to this client.
+            // Valid privacyIDEA response, but the capability is not offered to this client
+            // (e.g. a 401 with no result.value, or a server without the policy).
             return Boolean.FALSE;
         }
         catch (JsonSyntaxException | IllegalStateException e)
