@@ -334,9 +334,31 @@ public class PrivacyIDEA implements Closeable
      */
     public PIResponse validateCheckPasskey(String transactionID, String passkeyResponse, String origin, Map<String, String> headers)
     {
+        return validateCheckPasskey(transactionID, passkeyResponse, origin, Collections.emptyMap(), headers);
+    }
+
+    /**
+     * Authenticate a passkey (FIDO2) response, with extra request parameters — e.g.
+     * {@code request_persistent_cookie=1} to issue a remember-device cookie when the passkey is used as a
+     * second factor.
+     *
+     * @param transactionID    transaction ID
+     * @param passkeyResponse  the passkey sign response from the browser
+     * @param origin           the origin the browser used
+     * @param additionalParams extra parameters to add to the request (may be empty)
+     * @param headers          optional headers for the request
+     * @return PIResponse or null on error
+     */
+    public PIResponse validateCheckPasskey(String transactionID, String passkeyResponse, String origin,
+                                           Map<String, String> additionalParams, Map<String, String> headers)
+    {
         Map<String, String> params = new LinkedHashMap<>();
         params.put(TRANSACTION_ID, transactionID);
         params.putAll(parser.parseFIDO2AuthenticationResponse(passkeyResponse));
+        if (additionalParams != null)
+        {
+            params.putAll(additionalParams);
+        }
 
         Map<String, String> hdrs = new LinkedHashMap<>();
         hdrs.put(HEADER_ORIGIN, origin);
