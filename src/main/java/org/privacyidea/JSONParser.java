@@ -465,9 +465,14 @@ public class JSONParser
         {
             joInfo.entrySet().forEach(entry ->
                                       {
-                                          if (entry.getKey() != null && entry.getValue() != null)
+                                          JsonElement value = entry.getValue();
+                                          if (entry.getKey() != null && value != null && !value.isJsonNull())
                                           {
-                                              info.info.put(entry.getKey(), entry.getValue().getAsString());
+                                              // getAsString() only works on primitives (and throws on
+                                              // objects/arrays); stringify anything else so one oddly-shaped
+                                              // info value cannot break the whole token-list parse.
+                                              info.info.put(entry.getKey(),
+                                                            value.isJsonPrimitive() ? value.getAsString() : value.toString());
                                           }
                                       });
         }
