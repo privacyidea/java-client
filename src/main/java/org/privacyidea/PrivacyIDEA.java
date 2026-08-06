@@ -304,8 +304,15 @@ public class PrivacyIDEA implements Closeable
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
-        return this.parser.parsePIResponse(response);
+        PIRequestResult result = submitRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        PIResponse piResponse = this.parser.parsePIResponse(result.body);
+        if (piResponse != null)
+        {
+            // Capture the remember-device Set-Cookie the server issues on a successful auth (same as the
+            // plain validateCheck path) — otherwise "remember this device" silently does nothing via WebAuthn.
+            piResponse.setCookieHeaders = result.setCookies;
+        }
+        return piResponse;
     }
 
     /**
@@ -366,8 +373,15 @@ public class PrivacyIDEA implements Closeable
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
-        return this.parser.parsePIResponse(response);
+        PIRequestResult result = submitRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        PIResponse piResponse = this.parser.parsePIResponse(result.body);
+        if (piResponse != null)
+        {
+            // Capture the remember-device Set-Cookie the server issues on a successful auth (same as the
+            // plain validateCheck path) — otherwise "remember this device" silently does nothing via passkey.
+            piResponse.setCookieHeaders = result.setCookies;
+        }
+        return piResponse;
     }
 
     /**
