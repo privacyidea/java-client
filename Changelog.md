@@ -1,5 +1,21 @@
 # Changelog
 
+### 1.6.0 - 6 August 2026
+* Improved logging hygiene: the Authorization token, the `X-API-Key`, and token seeds/OTP values are no longer
+  written to the log, and logged values are sanitized to prevent forged log lines.
+* Requests are now executed synchronously per call; the internal fixed-size thread pool was removed, so the
+  number of concurrent requests is bounded by the caller (the host application's request threads) instead of a
+  hard limit. The HTTP timeout now bounds each call in full.
+* More robust response parsing: malformed or unexpectedly-typed server responses (e.g. HTML error pages) no
+  longer throw; they yield a clear error or a safe default. `pollTransaction` returns `ChallengeStatus.none`
+  on transport failures instead of throwing.
+* Fixed request parameter encoding so values containing reserved characters are no longer double-encoded.
+* JWT retrieval now recovers from a transient failed refresh instead of stopping permanently.
+* Redirects are no longer followed — the client only talks to the configured server URL.
+* Added remember-device support: `/validate/capabilities` capability lookup, `Set-Cookie` propagation on the
+  response, and a `validateCheckPasskey` overload that accepts additional parameters.
+* `close()` now releases the underlying HTTP resources; the builder validates required parameters.
+
 ### 1.5.1 - 30 June 2026
 * Fixed PIResponse::otpTransactionId() to also return the transaction id for push/smartphone challenges in
   interactive mode (push_code_to_phone). Previously it returned none for these, so the code entered by the user was

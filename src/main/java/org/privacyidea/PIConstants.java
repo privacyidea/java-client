@@ -24,6 +24,10 @@ public class PIConstants
     public static final String GET = "GET";
     public static final String POST = "POST";
 
+    // Synthetic error code used when the server response could not be parsed as a privacyIDEA JSON object
+    // (e.g. an HTML/plain error page from a 5xx or a proxy). Distinct from any server-issued positive code.
+    public static final int CLIENT_ERROR_CODE = -1;
+
     // ENDPOINTS
     public static final String ENDPOINT_AUTH = "/auth";
     public static final String ENDPOINT_TOKEN_INIT = "/token/init";

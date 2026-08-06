@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -99,6 +100,45 @@ public class TestChallengeResponseParsing
         assertTrue(r.authenticationSuccessful());
         assertFalse(r.hasChallenges());
         assertEquals("Found matching challenge", r.message);
+    }
+
+    /**
+     * A non-JSON body (e.g. an HTML 5xx error page or a proxy error) must not be swallowed into an empty
+     * response — the caller would misread that as "no challenge / not successful" and silently reload. The
+     * parser returns a response carrying a synthetic error instead, and keeps the raw body for logging.
+     */
+    @Test
+    public void testHtmlErrorPageYieldsError()
+    {
+        String html = "<!DOCTYPE html><html><head><title>500</title></head><body>Internal Server Error</body></html>";
+        PIResponse r = parser.parsePIResponse(html);
+
+        assertNotNull(r);
+        assertNotNull(r.error);
+        assertEquals(PIConstants.CLIENT_ERROR_CODE, r.error.code);
+        assertEquals(html, r.rawMessage);
+    }
+
+    /**
+     * Valid JSON that is not an object (e.g. a bare array) must also surface as an error, not throw or return
+     * an empty response.
+     */
+    @Test
+    public void testNonObjectJsonYieldsError()
+    {
+        PIResponse r = parser.parsePIResponse("[1,2,3]");
+
+        assertNotNull(r);
+        assertNotNull(r.error);
+        assertEquals(PIConstants.CLIENT_ERROR_CODE, r.error.code);
+    }
+
+    /** Empty / null input keeps the existing contract: null (nothing to parse). */
+    @Test
+    public void testEmptyInputReturnsNull()
+    {
+        assertNull(parser.parsePIResponse(""));
+        assertNull(parser.parsePIResponse(null));
     }
 
     private static String hotpChallenge()

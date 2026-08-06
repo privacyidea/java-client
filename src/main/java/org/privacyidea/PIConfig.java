@@ -26,7 +26,8 @@ class PIConfig
     public String serviceAccountPass = "";
     public String serviceAccountRealm = "";
     public boolean disableLog = false;
-    public int httpTimeoutMs = 30000;
+    // Default matches PrivacyIDEA.Builder.httpTimeoutMs so the two do not disagree.
+    public int httpTimeoutMs = 10000;
     protected String proxyHost = "";
     protected int proxyPort = 0;
 

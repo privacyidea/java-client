@@ -25,6 +25,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -39,6 +40,7 @@ import static org.privacyidea.PIConstants.AUTHENTICATORDATA;
 import static org.privacyidea.PIConstants.AUTHENTICATOR_ATTACHMENT;
 import static org.privacyidea.PIConstants.AUTHENTICATOR_DATA;
 import static org.privacyidea.PIConstants.CHALLENGE_STATUS;
+import static org.privacyidea.PIConstants.CLIENT_ERROR_CODE;
 import static org.privacyidea.PIConstants.CLIENTDATA;
 import static org.privacyidea.PIConstants.CLIENTDATAJSON;
 import static org.privacyidea.PIConstants.CLIENT_MODE;
@@ -129,29 +131,28 @@ public class JSONParser
     {
         if (serverResponse != null && !serverResponse.isEmpty())
         {
-            JsonElement root = JsonParser.parseString(serverResponse);
-            if (root != null)
+            try
             {
-                try
-                {
-                    JsonObject obj = root.getAsJsonObject();
-                    String jwt = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
-                    var parts = jwt.split("\\.");
-                    String dec = new String(Base64.getDecoder().decode(parts[1]));
+                // parseString is inside the try: a non-JSON /auth body (e.g. an HTML 5xx/proxy page) throws
+                // JsonSyntaxException, which must be caught here so the method honours its "null on error"
+                // contract instead of propagating.
+                JsonObject obj = JsonParser.parseString(serverResponse).getAsJsonObject();
+                String jwt = obj.getAsJsonObject(RESULT).getAsJsonObject(VALUE).getAsJsonPrimitive(TOKEN).getAsString();
+                var parts = jwt.split("\\.");
+                String dec = new String(Base64.getDecoder().decode(parts[1]), StandardCharsets.UTF_8);
 
-                    // Extract the expiration date from the token
-                    int responseTime = obj.getAsJsonPrimitive(TIME).getAsInt();
-                    int expirationTime = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsInt();
-                    int difference = expirationTime - responseTime;
-                    privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expirationTime * 1000L));
+                // Extract the expiration date from the token (epoch seconds -> long, so it is 2038-safe).
+                long responseTime = obj.getAsJsonPrimitive(TIME).getAsLong();
+                long expirationTime = JsonParser.parseString(dec).getAsJsonObject().getAsJsonPrimitive(EXP).getAsLong();
+                long difference = expirationTime - responseTime;
+                privacyIDEA.log("JWT Validity: " + difference / 60 + " minutes. Token expires at: " + new Date(expirationTime * 1000L));
 
-                    return new LinkedHashMap<>(Map.of(JWT, jwt, JWT_EXPIRATION_TIME, String.valueOf(expirationTime)));
-                }
-                catch (Exception e)
-                {
-                    privacyIDEA.error("JWT token extraction failed: " + e);
-                    privacyIDEA.error("Server response: " + serverResponse);
-                }
+                return new LinkedHashMap<>(Map.of(JWT, jwt, JWT_EXPIRATION_TIME, String.valueOf(expirationTime)));
+            }
+            catch (Exception e)
+            {
+                // Never log the raw /auth body here — it contains the bearer JWT.
+                privacyIDEA.error("JWT token extraction failed: " + e);
             }
         }
         else
@@ -182,12 +183,23 @@ public class JSONParser
         {
             obj = JsonParser.parseString(serverResponse).getAsJsonObject();
         }
-        catch (JsonSyntaxException e)
+        catch (JsonSyntaxException | IllegalStateException e)
         {
+            // The body is not a privacyIDEA JSON object — typically an HTML/plain error page from a 5xx
+            // (e.g. a server-side DB error) or a proxy. Return a response carrying an error so callers can
+            // surface a failure instead of treating an empty response as "no challenge / not successful"
+            // and silently reloading. The raw body stays in response.rawMessage for logging/debugging.
             privacyIDEA.error(e);
+            response.error = new PIError(CLIENT_ERROR_CODE, "The privacyIDEA server returned an unexpected response.");
             return response;
         }
 
+        // Guard the whole structural walk: a present-but-wrong-typed nested field (e.g. result as a string,
+        // a primitive inside multi_challenge) makes Gson's typed accessors throw. Rather than let that
+        // propagate to the caller as an uncaught RuntimeException, surface it as the same synthetic error a
+        // non-JSON body produces, so callers uniformly see "unexpected server response".
+        try
+        {
         response.id = getInt(obj, ID);
         response.piVersion = getString(obj, VERSION_NUMBER);
         response.signature = getString(obj, SIGNATURE);
@@ -272,7 +284,9 @@ public class JSONParser
             {
                 arrMessages.forEach(val ->
                                     {
-                                        if (val != null)
+                                        // Only add scalar entries; a JSON null (JsonNull) or object element
+                                        // would make getAsString() throw UnsupportedOperationException.
+                                        if (val != null && val.isJsonPrimitive())
                                         {
                                             response.messages.add(val.getAsString());
                                         }
@@ -316,7 +330,12 @@ public class JSONParser
                     }
                     else if (TOKEN_TYPE_PASSKEY.equals(type))
                     {
-                        response.passkeyChallenge = challenge.toString();
+                        // Do not overwrite a passkey challenge already extracted from detail.passkey (which
+                        // also carries its message/transaction id); only fill it in if still empty.
+                        if (response.passkeyChallenge == null || response.passkeyChallenge.isEmpty())
+                        {
+                            response.passkeyChallenge = challenge.toString();
+                        }
                     }
                     else
                     {
@@ -328,6 +347,12 @@ public class JSONParser
                     response.webAuthnSignRequest = mergeWebAuthnSignRequest(webauthnSignRequests);
                 }
             }
+        }
+        }
+        catch (RuntimeException e)
+        {
+            privacyIDEA.error(e);
+            response.error = new PIError(CLIENT_ERROR_CODE, "The privacyIDEA server returned an unexpected response.");
         }
         return response;
     }
@@ -341,7 +366,11 @@ public class JSONParser
         for (String signRequest : webAuthnSignRequests)
         {
             JsonObject obj = JsonParser.parseString(signRequest).getAsJsonObject();
-            extracted.add(obj.getAsJsonArray("allowCredentials"));
+            JsonArray ac = obj.getAsJsonArray("allowCredentials");
+            if (ac != null)
+            {
+                extracted.add(ac);
+            }
         }
 
         JsonObject signRequest = JsonParser.parseString(first).getAsJsonObject();
@@ -393,21 +422,29 @@ public class JSONParser
             return ret;
         }
 
-        JsonObject result = object.getAsJsonObject(RESULT);
-        if (result != null)
+        try
         {
-            JsonObject value = result.getAsJsonObject(VALUE);
-
-            if (value != null)
+            JsonObject result = object.getAsJsonObject(RESULT);
+            if (result != null)
             {
-                JsonArray tokens = value.getAsJsonArray(TOKENS);
-                if (tokens != null)
+                JsonObject value = result.getAsJsonObject(VALUE);
+
+                if (value != null)
                 {
-                    List<TokenInfo> infos = new ArrayList<>();
-                    tokens.forEach(jsonValue -> infos.add(parseSingleTokenInfo(jsonValue.toString())));
-                    ret = infos;
+                    JsonArray tokens = value.getAsJsonArray(TOKENS);
+                    if (tokens != null)
+                    {
+                        List<TokenInfo> infos = new ArrayList<>();
+                        tokens.forEach(jsonValue -> infos.add(parseSingleTokenInfo(jsonValue.toString())));
+                        ret = infos;
+                    }
                 }
             }
+        }
+        catch (RuntimeException e)
+        {
+            // A wrongly-typed result/value/tokens node: return whatever was collected rather than throwing.
+            privacyIDEA.error(e);
         }
         return ret;
     }
@@ -439,6 +476,10 @@ public class JSONParser
             return info;
         }
 
+        // Guard the field walk: a single token whose nested members (info/realms) arrive with an unexpected
+        // JSON type must not abort the whole list parse in parseTokenInfoList — return the partial token.
+        try
+        {
         info.active = getBoolean(obj, "active");
         info.count = getInt(obj, "count");
         info.countWindow = getInt(obj, "count_window");
@@ -482,11 +523,16 @@ public class JSONParser
         {
             arrRealms.forEach(val ->
                               {
-                                  if (val != null)
+                                  if (val != null && val.isJsonPrimitive())
                                   {
                                       info.realms.add(val.getAsString());
                                   }
                               });
+        }
+        }
+        catch (RuntimeException e)
+        {
+            privacyIDEA.error(e);
         }
         return info;
     }
@@ -516,12 +562,15 @@ public class JSONParser
             obj = JsonParser.parseString(serverResponse).getAsJsonObject();
 
             JsonObject result = obj.getAsJsonObject(RESULT);
-            JsonElement errElem = result.get(ERROR);
-            if (errElem != null && !errElem.isJsonNull())
+            if (result != null)
             {
-                JsonObject errObj = result.getAsJsonObject(ERROR);
-                rInfo.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
-                return rInfo;
+                JsonElement errElem = result.get(ERROR);
+                if (errElem != null && !errElem.isJsonNull())
+                {
+                    JsonObject errObj = result.getAsJsonObject(ERROR);
+                    rInfo.error = new PIError(getInt(errObj, CODE), getString(errObj, MESSAGE));
+                    return rInfo;
+                }
             }
 
             JsonObject detail = obj.getAsJsonObject("detail");
@@ -556,7 +605,7 @@ public class JSONParser
                 rInfo.rolloutState = getString(detail, "rollout_state");
             }
         }
-        catch (JsonSyntaxException | ClassCastException e)
+        catch (RuntimeException e)
         {
             privacyIDEA.error(e);
             return rInfo;
@@ -680,29 +729,73 @@ public class JSONParser
             // (e.g. a 401 with no result.value, or a server without the policy).
             return Boolean.FALSE;
         }
-        catch (JsonSyntaxException | IllegalStateException e)
+        catch (RuntimeException e)
         {
-            // Not a privacyIDEA JSON object (old server's 404 page, proxy error, ...). Unknown.
+            // Not a privacyIDEA JSON object, or a wrongly-typed capabilities node (old server's 404 page,
+            // proxy error, ...). Unknown — the caller should not cache it.
             return null;
         }
     }
 
+    // The leaf accessors below are deliberately tolerant of the value arriving as a different JSON scalar
+    // type than expected: privacyIDEA has historically stringified some flags/numbers, and a stricter reader
+    // would silently drop them (a "true" flag read as false, a numeric serial read as ""). They never throw.
+
     private boolean getBoolean(JsonObject obj, String name)
     {
         JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
-        return primitive != null && primitive.isBoolean() && primitive.getAsBoolean();
+        if (primitive == null)
+        {
+            return false;
+        }
+        if (primitive.isBoolean())
+        {
+            return primitive.getAsBoolean();
+        }
+        // Accept a stringified boolean ("true"/"false", case-insensitive).
+        return primitive.isString() && Boolean.parseBoolean(primitive.getAsString().trim());
     }
 
     private int getInt(JsonObject obj, String name)
     {
+        return (int) getLong(obj, name);
+    }
+
+    private long getLong(JsonObject obj, String name)
+    {
         JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
-        return primitive != null && primitive.isNumber() ? primitive.getAsInt() : 0;
+        if (primitive == null)
+        {
+            return 0L;
+        }
+        try
+        {
+            if (primitive.isNumber())
+            {
+                return primitive.getAsLong();
+            }
+            if (primitive.isString())
+            {
+                String s = primitive.getAsString().trim();
+                if (!s.isEmpty())
+                {
+                    return Long.parseLong(s);
+                }
+            }
+        }
+        catch (NumberFormatException ignored)
+        {
+            // fall through to default
+        }
+        return 0L;
     }
 
     private String getString(JsonObject obj, String name)
     {
         JsonPrimitive primitive = getPrimitiveOrNull(obj, name);
-        return primitive != null && primitive.isString() ? primitive.getAsString() : "";
+        // Any scalar (string, number, boolean) is rendered as its string form so a value sent under an
+        // unexpected type is preserved rather than lost.
+        return primitive != null ? primitive.getAsString() : "";
     }
 
     private JsonPrimitive getPrimitiveOrNull(JsonObject obj, String name)

@@ -24,14 +24,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static org.privacyidea.PIConstants.ENDPOINT_AUTH;
@@ -71,16 +67,23 @@ public class PrivacyIDEA implements Closeable
     private final IPILogger log;
     private final IPISimpleLogger simpleLog;
     private final Endpoint endpoint;
-    private String jwt = null;
-    // Thread pool for connections
-    private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(1000);
-    private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 20, 10, TimeUnit.SECONDS, queue);
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private CountDownLatch jwtRetrievalLatch;
+    // Written on the scheduler thread, read on request threads -> volatile for cross-thread visibility.
+    private volatile String jwt = null;
+    // Daemon scheduler so a forgotten close() cannot keep the JVM alive; single thread refreshes the JWT.
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, r ->
+    {
+        Thread t = new Thread(r, "privacyIDEA-jwt-refresh");
+        t.setDaemon(true);
+        return t;
+    });
+    private volatile CountDownLatch jwtRetrievalLatch;
     final JSONParser parser;
-    // Responses from these endpoints will not be logged. The list can be overwritten.
-    private List<String> logExcludedEndpoints = Arrays.asList(
-            PIConstants.ENDPOINT_POLLTRANSACTION); //Collections.emptyList();PIConstants.ENDPOINT_AUTH,
+    // Responses from these endpoints will not be logged (they carry secrets: the poll body is innocuous but
+    // /auth carries the JWT and /token/init the generated seed). The list can be overwritten.
+    private volatile List<String> logExcludedEndpoints = Arrays.asList(
+            PIConstants.ENDPOINT_POLLTRANSACTION,
+            PIConstants.ENDPOINT_AUTH,
+            PIConstants.ENDPOINT_TOKEN_INIT);
 
     private PrivacyIDEA(PIConfig configuration, IPILogger logger, IPISimpleLogger simpleLog)
     {
@@ -89,7 +92,6 @@ public class PrivacyIDEA implements Closeable
         this.configuration = configuration;
         this.endpoint = new Endpoint(this);
         this.parser = new JSONParser(this);
-        this.threadPool.allowCoreThreadTimeOut(true);
         if (serviceAccountAvailable())
         {
             retrieveJWT();
@@ -200,7 +202,7 @@ public class PrivacyIDEA implements Closeable
     private PIResponse getPIResponse(String type, String input, String pass, Map<String, String> headers, String transactionID,
                                      Map<String, String> additionalParams)
     {
-        Map<String, String> params = new LinkedHashMap<>(additionalParams);
+        Map<String, String> params = new LinkedHashMap<>(additionalParams == null ? Collections.emptyMap() : additionalParams);
         params.put(type, input);
         params.put(PASS, (pass != null ? pass : ""));
         appendRealm(params);
@@ -208,7 +210,7 @@ public class PrivacyIDEA implements Closeable
         {
             params.put(TRANSACTION_ID, transactionID);
         }
-        AsyncRequestCallable callable = submitRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        PIRequestResult callable = submitRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         PIResponse piResponse = this.parser.parsePIResponse(callable.body);
         if (piResponse != null)
         {
@@ -238,7 +240,7 @@ public class PrivacyIDEA implements Closeable
         Map<String, String> params = new LinkedHashMap<>();
         params.put(USER, user);
         appendRealm(params);
-        AsyncRequestCallable callable = submitRequest(ENDPOINT_VALIDATE_REMEMBER_DEVICE, params, headers, false, POST);
+        PIRequestResult callable = submitRequest(ENDPOINT_VALIDATE_REMEMBER_DEVICE, params, headers, false, POST);
         PIResponse piResponse = this.parser.parsePIResponse(callable.body);
         if (piResponse != null)
         {
@@ -261,7 +263,7 @@ public class PrivacyIDEA implements Closeable
      */
     public Boolean getRememberDeviceCapability(Map<String, String> headers)
     {
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CAPABILITIES, Collections.emptyMap(), headers, false, GET);
+        String response = runRequest(ENDPOINT_VALIDATE_CAPABILITIES, Collections.emptyMap(), headers, false, GET);
         return this.parser.parseRememberDeviceCapability(response);
     }
 
@@ -287,7 +289,7 @@ public class PrivacyIDEA implements Closeable
     public PIResponse validateCheckWebAuthn(String user, String transactionID, String webAuthnSignResponse, String origin,
                                             Map<String, String> additionalParams, Map<String, String> headers)
     {
-        Map<String, String> params = new LinkedHashMap<>(additionalParams);
+        Map<String, String> params = new LinkedHashMap<>(additionalParams == null ? Collections.emptyMap() : additionalParams);
         // Standard validateCheck data
         params.put(USER, user);
         params.put(TRANSACTION_ID, transactionID);
@@ -302,7 +304,7 @@ public class PrivacyIDEA implements Closeable
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -319,7 +321,7 @@ public class PrivacyIDEA implements Closeable
         Map<String, String> params = new LinkedHashMap<>();
         params.put(TYPE, type);
 
-        String response = runRequestAsync(ENDPOINT_VALIDATE_INITIALIZE, params, Collections.emptyMap(), false, POST);
+        String response = runRequest(ENDPOINT_VALIDATE_INITIALIZE, params, Collections.emptyMap(), false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -364,7 +366,7 @@ public class PrivacyIDEA implements Closeable
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -394,7 +396,7 @@ public class PrivacyIDEA implements Closeable
         hdrs.put(HEADER_ORIGIN, origin);
         hdrs.putAll(headers);
 
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
+        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, hdrs, false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -423,11 +425,11 @@ public class PrivacyIDEA implements Closeable
             return null;
         }
         Map<String, String> headersCopy = new LinkedHashMap<>(headers);
-        Map<String, String> params = new LinkedHashMap<>(additionalParams);
+        Map<String, String> params = new LinkedHashMap<>(additionalParams == null ? Collections.emptyMap() : additionalParams);
         params.put(USER, username);
         appendRealm(params);
 
-        String response = runRequestAsync(ENDPOINT_TRIGGERCHALLENGE, params, headersCopy, true, POST);
+        String response = runRequest(ENDPOINT_TRIGGERCHALLENGE, params, headersCopy, true, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -443,8 +445,14 @@ public class PrivacyIDEA implements Closeable
 
         Map<String, String> params = new LinkedHashMap<>();
         params.put(TRANSACTION_ID, transactionID);
-        String response = runRequestAsync(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
+        String response = runRequest(ENDPOINT_POLLTRANSACTION, params, Collections.emptyMap(), false, GET);
         PIResponse piresponse = this.parser.parsePIResponse(response);
+        // On a transport failure/timeout the body is null/empty and parsePIResponse returns null; report
+        // "none" as documented rather than dereferencing null.
+        if (piresponse == null || piresponse.challengeStatus == null)
+        {
+            return ChallengeStatus.none;
+        }
         return piresponse.challengeStatus;
     }
 
@@ -470,7 +478,7 @@ public class PrivacyIDEA implements Closeable
         params.put(CANCEL_ENROLLMENT, "true");
         appendRealm(params);
 
-        String response = runRequestAsync(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
+        String response = runRequest(ENDPOINT_VALIDATE_CHECK, params, headers, false, POST);
         return this.parser.parsePIResponse(response);
     }
 
@@ -512,7 +520,7 @@ public class PrivacyIDEA implements Closeable
         }
         Map<String, String> params = new LinkedHashMap<>();
         params.put(USER, username);
-        String response = runRequestAsync(ENDPOINT_TOKEN, params, new LinkedHashMap<>(), true, GET);
+        String response = runRequest(ENDPOINT_TOKEN, params, new LinkedHashMap<>(), true, GET);
         return parser.parseTokenInfoList(response);
     }
 
@@ -537,7 +545,7 @@ public class PrivacyIDEA implements Closeable
         params.put(TYPE, typeToEnroll);
         params.put(GENKEY, "1"); // Let the server generate the secret
 
-        String response = runRequestAsync(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
+        String response = runRequest(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
 
         return parser.parseRolloutInfo(response);
     }
@@ -564,7 +572,7 @@ public class PrivacyIDEA implements Closeable
         params.put(TYPE, typeToEnroll);
         params.put(OTPKEY, otpKey); // Import the secret
 
-        String response = runRequestAsync(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
+        String response = runRequest(ENDPOINT_TOKEN_INIT, params, new LinkedHashMap<>(), true, POST);
 
         return parser.parseRolloutInfo(response);
     }
@@ -589,31 +597,43 @@ public class PrivacyIDEA implements Closeable
     {
         log("Getting new JWT with service account...");
         this.jwtRetrievalLatch = new CountDownLatch(1);
+        // Default: retry soon. Only a successful retrieval pushes this out to ~expiry-60s. Whatever happens,
+        // the finally block below ALWAYS schedules the next run, so a single failure (empty body, malformed
+        // /auth response, non-numeric expiry) can no longer permanently stop the refresh loop.
+        long nextDelaySeconds = 10;
         try
         {
-            String response = runRequestAsync(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
-            if (response == null)
+            String response = runRequest(ENDPOINT_AUTH, serviceAccountParam(), Collections.emptyMap(), false, POST);
+            LinkedHashMap<String, String> jwtMap = (response == null) ? null : parser.getJWT(response);
+            if (jwtMap == null || jwtMap.get(JWT) == null)
             {
-                error("Failed to retrieve JWT: Response was empty. Retrying in 10 seconds.");
-                this.scheduler.schedule(this::retrieveJWT, 10, TimeUnit.SECONDS);
+                error("Failed to retrieve JWT: empty or invalid /auth response. Retrying in " + nextDelaySeconds + " seconds.");
             }
             else
             {
-                LinkedHashMap<String, String> jwtMap = parser.getJWT(response);
                 this.jwt = jwtMap.get(JWT);
-                long jwtExpiration = Integer.parseInt(jwtMap.get(JWT_EXPIRATION_TIME));
-
-                // Schedule the next token retrieval to 1 min before expiration
-                long delay = Math.max(1, jwtExpiration - 60 - (System.currentTimeMillis() / 1000L));
-                this.scheduler.schedule(this::retrieveJWT, delay, TimeUnit.SECONDS);
-                log("Next JWT retrieval in " + delay + " seconds.");
+                long jwtExpiration = Long.parseLong(jwtMap.get(JWT_EXPIRATION_TIME));
+                // Schedule the next token retrieval to 1 min before expiration.
+                nextDelaySeconds = Math.max(1, jwtExpiration - 60 - (System.currentTimeMillis() / 1000L));
             }
         }
         catch (Exception e)
         {
             error("Failed to retrieve JWT: " + e.getMessage());
         }
-        this.jwtRetrievalLatch.countDown();
+        finally
+        {
+            this.jwtRetrievalLatch.countDown();
+        }
+        try
+        {
+            this.scheduler.schedule(this::retrieveJWT, nextDelaySeconds, TimeUnit.SECONDS);
+            log("Next JWT retrieval in " + nextDelaySeconds + " seconds.");
+        }
+        catch (RejectedExecutionException e)
+        {
+            // The scheduler has been shut down via close(); nothing more to schedule.
+        }
     }
 
     /**
@@ -623,18 +643,22 @@ public class PrivacyIDEA implements Closeable
      */
     public String getJWT()
     {
-        if (jwtRetrievalLatch.getCount() == 0 && this.jwt == null)
+        // Snapshot the volatile reference once. Null means no service account was configured (the constructor
+        // only kicks off retrieval when one is present), so there is no JWT flow — return null rather than NPE.
+        CountDownLatch latch = this.jwtRetrievalLatch;
+        if (latch == null)
         {
-            retrieveJWT();
+            return null;
         }
         try
         {
-            jwtRetrievalLatch.await();
+            // The refresh loop always keeps a retrieval scheduled, so we just wait for the in-flight one.
+            latch.await();
         }
         catch (InterruptedException e)
         {
+            Thread.currentThread().interrupt();
             error("Error while waiting for JWT retrieval: " + e.getMessage());
-            error(e);
             return null;
         }
         return this.jwt;
@@ -660,35 +684,26 @@ public class PrivacyIDEA implements Closeable
      * @param method                http request method
      * @return response of the server as string or null
      */
-    private String runRequestAsync(String path, Map<String, String> params, Map<String, String> headers, boolean authorizationRequired,
-                                   String method)
+    private String runRequest(String path, Map<String, String> params, Map<String, String> headers, boolean authorizationRequired,
+                              String method)
     {
         return submitRequest(path, params, headers, authorizationRequired, method).body;
     }
 
     /**
-     * Like {@link #runRequestAsync} but returns the completed callable so callers can also read
-     * response metadata (e.g. Set-Cookie headers) that the plain body string does not carry.
+     * Like {@link #runRequest} but returns the full result so callers can also read response metadata
+     * (e.g. Set-Cookie headers) that the plain body string does not carry. Runs synchronously on the calling
+     * thread; OkHttp's connection pool provides the concurrency, so many logins can be in flight at once.
      */
-    private AsyncRequestCallable submitRequest(String path, Map<String, String> params, Map<String, String> headers,
-                                               boolean authorizationRequired, String method)
+    private PIRequestResult submitRequest(String path, Map<String, String> params, Map<String, String> headers,
+                                          boolean authorizationRequired, String method)
     {
         if (authorizationRequired)
         {
             // Wait for the JWT to be retrieved and add it to the header
             headers.put(PIConstants.HEADER_AUTHORIZATION, getJWT());
         }
-        AsyncRequestCallable callable = new AsyncRequestCallable(this, this.endpoint, path, params, headers, method);
-        Future<String> future = this.threadPool.submit(callable);
-        try
-        {
-            callable.body = future.get();
-        }
-        catch (InterruptedException | ExecutionException e)
-        {
-            log("runRequestAsync: " + e.getLocalizedMessage());
-        }
-        return callable;
+        return this.endpoint.sendRequest(path, params, headers, method);
     }
 
     /**
@@ -806,8 +821,10 @@ public class PrivacyIDEA implements Closeable
     @Override
     public void close() throws IOException
     {
-        this.threadPool.shutdown();
         this.scheduler.shutdownNow();
+        // Release the OkHttp resources too (dispatcher executor + pooled connections), otherwise repeated
+        // create/close cycles leak them until idle-eviction/GC.
+        this.endpoint.close();
     }
 
     /**
@@ -973,6 +990,16 @@ public class PrivacyIDEA implements Closeable
          */
         public PrivacyIDEA build()
         {
+            // Fail fast on a missing server URL rather than letting every later request silently fail when
+            // HttpUrl.parse("null/validate/check") returns null.
+            if (serverURL == null || serverURL.trim().isEmpty())
+            {
+                throw new IllegalArgumentException("serverURL must not be null or empty");
+            }
+            if (userAgent == null || userAgent.trim().isEmpty())
+            {
+                throw new IllegalArgumentException("userAgent must not be null or empty");
+            }
             PIConfig configuration = new PIConfig(serverURL, userAgent);
             configuration.realm = realm;
             configuration.verifySSL = verifySSL;

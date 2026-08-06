@@ -19,29 +19,31 @@ package org.privacyidea;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static org.privacyidea.PIConstants.GET;
+import static org.privacyidea.PIConstants.HEADER_AUTHORIZATION;
 import static org.privacyidea.PIConstants.HEADER_COOKIE;
 import static org.privacyidea.PIConstants.HEADER_USER_AGENT;
 import static org.privacyidea.PIConstants.HEADER_X_API_KEY;
 import static org.privacyidea.PIConstants.POST;
-import static org.privacyidea.PIConstants.WEBAUTHN_PARAMETERS;
 
 /**
  * This class handles sending requests to the server.
@@ -51,6 +53,9 @@ public class Endpoint
     private final PrivacyIDEA privacyIDEA;
     private final PIConfig piConfig;
     private final OkHttpClient client;
+
+    // Request parameters whose values are secrets and must never be written to the log.
+    private static final Set<String> SECRET_PARAMS = Set.of("pass", "password", "otpkey");
 
     final TrustManager[] trustAllManager = new TrustManager[]{new X509TrustManager()
     {
@@ -79,14 +84,25 @@ public class Endpoint
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.connectTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
                .writeTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
-               .readTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS);
+               .readTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               // Bound the whole call (all phases + retries) so it cannot outlive the configured timeout.
+               .callTimeout(piConfig.httpTimeoutMs, TimeUnit.MILLISECONDS)
+               // Do not follow redirects. This client talks to one explicitly-configured privacyIDEA URL and
+               // has no reason to be redirected; following one could forward our custom sensitive headers
+               // (X-API-Key, Cookie) to another host — OkHttp only auto-strips the standard Authorization
+               // header on a cross-host redirect, not custom ones. A stray redirect should fail visibly.
+               .followRedirects(false)
+               .followSslRedirects(false);
 
         if (!this.piConfig.verifySSL)
         {
-            // Trust all certs and verify every host
+            // Disable certificate trust AND hostname verification. This is insecure (MITM-able) and only
+            // intended for test setups — warn loudly so it is visible in the log if left on in production.
+            privacyIDEA.error("verifySSL is disabled: TLS certificate and hostname verification are turned " +
+                              "off. Do NOT use this in production.");
             try
             {
-                final SSLContext sslContext = SSLContext.getInstance("SSL");
+                final SSLContext sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, trustAllManager, new java.security.SecureRandom());
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllManager[0]);
@@ -108,41 +124,44 @@ public class Endpoint
     }
 
     /**
-     * Add a request to the okhttp queue. The callback will be invoked upon success or failure.
+     * Send a request to the server and return the result synchronously (on the calling thread). OkHttp's own
+     * connection pool handles concurrency; there is no extra thread pool, so the number of in-flight requests
+     * is bounded only by the number of calling threads (i.e. the host IdP's request threads).
      *
      * @param endpoint server endpoint
      * @param params   request parameters
      * @param headers  request headers
      * @param method   http request method
-     * @param callback okhttp3 callback
+     * @return the response body + Set-Cookie headers; body is null on a transport failure / bad URL
      */
-    void sendRequestAsync(String endpoint, Map<String, String> params, Map<String, String> headers, String method, Callback callback)
+    PIRequestResult sendRequest(String endpoint, Map<String, String> params, Map<String, String> headers, String method)
     {
         HttpUrl httpUrl = HttpUrl.parse(piConfig.serverURL + endpoint);
         if (httpUrl == null)
         {
             privacyIDEA.error("Server url could not be parsed: " + (piConfig.serverURL + endpoint));
-            // Invoke the callback to terminate the thread that called this function.
-            callback.onFailure(null, new IOException("Request could not be created because the url could not be parsed"));
-            return;
+            return new PIRequestResult(null, null);
         }
         HttpUrl.Builder urlBuilder = httpUrl.newBuilder();
         privacyIDEA.log(method + " " + endpoint);
         params.forEach((k, v) ->
                        {
-                           if (k.equals("pass") || k.equals("password"))
-                           {
-                               v = "*".repeat(v.length());
-                           }
-                           privacyIDEA.log(k + "=" + v);
+                           // Redact secret values (fixed width, so the length is not disclosed) and strip
+                           // control chars so a crafted value cannot forge extra log lines.
+                           String logValue = SECRET_PARAMS.contains(k) ? "<hidden>" : sanitizeForLog(v);
+                           privacyIDEA.log(sanitizeForLog(k) + "=" + logValue);
                        });
 
         if (GET.equals(method))
         {
+            // Pass raw values to OkHttp, which percent-encodes them exactly once. (Do not pre-encode with
+            // URLEncoder as well, or reserved characters get double-encoded and reach the server wrong.)
             params.forEach((key, value) ->
                            {
-                               String encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
-                               urlBuilder.addQueryParameter(key, encValue);
+                               if (key != null && value != null)
+                               {
+                                   urlBuilder.addQueryParameter(key, value);
+                               }
                            });
         }
 
@@ -181,14 +200,10 @@ public class Endpoint
                            {
                                if (key != null && value != null)
                                {
-                                   String encValue = value;
-                                   // WebAuthn params are excluded from url encoding,
-                                   // they are already in the correct encoding for the server
-                                   if (!WEBAUTHN_PARAMETERS.contains(key))
-                                   {
-                                       encValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
-                                   }
-                                   formBodyBuilder.add(key, encValue);
+                                   // FormBody.add() percent-encodes the value exactly once, which is correct
+                                   // for all params including WebAuthn (the server form-decodes it back to the
+                                   // original). Pre-encoding with URLEncoder here would double-encode.
+                                   formBodyBuilder.add(key, value);
                                }
                            });
             // This switches okhttp to make a post request
@@ -203,13 +218,59 @@ public class Endpoint
         {
             String name = reqHeaders.name(i);
             String value = reqHeaders.value(i);
-            if (HEADER_X_API_KEY.equalsIgnoreCase(name) || HEADER_COOKIE.equalsIgnoreCase(name))
+            if (HEADER_X_API_KEY.equalsIgnoreCase(name) || HEADER_COOKIE.equalsIgnoreCase(name)
+                || HEADER_AUTHORIZATION.equalsIgnoreCase(name))
             {
                 value = "<hidden>";
             }
-            headerLog.append(name).append(": ").append(value).append(" | ");
+            headerLog.append(name).append(": ").append(sanitizeForLog(value)).append(" | ");
         }
         privacyIDEA.log(headerLog.toString());
-        client.newCall(request).enqueue(callback);
+
+        // Execute synchronously on the calling thread. try-with-resources guarantees the response body is
+        // closed on every path. The body is always read (even on non-2xx) because privacyIDEA returns its
+        // JSON error envelope with 4xx/5xx status codes.
+        try (Response response = client.newCall(request).execute())
+        {
+            List<String> setCookies = new ArrayList<>(response.headers("Set-Cookie"));
+            ResponseBody responseBody = response.body();
+            String body = responseBody == null ? null : responseBody.string();
+            if (body != null
+                && !privacyIDEA.logExcludedEndpoints().contains(endpoint)
+                && !PIConstants.ENDPOINT_AUTH.equals(endpoint))
+            {
+                privacyIDEA.log(endpoint + " (" + response.code() + "):\n" + privacyIDEA.parser.formatJson(body));
+            }
+            return new PIRequestResult(body, setCookies);
+        }
+        catch (IOException e)
+        {
+            // Connection refused / timeout / TLS failure — surface as a null body (callers null-check).
+            privacyIDEA.error(e);
+            return new PIRequestResult(null, null);
+        }
+    }
+
+    /**
+     * Release the underlying OkHttp resources (dispatcher executor + pooled connections). Called from
+     * {@link PrivacyIDEA#close()}.
+     */
+    void close()
+    {
+        client.dispatcher().executorService().shutdown();
+        client.connectionPool().evictAll();
+    }
+
+    /**
+     * Strip CR/LF (and other control chars) from a value before it is written to the log, so an
+     * attacker-influenced value (e.g. a username) cannot inject forged log lines.
+     */
+    private static String sanitizeForLog(String value)
+    {
+        if (value == null)
+        {
+            return "null";
+        }
+        return value.replaceAll("[\\r\\n\\t\\p{Cntrl}]", " ");
     }
 }
