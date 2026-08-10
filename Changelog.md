@@ -3,6 +3,8 @@
 ### 1.6.0 - 6 August 2026
 * Capture the remember-device cookie on WebAuthn and passkey authentications (previously only the OTP path
   propagated the Set-Cookie, so "remember this device" silently did nothing with a security key / passkey).
+* Add a getTokenInfo(username, headers) overload so callers can forward request headers on GET /token
+  (the existing getTokenInfo(username) delegates to it with no headers).
 * Improved logging hygiene: the Authorization token, the `X-API-Key`, and token seeds/OTP values are no longer
   written to the log, and logged values are sanitized to prevent forged log lines.
 * Requests are now executed synchronously per call; the internal fixed-size thread pool was removed, so the

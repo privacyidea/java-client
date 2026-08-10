@@ -524,7 +524,22 @@ public class PrivacyIDEA implements Closeable
      * @param username username to get info for
      * @return possibly empty list of TokenInfo or null if failure
      */
+    /**
+     * @see PrivacyIDEA#getTokenInfo(String, Map)
+     */
     public List<TokenInfo> getTokenInfo(String username)
+    {
+        return getTokenInfo(username, Collections.emptyMap());
+    }
+
+    /**
+     * Get the list of the user's tokens via {@code GET /token} using the service account.
+     *
+     * @param username the user whose tokens to list
+     * @param headers  request headers to forward (e.g. Accept-Language, forwarded client headers)
+     * @return list of token info objects, or null if there is no service account
+     */
+    public List<TokenInfo> getTokenInfo(String username, Map<String, String> headers)
     {
         Objects.requireNonNull(username);
         if (!serviceAccountAvailable())
@@ -534,7 +549,8 @@ public class PrivacyIDEA implements Closeable
         }
         Map<String, String> params = new LinkedHashMap<>();
         params.put(USER, username);
-        String response = runRequest(ENDPOINT_TOKEN, params, new LinkedHashMap<>(), true, GET);
+        Map<String, String> hdrs = new LinkedHashMap<>(headers == null ? Collections.emptyMap() : headers);
+        String response = runRequest(ENDPOINT_TOKEN, params, hdrs, true, GET);
         return parser.parseTokenInfoList(response);
     }
 

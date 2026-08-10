@@ -17,7 +17,9 @@
 package org.privacyidea;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +102,43 @@ public class TestGetTokenInfo
         assertEquals("Test", tokenInfo.username);
 
         assertEquals(authToken, privacyIDEA.getJWT());
+    }
+
+    @Test
+    public void testForwardsHeaders()
+    {
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
+                  .respond(HttpResponse.response().withBody(Utils.postAuthSuccessResponse()));
+
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .serviceAccount(serviceAccount, servicePassword)
+                                 .serviceRealm(serviceRealm)
+                                 .disableLog()
+                                 .httpTimeoutMs(15000)
+                                 .verifySSL(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
+
+        // The GET /token stub only matches when the forwarded header is present, so a non-null result
+        // proves the header the caller passed reached the request.
+        mockServer.when(HttpRequest.request()
+                                   .withMethod("GET")
+                                   .withQueryStringParameter("user", username)
+                                   .withPath(PIConstants.ENDPOINT_TOKEN)
+                                   .withHeader("Authorization", authToken)
+                                   .withHeader("X-Forwarded-For", "203.0.113.7"))
+                  .respond(HttpResponse.response().withBody(Utils.getTokenResponse()));
+
+        Map<String, String> headers = new LinkedHashMap<>();
+        headers.put("X-Forwarded-For", "203.0.113.7");
+        List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username, headers);
+
+        assertNotNull(tokenInfoList);
+        assertEquals(1, tokenInfoList.size());
+        assertEquals("OATH00123564", tokenInfoList.get(0).serial);
     }
 
     @Test
