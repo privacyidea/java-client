@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio</artifactId>
-            <version>3.17.0</version>
+            <version>3.18.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -119,7 +119,7 @@
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>4.5.2</version>
+            <version>4.6.0</version>
         </dependency>
     </dependencies>
 </project>
