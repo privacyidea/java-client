@@ -1,6 +1,11 @@
 # Changelog
 
-### 1.6.0 - 6 August 2026
+### 1.6.0 - 1 October 2026
+* Updated the bundled OkHttp to 5.4.0, kotlin-stdlib to 2.4.0 and okio to 3.18.2. OkHttp and okio are now
+  referenced by their `-jvm` artifacts: OkHttp 5 is a Kotlin Multiplatform release whose plain `okhttp` artifact
+  carries no classes for Maven builds.
+* java-jwt is now a test-only dependency, so neither it nor the Jackson libraries it pulls in are part of the
+  client's dependency tree anymore.
 * Capture the remember-device cookie on WebAuthn and passkey authentications (previously only the OTP path
   propagated the Set-Cookie, so "remember this device" silently did nothing with a security key / passkey).
 * Add a getTokenInfo(username, headers) overload so callers can forward request headers on GET /token
