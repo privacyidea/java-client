@@ -6,6 +6,8 @@
   carries no classes for Maven builds.
 * java-jwt is now a test-only dependency, so neither it nor the Jackson libraries it pulls in are part of the
   client's dependency tree anymore.
+* Added LICENSE (Apache License 2.0) and NOTICE. Both are also included in the jar under META-INF/, and
+  NOTICE lists the bundled OkHttp, Okio, Gson and Kotlin standard library with their attributions.
 * Capture the remember-device cookie on WebAuthn and passkey authentications (previously only the OTP path
   propagated the Set-Cookie, so "remember this device" silently did nothing with a security key / passkey).
 * Add a getTokenInfo(username, headers) overload so callers can forward request headers on GET /token

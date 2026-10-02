@@ -7,11 +7,29 @@
     <artifactId>privacyidea-java-client</artifactId>
     <version>1.6.0</version>
     <packaging>jar</packaging>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <build>
         <finalName>privacyidea-java-client</finalName>
+        <resources>
+            <!-- The shaded jar bundles OkHttp, Okio, Gson and the Kotlin stdlib, none of which carry their
+                 license files; ship our LICENSE and the third-party NOTICE in META-INF instead. -->
+            <resource>
+                <directory>${project.basedir}</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE</include>
+                    <include>NOTICE</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
