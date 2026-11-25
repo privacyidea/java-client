@@ -1,5 +1,9 @@
 # Changelog
 
+### Unreleased
+* `getTokenInfo` now sends the configured realm. Before, privacyIDEA found the user in its default realm, so the
+  token list could belong to a different user with the same login name.
+
 ### 1.6.0 - 1 October 2026
 * Updated the bundled OkHttp to 5.4.0, kotlin-stdlib to 2.4.0 and okio to 3.18.2. OkHttp and okio are now
   referenced by their `-jvm` artifacts: OkHttp 5 is a Kotlin Multiplatform release whose plain `okhttp` artifact

@@ -142,6 +142,75 @@ public class TestGetTokenInfo
     }
 
     @Test
+    public void testSendsConfiguredRealm()
+    {
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
+                  .respond(HttpResponse.response().withBody(Utils.postAuthSuccessResponse()));
+
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .serviceAccount(serviceAccount, servicePassword)
+                                 .serviceRealm(serviceRealm)
+                                 .realm("userrealm")
+                                 .disableLog()
+                                 .httpTimeoutMs(15000)
+                                 .verifySSL(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
+
+        // The GET /token stub only matches with the configured user realm, so a non-null result proves that the
+        // realm reached the request. Without it, privacyIDEA resolves the user in its default realm.
+        mockServer.when(HttpRequest.request()
+                                   .withMethod("GET")
+                                   .withQueryStringParameter("user", username)
+                                   .withQueryStringParameter("realm", "userrealm")
+                                   .withPath(PIConstants.ENDPOINT_TOKEN)
+                                   .withHeader("Authorization", authToken))
+                  .respond(HttpResponse.response().withBody(Utils.getTokenResponse()));
+
+        List<TokenInfo> tokenInfoList = privacyIDEA.getTokenInfo(username);
+
+        assertNotNull(tokenInfoList);
+        assertEquals(1, tokenInfoList.size());
+        HttpRequest[] recorded = mockServer.retrieveRecordedRequests(HttpRequest.request().withPath(PIConstants.ENDPOINT_TOKEN));
+        assertEquals(1, recorded.length);
+        assertEquals(List.of("userrealm"), recorded[0].getQueryStringParameters().getValues("realm"));
+    }
+
+    @Test
+    public void testSendsNoRealmWhenNoneConfigured()
+    {
+        mockServer.when(HttpRequest.request()
+                                   .withPath(PIConstants.ENDPOINT_AUTH)
+                                   .withMethod("POST")
+                                   .withBody("username=" + serviceAccount + "&password=" + servicePassword + "&realm=" + serviceRealm))
+                  .respond(HttpResponse.response().withBody(Utils.postAuthSuccessResponse()));
+        mockServer.when(HttpRequest.request()
+                                   .withMethod("GET")
+                                   .withQueryStringParameter("user", username)
+                                   .withPath(PIConstants.ENDPOINT_TOKEN)
+                                   .withHeader("Authorization", authToken))
+                  .respond(HttpResponse.response().withBody(Utils.getTokenResponse()));
+
+        privacyIDEA = PrivacyIDEA.newBuilder("https://127.0.0.1:1080", "test")
+                                 .serviceAccount(serviceAccount, servicePassword)
+                                 .serviceRealm(serviceRealm)
+                                 .disableLog()
+                                 .httpTimeoutMs(15000)
+                                 .verifySSL(false)
+                                 .logger(new PILogImplementation())
+                                 .build();
+
+        assertNotNull(privacyIDEA.getTokenInfo(username));
+        HttpRequest[] recorded = mockServer.retrieveRecordedRequests(HttpRequest.request().withPath(PIConstants.ENDPOINT_TOKEN));
+        assertEquals(1, recorded.length);
+        assertTrue(recorded[0].getQueryStringParameters() == null
+                   || recorded[0].getQueryStringParameters().getValues("realm").isEmpty());
+    }
+
+    @Test
     public void testForNoToken()
     {
         mockServer.when(HttpRequest.request()
