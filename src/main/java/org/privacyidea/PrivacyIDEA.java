@@ -549,6 +549,8 @@ public class PrivacyIDEA implements Closeable
         }
         Map<String, String> params = new LinkedHashMap<>();
         params.put(USER, username);
+        // Without the realm, privacyIDEA resolves the user in its default realm, which can be a different user.
+        appendRealm(params);
         Map<String, String> hdrs = new LinkedHashMap<>(headers == null ? Collections.emptyMap() : headers);
         String response = runRequest(ENDPOINT_TOKEN, params, hdrs, true, GET);
         return parser.parseTokenInfoList(response);
